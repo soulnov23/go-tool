@@ -1,0 +1,40 @@
+server: #服务端配置
+  - name: tcp
+    ip: 0.0.0.0 #服务监听ip地址
+    port: 8000 #服务监听端口
+    network: tcp #网络监听类型 tcp udp
+    protocol: rpc #应用层协议 rpc http
+    timeout: 3000 #请求最长处理时间 单位 毫秒
+  - name: http
+    ip: 0.0.0.0 #服务监听ip地址
+    port: 8080 #服务监听端口
+    network: tcp #网络监听类型 tcp udp
+    protocol: http #应用层协议 rpc http
+    timeout: 3000 #请求最长处理时间 单位 毫秒
+
+client: #客户端调用的后端配置
+  - name: mysql
+    network: tcp
+    protocol: http
+    target:
+    timeout:
+
+log: #日志配置
+  writer: file #本地文件日志
+  level: debug #本地文件滚动日志的级别
+  caller_skip: 0 #控制log函数嵌套深度
+  formatter: console #日志打印格式
+  formatter_config:
+    time_key: Time
+    level_key: Level
+    name_key: Name
+    caller_key: Caller
+    #function_key: Function
+    message_key: Message
+    stacktrace_key: Stacktrace
+  writer_config:
+    file_name: ../log/app.log #本地文件滚动日志文件名
+    max_size: 128 #本地文件滚动日志的大小 单位 MB
+    max_backups: 10 #最大日志文件数
+    max_age: 7 #最大日志保留天数
+    compress: false #日志文件是否压缩

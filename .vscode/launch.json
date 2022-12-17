@@ -1,0 +1,26 @@
+{
+    // https://github.com/golang/vscode-go/blob/master/docs/debugging.md
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // mandatory attributes
+            "name": "dlv",
+            "type": "go",
+            "request": "launch",
+            // specific attributes
+            "args": [
+                "-conf",
+                "../conf/go_tool.yaml"
+            ],
+            // working directory of the program being debugged
+            "cwd": "./build/bin",
+            "env": {
+                "SERVER_VERSION": "v0.0.1",
+            },
+            "mode": "exec",
+            // path to the program folder 
+            "program": "./build/bin/go-tool"
+        }
+    ]
+}
+// dlv exec output -- -conf output.yaml
