@@ -23,11 +23,11 @@ const (
 )
 
 // ensure we always implement io.WriteCloser.
-var _ io.WriteCloser = (*RollWriter)(nil)
+var _ io.WriteCloser = (*rollWriter)(nil)
 
-// RollWriter is a file log writer which support rolling by size or datetime.
+// rollWriter is a file log writer which support rolling by size or datetime.
 // It implements io.WriteCloser.
-type RollWriter struct {
+type rollWriter struct {
 	filePath string
 	opts     *Options
 
@@ -45,8 +45,8 @@ type RollWriter struct {
 	closeCh    chan *os.File
 }
 
-// NewRollWriter creates a new RollWriter.
-func NewRollWriter(filePath string, opt ...Option) (*RollWriter, error) {
+// NewRollWriter creates a new rollWriter.
+func NewRollWriter(filePath string, opt ...Option) (*rollWriter, error) {
 	opts := &Options{
 		MaxSize:    0,     // default no rolling by file size
 		MaxAge:     0,     // default no scavenging on expired logs
@@ -68,7 +68,7 @@ func NewRollWriter(filePath string, opt ...Option) (*RollWriter, error) {
 		return nil, errors.New("strftime.New: " + err.Error())
 	}
 
-	w := &RollWriter{
+	w := &rollWriter{
 		filePath: filePath,
 		opts:     opts,
 		pattern:  pattern,
@@ -83,7 +83,7 @@ func NewRollWriter(filePath string, opt ...Option) (*RollWriter, error) {
 }
 
 // Write writes logs. It implements io.Writer.
-func (w *RollWriter) Write(v []byte) (n int, err error) {
+func (w *rollWriter) Write(v []byte) (n int, err error) {
 	// reopen file every 10 seconds.
 	if w.getCurrFile() == nil || time.Now().Unix()-atomic.LoadInt64(&w.openTime) > 10 {
 		w.mu.Lock()
@@ -110,7 +110,7 @@ func (w *RollWriter) Write(v []byte) (n int, err error) {
 }
 
 // Close closes the current log file. It implements io.Closer.
-func (w *RollWriter) Close() error {
+func (w *rollWriter) Close() error {
 	if w.getCurrFile() == nil {
 		return nil
 	}
@@ -131,7 +131,7 @@ func (w *RollWriter) Close() error {
 }
 
 // getCurrFile returns the current log file.
-func (w *RollWriter) getCurrFile() *os.File {
+func (w *rollWriter) getCurrFile() *os.File {
 	if file, ok := w.currFile.Load().(*os.File); ok {
 		return file
 	}
@@ -139,12 +139,12 @@ func (w *RollWriter) getCurrFile() *os.File {
 }
 
 // setCurrFile sets the current log file.
-func (w *RollWriter) setCurrFile(file *os.File) {
+func (w *rollWriter) setCurrFile(file *os.File) {
 	w.currFile.Store(file)
 }
 
 // reopenFile reopen the file regularly. It notifies the scavenger if file path has changed.
-func (w *RollWriter) reopenFile() {
+func (w *rollWriter) reopenFile() {
 	if w.getCurrFile() == nil || time.Now().Unix()-atomic.LoadInt64(&w.openTime) > 10 {
 		atomic.StoreInt64(&w.openTime, time.Now().Unix())
 		currPath := w.pattern.FormatString(time.Now())
@@ -157,7 +157,7 @@ func (w *RollWriter) reopenFile() {
 }
 
 // doReopenFile reopen the file.
-func (w *RollWriter) doReopenFile(path string) error {
+func (w *rollWriter) doReopenFile(path string) error {
 	atomic.StoreInt64(&w.openTime, time.Now().Unix())
 	lastFile := w.getCurrFile()
 	of, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
@@ -176,7 +176,7 @@ func (w *RollWriter) doReopenFile(path string) error {
 }
 
 // backupFile backs this file up and reopen a new one if file size is too large.
-func (w *RollWriter) backupFile() {
+func (w *rollWriter) backupFile() {
 	if w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize) >= w.opts.MaxSize {
 		atomic.StoreInt64(&w.currSize, 0)
 
@@ -193,7 +193,7 @@ func (w *RollWriter) backupFile() {
 }
 
 // notify runs scavengers.
-func (w *RollWriter) notify() {
+func (w *rollWriter) notify() {
 	w.notifyOnce.Do(func() {
 		w.notifyCh = make(chan bool, 1)
 		go w.runCleanFiles()
@@ -205,7 +205,7 @@ func (w *RollWriter) notify() {
 }
 
 // runCleanFiles cleans redundant or expired (compressed) logs in a new goroutine.
-func (w *RollWriter) runCleanFiles() {
+func (w *rollWriter) runCleanFiles() {
 	for range w.notifyCh {
 		if w.opts.MaxBackups == 0 && w.opts.MaxAge == 0 && !w.opts.Compress {
 			continue
@@ -215,7 +215,7 @@ func (w *RollWriter) runCleanFiles() {
 }
 
 // delayCloseFile delay closing file
-func (w *RollWriter) delayCloseFile(file *os.File) {
+func (w *rollWriter) delayCloseFile(file *os.File) {
 	w.closeOnce.Do(func() {
 		w.closeCh = make(chan *os.File, 100)
 		go w.runCloseFiles()
@@ -224,7 +224,7 @@ func (w *RollWriter) delayCloseFile(file *os.File) {
 }
 
 // runCloseFiles delay closing file in a new goroutine.
-func (w *RollWriter) runCloseFiles() {
+func (w *rollWriter) runCloseFiles() {
 	for f := range w.closeCh {
 		// delay 20ms
 		time.Sleep(20 * time.Millisecond)
@@ -233,7 +233,7 @@ func (w *RollWriter) runCloseFiles() {
 }
 
 // cleanFiles cleans redundant or expired (compressed) logs.
-func (w *RollWriter) cleanFiles() {
+func (w *rollWriter) cleanFiles() {
 	// get the file list of current log.
 	files, err := w.getOldLogFiles()
 	if err != nil || len(files) == 0 {
@@ -258,7 +258,7 @@ func (w *RollWriter) cleanFiles() {
 }
 
 // getOldLogFiles returns the log file list ordered by modified time.
-func (w *RollWriter) getOldLogFiles() ([]logInfo, error) {
+func (w *rollWriter) getOldLogFiles() ([]logInfo, error) {
 	files, err := os.ReadDir(w.currDir)
 	if err != nil {
 		return nil, errors.New("can't read log file " + w.currDir + " directory: " + err.Error())
@@ -280,7 +280,7 @@ func (w *RollWriter) getOldLogFiles() ([]logInfo, error) {
 
 // matchLogFile checks whether current log file matches all relative log files, if matched, returns
 // the modified time.
-func (w *RollWriter) matchLogFile(filename, filePrefix string) (time.Time, error) {
+func (w *rollWriter) matchLogFile(filename, filePrefix string) (time.Time, error) {
 	// exclude current log file.
 	// a.log
 	// a.log.20200712
@@ -303,7 +303,7 @@ func (w *RollWriter) matchLogFile(filename, filePrefix string) (time.Time, error
 }
 
 // removeFiles deletes expired or redundant log files.
-func (w *RollWriter) removeFiles(remove []logInfo) {
+func (w *rollWriter) removeFiles(remove []logInfo) {
 	// clean expired or redundant files.
 	for _, f := range remove {
 		os.Remove(filepath.Join(w.currDir, f.Name()))
@@ -311,7 +311,7 @@ func (w *RollWriter) removeFiles(remove []logInfo) {
 }
 
 // compressFiles compresses demanded log files.
-func (w *RollWriter) compressFiles(compress []logInfo) {
+func (w *rollWriter) compressFiles(compress []logInfo) {
 	// compress log files.
 	for _, f := range compress {
 		fn := filepath.Join(w.currDir, f.Name())

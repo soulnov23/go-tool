@@ -1,6 +1,6 @@
 package log
 
-// Options is the RollWriter call options.
+// Options is the rollWriter call options.
 type Options struct {
 	// MaxSize is max size by byte of the log file.
 	MaxSize int64
