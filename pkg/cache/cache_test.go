@@ -168,3 +168,10 @@ func TestCache(t *testing.T) {
 	t.Logf("size: %d", cap(buf))
 	t.Logf("address: %p", buf)
 }
+
+func TestMake(t *testing.T) {
+	buf := make([]byte, 0)
+	t.Logf("size: %d", cap(buf))
+	buf = make([]byte, 0, 2)
+	t.Logf("size: %d", cap(buf))
+}
