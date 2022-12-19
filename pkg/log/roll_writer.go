@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	backupTimeFormat = ".15:04:05"
-	compressSuffix   = ".gz"
+	BackupTimeFormat = ".15:04:05"
+	CompressSuffix   = ".gz"
 )
 
 // ensure we always implement io.WriteCloser.
@@ -181,7 +181,7 @@ func (w *RollWriter) backupFile() {
 		atomic.StoreInt64(&w.currSize, 0)
 
 		// rename the old file.
-		newName := w.currPath + time.Now().Format(backupTimeFormat)
+		newName := w.currPath + time.Now().Format(BackupTimeFormat)
 		if _, e := os.Stat(w.currPath); !os.IsNotExist(e) {
 			_ = os.Rename(w.currPath, newName)
 		}
@@ -315,7 +315,7 @@ func (w *RollWriter) compressFiles(compress []logInfo) {
 	// compress log files.
 	for _, f := range compress {
 		fn := filepath.Join(w.currDir, f.Name())
-		compressFile(fn, fn+compressSuffix)
+		compressFile(fn, fn+CompressSuffix)
 	}
 }
 
@@ -327,7 +327,7 @@ func filterByMaxBackups(files []logInfo, remove *[]logInfo, maxBackups int) []lo
 	var remaining []logInfo
 	preserved := make(map[string]bool)
 	for _, f := range files {
-		fn := strings.TrimSuffix(f.Name(), compressSuffix)
+		fn := strings.TrimSuffix(f.Name(), CompressSuffix)
 		preserved[fn] = true
 
 		if len(preserved) > maxBackups {
@@ -363,7 +363,7 @@ func filterByCompressExt(files []logInfo, compress *[]logInfo, needCompress bool
 		return
 	}
 	for _, f := range files {
-		if !strings.HasSuffix(f.Name(), compressSuffix) {
+		if !strings.HasSuffix(f.Name(), CompressSuffix) {
 			*compress = append(*compress, f)
 		}
 	}
