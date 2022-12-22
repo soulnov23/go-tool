@@ -19,16 +19,16 @@ var (
 	ErrNotEnoughData = errors.New("data is not enough")
 )
 
-type linkedBuffer struct {
-	head      *linkedBufferNode
-	readNode  *linkedBufferNode
-	writeNode *linkedBufferNode // tail node
+type LinkedBuffer struct {
+	head      *LinkedBufferNode
+	readNode  *LinkedBufferNode
+	writeNode *LinkedBufferNode // tail node
 
 	len int32
 }
 
-func NewBuffer() *linkedBuffer {
-	return &linkedBuffer{
+func NewBuffer() *LinkedBuffer {
+	return &LinkedBuffer{
 		head:      nil,
 		readNode:  nil,
 		writeNode: nil,
@@ -36,7 +36,7 @@ func NewBuffer() *linkedBuffer {
 	}
 }
 
-func DeleteBuffer(buffer *linkedBuffer) {
+func DeleteBuffer(buffer *LinkedBuffer) {
 	if buffer == nil {
 		return
 	}
@@ -49,11 +49,11 @@ func DeleteBuffer(buffer *linkedBuffer) {
 	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 }
 
-func (buffer *linkedBuffer) Len() int {
+func (buffer *LinkedBuffer) Len() int {
 	return int(atomic.LoadInt32(&buffer.len))
 }
 
-func (buffer *linkedBuffer) Peek(size int) ([]byte, error) {
+func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 	if size <= 0 {
 		return nil, ErrInvalidParam
 	}
@@ -90,7 +90,7 @@ func (buffer *linkedBuffer) Peek(size int) ([]byte, error) {
 	return buf[:size], nil
 }
 
-func (buffer *linkedBuffer) Skip(size int) error {
+func (buffer *LinkedBuffer) Skip(size int) error {
 	if size <= 0 {
 		return ErrInvalidParam
 	}
@@ -128,7 +128,7 @@ func (buffer *linkedBuffer) Skip(size int) error {
 	return nil
 }
 
-func (buffer *linkedBuffer) Next(size int) ([]byte, error) {
+func (buffer *LinkedBuffer) Next(size int) ([]byte, error) {
 	if size <= 0 {
 		return nil, ErrInvalidParam
 	}
@@ -168,7 +168,7 @@ func (buffer *linkedBuffer) Next(size int) ([]byte, error) {
 	return buf[:size], nil
 }
 
-func (buffer *linkedBuffer) OptimizeMemory() {
+func (buffer *LinkedBuffer) OptimizeMemory() {
 	node := buffer.head
 	for node != nil {
 		if node.Len() > 0 {
@@ -181,7 +181,7 @@ func (buffer *linkedBuffer) OptimizeMemory() {
 	buffer.head = node
 }
 
-func (buffer *linkedBuffer) Write(buf []byte) {
+func (buffer *LinkedBuffer) Append(buf []byte) {
 	size := cap(buf)
 	if size == 0 {
 		return

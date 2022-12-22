@@ -11,27 +11,27 @@ var nodes sync.Pool
 
 func init() {
 	nodes.New = func() any {
-		return &linkedBufferNode{
+		return &LinkedBufferNode{
 			referCount: 1,
 		}
 	}
 }
 
-type linkedBufferNode struct {
+type LinkedBufferNode struct {
 	block       []byte
 	readOffset  int
 	writeOffset int
 	referCount  int32
-	next        *linkedBufferNode
+	next        *LinkedBufferNode
 }
 
-func NewNode(blockSize int) *linkedBufferNode {
-	node := nodes.Get().(*linkedBufferNode)
+func NewNode(blockSize int) *LinkedBufferNode {
+	node := nodes.Get().(*LinkedBufferNode)
 	node.block = cache.New(blockSize)
 	return node
 }
 
-func DeleteNode(node *linkedBufferNode) {
+func DeleteNode(node *LinkedBufferNode) {
 	if node == nil {
 		return
 	}
@@ -42,19 +42,19 @@ func DeleteNode(node *linkedBufferNode) {
 	}
 }
 
-func (node *linkedBufferNode) Len() int {
+func (node *LinkedBufferNode) Len() int {
 	return node.writeOffset - node.readOffset
 }
 
-func (node *linkedBufferNode) Peek(size int) []byte {
+func (node *LinkedBufferNode) Peek(size int) []byte {
 	return node.block[node.readOffset : node.readOffset+size]
 }
 
-func (node *linkedBufferNode) Skip(size int) {
+func (node *LinkedBufferNode) Skip(size int) {
 	node.readOffset += size
 }
 
-func (node *linkedBufferNode) Next(size int) []byte {
+func (node *LinkedBufferNode) Next(size int) []byte {
 	offset := node.readOffset
 	node.readOffset += size
 	return node.block[offset:node.readOffset]
