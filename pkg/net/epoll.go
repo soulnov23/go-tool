@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"syscall"
 
+	"github.com/SoulNov23/go-tool/pkg/buffer"
 	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/unsafe"
 	"golang.org/x/sys/unix"
 )
 
@@ -66,8 +66,8 @@ type Epoll struct {
 	eventFD    int
 	listens    map[int]string
 	events     []syscall.EpollEvent
-	conn       map[int]string
-	mutex      sync.Mutex
+	tcpConns   map[int]*TcpConn
+	connLock   sync.Mutex
 	triggerBuf []byte
 	trigger    uint32
 	close      chan struct{}
@@ -94,14 +94,14 @@ func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
 		log.Error(wrapErr)
 		return nil, wrapErr
 	}
-	log.Debugf("epoll create success, epoll fd: %d, event fd: %d", epollFD, eventFD)
+	log.Debugf("Epoll create success, Epoll fd: %d, event fd: %d", epollFD, eventFD)
 	return &Epoll{
 		log:        log,
 		epollFD:    epollFD,
 		eventFD:    eventFD,
 		listens:    make(map[int]string),
 		events:     make([]syscall.EpollEvent, eventSize),
-		conn:       make(map[int]string),
+		tcpConns:   make(map[int]*TcpConn),
 		triggerBuf: make([]byte, 8),
 		close:      make(chan struct{}, 1),
 	}, nil
@@ -208,19 +208,19 @@ func (ep *Epoll) handler() bool {
 		evt := ep.events[i].Events
 		switch {
 		case evt&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0:
-			ep.log.Debugf("close ip: %s, fd: %d", ep.conn[fd], fd)
+			ep.log.Debugf("close ip: %s, fd: %d", ep.tcpConns[fd].remoteAddr, fd)
 			Control(ep.epollFD, fd, Detach)
-			ep.mutex.Lock()
-			delete(ep.conn, fd)
-			ep.mutex.Unlock()
+			ep.connLock.Lock()
+			delete(ep.tcpConns, fd)
+			ep.connLock.Unlock()
 		case evt&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0:
 			if _, ok := ep.listens[fd]; ok {
 				ep.handlerAccept(fd)
 			} else {
-				ep.handlerRead(fd)
+				ep.tcpConns[fd].Read()
 			}
 		case evt&syscall.EPOLLOUT != 0:
-			ep.handlerWrite(fd)
+			ep.tcpConns[fd].ReWrite()
 		default:
 		}
 	}
@@ -264,57 +264,19 @@ func (ep *Epoll) handlerAccept(fd int) {
 			ep.log.Errorf("net.Control: %v", err)
 			continue
 		}
-		ep.mutex.Lock()
-		ep.conn[connFD] = ip
-		ep.mutex.Unlock()
+		tcpConn := &TcpConn{
+			log:         ep.log,
+			epollFD:     ep.epollFD,
+			fd:          connFD,
+			localAddr:   ep.listens[fd],
+			remoteAddr:  ip,
+			readBuffer:  buffer.NewBuffer(),
+			writeBuffer: buffer.NewBuffer(),
+		}
+		ep.connLock.Lock()
+		ep.tcpConns[connFD] = tcpConn
+		ep.connLock.Unlock()
 	}
-}
-
-func (ep *Epoll) handlerRead(fd int) {
-	var buffer [1024]byte
-	offset := 0
-	for {
-		n, err := syscall.Read(fd, buffer[offset:])
-		if err != nil {
-			if err == syscall.EAGAIN {
-				break
-			} else if err == syscall.EINTR {
-				continue
-			} else {
-				ep.log.Errorf("syscall.Read: %v", err)
-				continue
-			}
-		}
-		offset += n
-		if n == 0 || offset == 1024 {
-			break
-		}
-	}
-	ep.log.Debugf("read: %s", unsafe.Byte2String(buffer[:]))
-	Control(ep.epollFD, fd, ModReadWritable)
-}
-
-func (ep *Epoll) handlerWrite(fd int) {
-	buffer := "hello world"
-	offset := 0
-	for {
-		n, err := syscall.Write(fd, unsafe.String2Byte(buffer)[offset:])
-		if err != nil {
-			if err == syscall.EAGAIN {
-				break
-			} else if err == syscall.EINTR {
-				continue
-			} else {
-				ep.log.Errorf("syscall.Write: %v", err)
-				continue
-			}
-		}
-		offset += n
-		if n == 0 || offset == len(buffer) {
-			break
-		}
-	}
-	ep.log.Debugf("write: %s", unsafe.Byte2String([]byte(buffer)[:offset]))
 }
 
 func (ep *Epoll) Trigger() error {
