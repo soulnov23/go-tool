@@ -5,9 +5,10 @@ import (
 	"flag"
 	"os"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/SoulNov23/go-tool/pkg/env"
 	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/serialization"
 	"github.com/SoulNov23/go-tool/pkg/unsafe"
 )
 
@@ -39,12 +40,8 @@ func GetAppConfig() (*AppConfig, error) {
 		return nil, errors.New("os.ReadFile: " + err.Error())
 	}
 	buffer = unsafe.String2Byte(env.ExpandEnv(unsafe.Byte2String(buffer)))
-	serialize := serialization.GetSerializer(serialization.SerializationTypeYAML)
-	if serialize == nil {
-		return nil, errors.New("yaml serialization not support")
-	}
 	appConfig := &AppConfig{}
-	if err = serialize.Unmarshal(buffer, appConfig); err != nil {
+	if err = yaml.Unmarshal(buffer, appConfig); err != nil {
 		return nil, errors.New("unmarshal " + DefaultConfPath + ": " + err.Error())
 	}
 	return appConfig, nil
