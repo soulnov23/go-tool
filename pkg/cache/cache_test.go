@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"runtime"
 	"testing"
 )
 
@@ -107,6 +108,14 @@ func Test_log2(t *testing.T) {
 
 func TestCache(t *testing.T) {
 	buf := New(0)
+	t.Logf("size: %d", cap(buf))
+	t.Logf("address: %p", buf)
+	runtime.GC()
+	buf = New(0)
+	t.Logf("size: %d", cap(buf))
+	t.Logf("address: %p", buf)
+	runtime.GC()
+	buf = New(0)
 	t.Logf("size: %d", cap(buf))
 	t.Logf("address: %p", buf)
 	Delete(buf)
