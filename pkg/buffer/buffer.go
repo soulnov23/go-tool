@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"errors"
+	"sync"
 	"sync/atomic"
 
 	"github.com/SoulNov23/go-tool/pkg/cache"
@@ -24,6 +25,9 @@ type LinkedBuffer struct {
 	readNode  *LinkedBufferNode
 	writeNode *LinkedBufferNode // tail node
 
+	readLock  sync.Mutex
+	writeLock sync.Mutex
+
 	len int32
 }
 
@@ -40,6 +44,10 @@ func DeleteBuffer(buffer *LinkedBuffer) {
 	if buffer == nil {
 		return
 	}
+	buffer.readLock.Lock()
+	defer buffer.readLock.Unlock()
+	buffer.writeLock.Lock()
+	defer buffer.writeLock.Unlock()
 	atomic.StoreInt32(&buffer.len, 0)
 	for node := buffer.head; node != nil; {
 		next := node.next
@@ -57,6 +65,8 @@ func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 	if size <= 0 {
 		return nil, ErrInvalidParam
 	}
+	buffer.readLock.Lock()
+	defer buffer.readLock.Unlock()
 	if buffer.Len() < size {
 		return nil, ErrNotEnoughData
 	}
@@ -72,8 +82,9 @@ func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 	// size需要读取多个节点的buf
 	buf := cache.New(size)
 	// ack记录遍历一个节点后的累积值，最终得到ack==size
-	for ack := 0; ack < size; {
-		// 遇到空节点直接跳过
+	ack := 0
+	for ack < size && node != nil {
+		// 遇到空节点跳下一个节点
 		if node.Len() == 0 {
 			node = node.next
 			continue
@@ -85,15 +96,18 @@ func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 		tempBuf := node.Peek(offset)
 		copy(buf[ack:ack+offset], tempBuf)
 		ack += offset
+		// Peek不会修改readOffset需要手动跳下一个节点
 		node = node.next
 	}
-	return buf[:size], nil
+	return buf[:ack], nil
 }
 
 func (buffer *LinkedBuffer) Skip(size int) error {
 	if size <= 0 {
 		return ErrInvalidParam
 	}
+	buffer.readLock.Lock()
+	defer buffer.readLock.Unlock()
 	if buffer.Len() < size {
 		return ErrNotEnoughData
 	}
@@ -110,7 +124,9 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 	}
 	// size需要读取多个节点的buf
 	// ack记录遍历一个节点后的累积值，最终得到ack==size
-	for ack := 0; ack < size; {
+	ack := 0
+	for ack < size && node != nil {
+		// 节点内容被读完了跳下一个节点
 		if node.Len() == 0 {
 			node = node.next
 			continue
@@ -121,10 +137,9 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 		}
 		node.Skip(offset)
 		ack += offset
-		node = node.next
 	}
 	buffer.readNode = node
-	atomic.AddInt32(&buffer.len, -int32(size))
+	atomic.AddInt32(&buffer.len, -int32(ack))
 	return nil
 }
 
@@ -132,6 +147,8 @@ func (buffer *LinkedBuffer) Next(size int) ([]byte, error) {
 	if size <= 0 {
 		return nil, ErrInvalidParam
 	}
+	buffer.readLock.Lock()
+	defer buffer.readLock.Unlock()
 	if buffer.Len() < size {
 		return nil, ErrNotEnoughData
 	}
@@ -143,13 +160,14 @@ func (buffer *LinkedBuffer) Next(size int) ([]byte, error) {
 	node := buffer.readNode
 	if node.Len() >= size {
 		atomic.AddInt32(&buffer.len, -int32(size))
-		return node.Peek(size), nil
+		return node.Next(size), nil
 	}
 	// size需要读取多个节点的buf
 	buf := cache.New(size)
 	// ack记录遍历一个节点后的累积值，最终得到ack==size
-	for ack := 0; ack < size; {
-		// 遇到空节点直接跳过
+	ack := 0
+	for ack < size && node != nil {
+		// 节点内容被读完了跳下一个节点
 		if node.Len() == 0 {
 			node = node.next
 			continue
@@ -161,14 +179,17 @@ func (buffer *LinkedBuffer) Next(size int) ([]byte, error) {
 		tempBuf := node.Next(offset)
 		copy(buf[ack:ack+offset], tempBuf)
 		ack += offset
-		node = node.next
 	}
 	buffer.readNode = node
-	atomic.AddInt32(&buffer.len, -int32(size))
-	return buf[:size], nil
+	atomic.AddInt32(&buffer.len, -int32(ack))
+	return buf[:ack], nil
 }
 
 func (buffer *LinkedBuffer) OptimizeMemory() {
+	buffer.readLock.Lock()
+	defer buffer.readLock.Unlock()
+	buffer.writeLock.Lock()
+	defer buffer.writeLock.Unlock()
 	node := buffer.head
 	for node != nil {
 		if node.Len() > 0 {
@@ -186,13 +207,17 @@ func (buffer *LinkedBuffer) Append(buf []byte) {
 	if size == 0 {
 		return
 	}
+	buffer.readLock.Lock()
+	defer buffer.readLock.Unlock()
+	buffer.writeLock.Lock()
+	defer buffer.writeLock.Unlock()
 	node := NewNode(size)
+	node.block, node.writeOffset = buf[:size], size
 	if buffer.writeNode == nil {
 		buffer.head, buffer.readNode, buffer.writeNode = node, node, node
 	} else {
-		buffer.writeNode.next = NewNode(size)
-		buffer.writeNode = buffer.writeNode.next
+		buffer.writeNode.next = node
+		buffer.writeNode = node
 	}
-	buffer.writeNode.block, buffer.writeNode.writeOffset = buf[:size], size
 	atomic.AddInt32(&buffer.len, int32(size))
 }
