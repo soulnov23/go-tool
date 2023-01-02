@@ -143,7 +143,7 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 	return nil
 }
 
-func (buffer *LinkedBuffer) Next(size int) ([]byte, error) {
+func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
 	if size <= 0 {
 		return nil, ErrInvalidParam
 	}
@@ -185,24 +185,23 @@ func (buffer *LinkedBuffer) Next(size int) ([]byte, error) {
 	return buf[:ack], nil
 }
 
-func (buffer *LinkedBuffer) OptimizeMemory() {
+func (buffer *LinkedBuffer) GC() {
 	buffer.readLock.Lock()
 	defer buffer.readLock.Unlock()
 	buffer.writeLock.Lock()
 	defer buffer.writeLock.Unlock()
-	node := buffer.head
-	for node != nil {
-		if node.Len() > 0 {
-			break
-		}
+	if buffer.Len() > 0 {
+		return
+	}
+	for node := buffer.head; node != nil; {
 		next := node.next
 		DeleteNode(node)
 		node = next
 	}
-	buffer.head = node
+	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 }
 
-func (buffer *LinkedBuffer) Append(buf []byte) {
+func (buffer *LinkedBuffer) Write(buf []byte) {
 	size := cap(buf)
 	if size == 0 {
 		return
