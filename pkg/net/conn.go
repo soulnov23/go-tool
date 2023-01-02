@@ -27,11 +27,37 @@ func (conn *TcpConn) Skip(size int) error {
 	return conn.readBuffer.Skip(size)
 }
 
-func (conn *TcpConn) Next(size int) ([]byte, error) {
-	return conn.readBuffer.Next(size)
+func (conn *TcpConn) Read(size int) ([]byte, error) {
+	return conn.readBuffer.Read(size)
 }
 
-func (conn *TcpConn) Read() {
+func (conn *TcpConn) Write(buf []byte) {
+	offset := 0
+	for {
+		n, err := syscall.Write(conn.fd, buf[offset:])
+		if err != nil {
+			if err == syscall.EAGAIN {
+				if err := Control(conn.epollFD, conn.fd, ModReadWritable); err != nil {
+					conn.log.Errorf("net.Control: " + err.Error())
+				}
+				conn.writeBuffer.Write(buf)
+				break
+			} else if err == syscall.EINTR {
+				continue
+			} else {
+				conn.log.Errorf("syscall.Write: %v", err)
+				continue
+			}
+		}
+		offset += n
+		if n == 0 || offset == len(buf) {
+			break
+		}
+	}
+	conn.log.Debugf("write: %s", unsafe.Byte2String(buf)[:offset])
+}
+
+func (conn *TcpConn) handlerRead() {
 	buf := cache.New(buffer.Block8k)
 	offset := 0
 	for {
@@ -52,42 +78,24 @@ func (conn *TcpConn) Read() {
 		}
 	}
 	conn.log.Debugf("read: %s", unsafe.Byte2String(buf[:]))
-	conn.readBuffer.Append(buf)
+	conn.readBuffer.Write(buf)
+	cache.Delete(buf)
 }
 
-func (conn *TcpConn) Write(buf []byte) {
-	offset := 0
-	for {
-		n, err := syscall.Write(conn.fd, buf[offset:])
-		if err != nil {
-			if err == syscall.EAGAIN {
-				if err := Control(conn.epollFD, conn.fd, ModReadWritable); err != nil {
-					conn.log.Errorf("net.Control: " + err.Error())
-				}
-				conn.writeBuffer.Append(buf)
-				break
-			} else if err == syscall.EINTR {
-				continue
-			} else {
-				conn.log.Errorf("syscall.Write: %v", err)
-				continue
-			}
-		}
-		offset += n
-		if n == 0 || offset == len(buf) {
-			break
-		}
-	}
-	conn.log.Debugf("write: %s", unsafe.Byte2String(buf)[:offset])
-}
-
-func (conn *TcpConn) ReWrite() {
+func (conn *TcpConn) handlerWrite() {
 	if conn.writeBuffer.Len() == 0 {
 		return
 	}
-	buf, err := conn.Peek(conn.writeBuffer.Len())
+	buf, err := conn.writeBuffer.Peek(conn.writeBuffer.Len())
 	if err != nil {
-		conn.log.Errorf("TcpConn.Peek: " + err.Error())
+		conn.log.Errorf("TcpConn.writeBuffer.Peek: " + err.Error())
+		// 发送失败，再触发一次EPOLLOUT
+		if err := Control(conn.epollFD, conn.fd, ModReadWritable); err != nil {
+			conn.log.Errorf("net.Control: " + err.Error())
+		}
+		return
 	}
+	conn.writeBuffer.Skip(cap(buf))
+	conn.writeBuffer.GC()
 	conn.Write(buf)
 }

@@ -217,10 +217,10 @@ func (ep *Epoll) handler() bool {
 			if _, ok := ep.listens[fd]; ok {
 				ep.handlerAccept(fd)
 			} else {
-				ep.tcpConns[fd].Read()
+				ep.tcpConns[fd].handlerRead()
 			}
 		case evt&syscall.EPOLLOUT != 0:
-			ep.tcpConns[fd].ReWrite()
+			ep.tcpConns[fd].handlerWrite()
 		default:
 		}
 	}
