@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 
 	"github.com/SoulNov23/go-tool/internal"
 	"github.com/SoulNov23/go-tool/pkg/log"
@@ -62,5 +61,4 @@ func main() {
 		zapLog.Debugf("signal: %s", sig.String())
 		eventLoop.Trigger()
 	}
-	time.Sleep(10 * time.Second)
 }
