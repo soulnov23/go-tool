@@ -208,9 +208,13 @@ func (ep *Epoll) handler() bool {
 		evt := ep.events[i].Events
 		switch {
 		case evt&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0:
+			ep.connLock.Lock()
+			if _, ok := ep.tcpConns[fd]; !ok {
+				ep.connLock.Unlock()
+				continue
+			}
 			ep.log.Debugf("close ip: %s, fd: %d", ep.tcpConns[fd].remoteAddr, fd)
 			Control(ep.epollFD, fd, Detach)
-			ep.connLock.Lock()
 			delete(ep.tcpConns, fd)
 			ep.connLock.Unlock()
 		case evt&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0:
