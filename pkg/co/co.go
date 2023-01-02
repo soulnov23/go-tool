@@ -1,4 +1,4 @@
-package coroutine
+package co
 
 import (
 	"errors"
