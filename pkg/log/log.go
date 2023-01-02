@@ -92,8 +92,9 @@ func newEncoder(c *LogConfig) zapcore.Encoder {
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendByteString(defaultTimeFormat(t))
 		},
-		EncodeDuration: zapcore.StringDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
+		EncodeDuration:   zapcore.StringDurationEncoder,
+		EncodeCaller:     zapcore.ShortCallerEncoder,
+		ConsoleSeparator: " ",
 	}
 	switch c.Formatter {
 	case "console":
