@@ -193,6 +193,7 @@ func (ep *Epoll) Wait() error {
 }
 
 func (ep *Epoll) handler() bool {
+	ep.log.Debugf("wake epoll fd: %d", ep.epollFD)
 	for i := range ep.events {
 		fd := int(ep.events[i].Fd)
 		// 通过write evfd触发
@@ -213,9 +214,10 @@ func (ep *Epoll) handler() bool {
 				ep.connLock.Unlock()
 				continue
 			}
-			ep.log.Debugf("close ip: %s, fd: %d", ep.tcpConns[fd].remoteAddr, fd)
+			ep.log.Debugf("close %s->%s, fd: %d", ep.tcpConns[fd].remoteAddr, ep.tcpConns[fd].localAddr, fd)
 			Control(ep.epollFD, fd, Detach)
 			delete(ep.tcpConns, fd)
+			syscall.Close(fd)
 			ep.connLock.Unlock()
 		case evt&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0:
 			if _, ok := ep.listens[fd]; ok {
@@ -251,7 +253,7 @@ func (ep *Epoll) handlerAccept(fd int) {
 			continue
 		}
 		ip := netip.AddrFrom4(sa.Addr).String() + ":" + strconv.Itoa(sa.Port)
-		ep.log.Debugf("accept ip: %v, fd: %d", ip, connFD)
+		ep.log.Debugf("accept %s->%s fd: %d", ip, ep.listens[fd], connFD)
 		SetSocketCloseExec(connFD)
 		if err := SetSocketNonBlock(connFD); err != nil {
 			syscall.Close(connFD)
