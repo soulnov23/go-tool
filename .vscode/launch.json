@@ -2,9 +2,10 @@
     // https://github.com/golang/vscode-go/blob/master/docs/debugging.md
     "version": "0.2.0",
     "configurations": [
+        // dlv exec exec_file -- -conf output.yaml
         {
             // mandatory attributes
-            "name": "dlv",
+            "name": "dlv exec",
             "type": "go",
             "request": "launch",
             // specific attributes
@@ -15,12 +16,30 @@
             // working directory of the program being debugged
             "cwd": "./build/bin",
             "env": {
+                "GOTRACEBACK": "crash",
                 "SERVER_VERSION": "v0.0.1",
             },
             "mode": "exec",
             // path to the program folder 
             "program": "./build/bin/go-tool"
+        },
+        // dlv core exec_file core_file
+        {
+            // mandatory attributes
+            "name": "dlv core",
+            "type": "go",
+            "request": "launch",
+            // path to the core dump file to open
+            "coreFilePath": "./build/bin/core.3274",
+            // working directory of the program being debugged
+            "cwd": "./build/bin",
+            "env": {
+                "GOTRACEBACK": "crash",
+                "SERVER_VERSION": "v0.0.1",
+            },
+            "mode": "core",
+            // path to the program folder 
+            "program": "./build/bin/go-tool"
         }
     ]
 }
-// dlv exec output -- -conf output.yaml
