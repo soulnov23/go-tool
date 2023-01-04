@@ -29,7 +29,7 @@ log: #日志配置
     level_key: Level
     name_key: Name
     caller_key: Caller
-    #function_key: Function
+    function_key: #Function
     message_key: Message
     stacktrace_key: Stacktrace
   writer_config:
