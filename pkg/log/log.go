@@ -80,13 +80,13 @@ func newFileCore(c *LogConfig) (zapcore.Core, error) {
 
 func newEncoder(c *LogConfig) zapcore.Encoder {
 	cfg := zapcore.EncoderConfig{
-		TimeKey:       getLogEncoderKey("T", c.FormatConfig.TimeKey),
-		LevelKey:      getLogEncoderKey("L", c.FormatConfig.LevelKey),
-		NameKey:       getLogEncoderKey("N", c.FormatConfig.NameKey),
-		CallerKey:     getLogEncoderKey("C", c.FormatConfig.CallerKey),
-		FunctionKey:   getLogEncoderKey(zapcore.OmitKey, c.FormatConfig.FunctionKey),
-		MessageKey:    getLogEncoderKey("M", c.FormatConfig.MessageKey),
-		StacktraceKey: getLogEncoderKey("S", c.FormatConfig.StacktraceKey),
+		TimeKey:       c.FormatConfig.TimeKey,
+		LevelKey:      c.FormatConfig.LevelKey,
+		NameKey:       c.FormatConfig.NameKey,
+		CallerKey:     c.FormatConfig.CallerKey,
+		FunctionKey:   c.FormatConfig.FunctionKey,
+		MessageKey:    c.FormatConfig.MessageKey,
+		StacktraceKey: c.FormatConfig.StacktraceKey,
 		LineEnding:    zapcore.DefaultLineEnding,
 		EncodeLevel:   zapcore.CapitalLevelEncoder,
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
@@ -104,13 +104,6 @@ func newEncoder(c *LogConfig) zapcore.Encoder {
 	default:
 		return zapcore.NewConsoleEncoder(cfg)
 	}
-}
-
-func getLogEncoderKey(defKey, key string) string {
-	if key == "" {
-		return defKey
-	}
-	return key
 }
 
 // defaultTimeFormat returns the default time format.
