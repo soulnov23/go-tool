@@ -37,7 +37,7 @@ func main() {
 	defer zapLog.Sync()
 	zapLog.Debugf("go-tool version: %s", os.Getenv("SERVER_VERSION"))
 
-	eventLoop, err := net.NewEventLoop(zapLog, net.WithLoopSize(1))
+	eventLoop, err := net.NewEventLoop(zapLog, net.WithLoopSize(runtime.NumCPU()))
 	if err != nil {
 		panic(rt.GetCaller() + "\t" + err.Error())
 	}
