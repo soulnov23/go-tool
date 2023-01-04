@@ -19,6 +19,27 @@ type TcpConn struct {
 	writeBuffer *buffer.LinkedBuffer
 }
 
+func NewTcpConn(log log.Logger, epollFD int, fd int, localAddr string, remoteAddr string) *TcpConn {
+	return &TcpConn{
+		log:         log,
+		epollFD:     epollFD,
+		fd:          fd,
+		localAddr:   localAddr,
+		remoteAddr:  remoteAddr,
+		readBuffer:  buffer.NewBuffer(),
+		writeBuffer: buffer.NewBuffer(),
+	}
+}
+
+func DeleteTcpConn(conn *TcpConn) {
+	conn.log, conn.epollFD, conn.localAddr, conn.remoteAddr = nil, -1, "", ""
+	Control(conn.epollFD, conn.fd, Detach)
+	syscall.Close(conn.fd)
+	conn.fd = -1
+	buffer.DeleteBuffer(conn.readBuffer)
+	buffer.DeleteBuffer(conn.writeBuffer)
+}
+
 func (conn *TcpConn) Peek(size int) ([]byte, error) {
 	return conn.readBuffer.Peek(size)
 }
@@ -46,7 +67,7 @@ func (conn *TcpConn) Write(buf []byte) {
 				continue
 			} else {
 				conn.log.Errorf("syscall.Write: %v", err)
-				continue
+				break
 			}
 		}
 		offset += n
@@ -69,7 +90,7 @@ func (conn *TcpConn) handlerRead() {
 				continue
 			} else {
 				conn.log.Errorf("syscall.Read: %v", err)
-				continue
+				break
 			}
 		}
 		offset += n

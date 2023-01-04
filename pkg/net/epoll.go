@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	"github.com/SoulNov23/go-tool/pkg/buffer"
 	"github.com/SoulNov23/go-tool/pkg/log"
 	"golang.org/x/sys/unix"
 )
@@ -94,7 +93,7 @@ func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
 		log.Error(wrapErr)
 		return nil, wrapErr
 	}
-	log.Debugf("Epoll create success, Epoll fd: %d, event fd: %d", epollFD, eventFD)
+	log.Debugf("create epoll fd: %d, event fd: %d", epollFD, eventFD)
 	return &Epoll{
 		log:        log,
 		epollFD:    epollFD,
@@ -210,24 +209,23 @@ func (ep *Epoll) handler() bool {
 		switch {
 		case evt&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0:
 			ep.connLock.Lock()
-			if _, ok := ep.tcpConns[fd]; !ok {
+			conn, ok := ep.tcpConns[fd]
+			if !ok {
 				ep.connLock.Unlock()
 				continue
 			}
-			ep.log.Debugf("close %s->%s, fd: %d", ep.tcpConns[fd].remoteAddr, ep.tcpConns[fd].localAddr, fd)
-			Control(ep.epollFD, fd, Detach)
+			ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
+			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
-			syscall.Close(fd)
 			ep.connLock.Unlock()
 		case evt&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0:
 			if _, ok := ep.listens[fd]; ok {
 				ep.handlerAccept(fd)
-			} else {
-				ep.tcpConns[fd].handlerRead()
+				continue
 			}
+			ep.tcpConns[fd].handlerRead()
 		case evt&syscall.EPOLLOUT != 0:
 			ep.tcpConns[fd].handlerWrite()
-		default:
 		}
 	}
 	// 是否退出循环：否
@@ -270,17 +268,8 @@ func (ep *Epoll) handlerAccept(fd int) {
 			ep.log.Errorf("net.Control: %v", err)
 			continue
 		}
-		tcpConn := &TcpConn{
-			log:         ep.log,
-			epollFD:     ep.epollFD,
-			fd:          connFD,
-			localAddr:   ep.listens[fd],
-			remoteAddr:  ip,
-			readBuffer:  buffer.NewBuffer(),
-			writeBuffer: buffer.NewBuffer(),
-		}
 		ep.connLock.Lock()
-		ep.tcpConns[connFD] = tcpConn
+		ep.tcpConns[connFD] = NewTcpConn(ep.log, ep.epollFD, connFD, ep.listens[fd], ip)
 		ep.connLock.Unlock()
 	}
 }
