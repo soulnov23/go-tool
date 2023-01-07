@@ -49,3 +49,11 @@ type FormatConfig struct {
 	// StackTraceKey is the stack trace key of log output, default as "S".
 	StacktraceKey string `yaml:"stacktrace_key"`
 }
+
+// 标准输出打印
+var DefaultLogConfig = &LogConfig{
+	Writer:     logTypeConsole,
+	Formatter:  "console",
+	Level:      "debug",
+	CallerSkip: 0,
+}
