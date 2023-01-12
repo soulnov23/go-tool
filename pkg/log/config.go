@@ -2,33 +2,33 @@ package log
 
 // LogConfig is the output config, includes console, file and remote.
 type LogConfig struct {
-	// Writer is the output of log, such as console or file.
-	Writer      string
-	WriteConfig WriteConfig `yaml:"writer_config"`
-
-	// Formatter is the format of log, such as console or json.
-	Formatter    string
-	FormatConfig FormatConfig `yaml:"formatter_config"`
-
 	// Level controls the log level, like debug, info or error.
 	Level string
 
 	// CallerSkip controls the nesting depth of log function.
 	CallerSkip int `yaml:"caller_skip"`
+
+	// Formatter is the format of log, such as console or json.
+	Formatter    string
+	FormatConfig FormatConfig `yaml:"formatter_config"`
+
+	// Writer is the output of log, such as console or file.
+	Writer      string
+	WriteConfig WriteConfig `yaml:"writer_config"`
 }
 
 // WriteConfig is the local file config.
 type WriteConfig struct {
 	// FileName is the file name like /var/run/log/server.log.
 	FileName string `yaml:"file_name"`
-	// MaxAge is the max expire times(day).
-	MaxAge int `yaml:"max_age"`
-	// MaxBackups is the max backup files.
-	MaxBackups int `yaml:"max_backups"`
-	// Compress defines whether log should be compressed.
-	Compress bool `yaml:"compress"`
 	// MaxSize is the max size of log file(MB).
 	MaxSize int `yaml:"max_size"`
+	// MaxBackups is the max backup files.
+	MaxBackups int `yaml:"max_backups"`
+	// MaxAge is the max expire times(day).
+	MaxAge int `yaml:"max_age"`
+	// Compress defines whether log should be compressed.
+	Compress bool `yaml:"compress"`
 }
 
 // FormatConfig is the log format config.
@@ -51,9 +51,24 @@ type FormatConfig struct {
 }
 
 // 标准输出打印
-var DefaultLogConfig = &LogConfig{
-	Writer:     logTypeConsole,
-	Formatter:  "console",
+var DefaultConsoleLogConfig = &LogConfig{
 	Level:      "debug",
 	CallerSkip: 0,
+	Formatter:  "console",
+	Writer:     logTypeConsole,
+}
+
+// 日志文件打印
+var DefaultFileLogConfig = &LogConfig{
+	Level:      "debug",
+	CallerSkip: 0,
+	Formatter:  "console",
+	Writer:     logTypeFile,
+	WriteConfig: WriteConfig{
+		FileName:   "app.log",
+		MaxSize:    128,
+		MaxBackups: 10,
+		MaxAge:     7,
+		Compress:   false,
+	},
 }
