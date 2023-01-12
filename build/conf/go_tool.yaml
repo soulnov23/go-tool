@@ -20,7 +20,6 @@ client: #客户端调用的后端配置
     timeout:
 
 log: #日志配置
-  writer: file #本地文件日志
   level: debug #本地文件滚动日志的级别
   caller_skip: 0 #控制log函数嵌套深度
   formatter: console #日志打印格式
@@ -32,6 +31,7 @@ log: #日志配置
     function_key: #Function
     message_key: Message
     stacktrace_key: Stacktrace
+  writer: file #本地文件日志
   writer_config:
     file_name: ../log/app.log #本地文件滚动日志文件名
     max_size: 128 #本地文件滚动日志的大小 单位 MB
