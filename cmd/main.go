@@ -30,7 +30,7 @@ func main() {
 	if err != nil {
 		panic(rt.GetCaller() + "\t" + err.Error())
 	}
-	zapLog, err := log.NewZapLog(&appConfig.Log)
+	zapLog, err := log.NewZapLog(appConfig.Log)
 	if err != nil {
 		panic(rt.GetCaller() + "\t" + err.Error())
 	}

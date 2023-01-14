@@ -8,11 +8,7 @@ import (
 )
 
 func TestCoPool(t *testing.T) {
-	config := &log.LogConfig{
-		Writer: "console",
-		Level:  "debug",
-	}
-	zapLog, err := log.NewZapLog(config)
+	zapLog, err := log.NewZapLog(log.DefaultConsoleLogConfig)
 	if err != nil {
 		t.Logf("log.NewZapLog: %s", err.Error())
 	}
