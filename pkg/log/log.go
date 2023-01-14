@@ -36,30 +36,32 @@ var zapCoreLevelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
-func NewZapLog(c *LogConfig) (*zap.SugaredLogger, error) {
+func NewZapLog(c LogConfig) (*zap.SugaredLogger, error) {
 	var cores []zapcore.Core
-	if c.Writer == logTypeConsole {
-		core := newConsoleCore(c)
-		cores = append(cores, core)
-	} else if c.Writer == logTypeFile {
-		core, err := newFileCore(c)
-		if err != nil {
-			return nil, errors.New("log.newFileCore: " + err.Error())
+	for _, cfg := range c.CoreConfig {
+		if cfg.Writer == logTypeConsole {
+			core := newConsoleCore(cfg)
+			cores = append(cores, core)
+		} else if cfg.Writer == logTypeFile {
+			core, err := newFileCore(cfg)
+			if err != nil {
+				return nil, errors.New("log.newFileCore: " + err.Error())
+			}
+			cores = append(cores, core)
+		} else {
+			return nil, errors.New("writer type " + cfg.Writer + " not support")
 		}
-		cores = append(cores, core)
-	} else {
-		return nil, errors.New("writer type " + c.Writer + " not support")
 	}
 	return zap.New(zapcore.NewTee(cores...), zap.AddCallerSkip(c.CallerSkip), zap.AddCaller()).Sugar(), nil
 }
 
-func newConsoleCore(c *LogConfig) zapcore.Core {
+func newConsoleCore(c CoreConfig) zapcore.Core {
 	level := zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level])
 	core := zapcore.NewCore(newEncoder(c), zapcore.Lock(os.Stdout), level)
 	return core
 }
 
-func newFileCore(c *LogConfig) (zapcore.Core, error) {
+func newFileCore(c CoreConfig) (zapcore.Core, error) {
 	opts := []Option{
 		WithMaxAge(c.WriteConfig.MaxAge),
 		WithMaxBackups(c.WriteConfig.MaxBackups),
@@ -78,7 +80,7 @@ func newFileCore(c *LogConfig) (zapcore.Core, error) {
 	return core, nil
 }
 
-func newEncoder(c *LogConfig) zapcore.Encoder {
+func newEncoder(c CoreConfig) zapcore.Encoder {
 	cfg := zapcore.EncoderConfig{
 		TimeKey:       getLogEncoderKey("Time", c.FormatConfig.TimeKey),
 		LevelKey:      getLogEncoderKey("Level", c.FormatConfig.LevelKey),
