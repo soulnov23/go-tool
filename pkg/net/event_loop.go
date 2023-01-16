@@ -13,7 +13,7 @@ type EventLoop struct {
 	epolls []*Epoll
 }
 
-func NewEventLoop(log log.Logger, opts ...Option) (*EventLoop, error) {
+func NewEventLoop(log log.Logger, server Server, opts ...Option) (*EventLoop, error) {
 	eventLoop := &EventLoop{
 		log: log,
 		opts: &Options{
@@ -28,7 +28,7 @@ func NewEventLoop(log log.Logger, opts ...Option) (*EventLoop, error) {
 	log.Debugf("EventLoop loopSize: %d, eventSize: %d, backlog: %d", eventLoop.opts.loopSize, eventLoop.opts.eventSize, eventLoop.opts.backlog)
 
 	for i := 0; i < eventLoop.opts.loopSize; i++ {
-		epoll, err := NewEpoll(log, eventLoop.opts.eventSize)
+		epoll, err := NewEpoll(log, eventLoop.opts.eventSize, server)
 		if err != nil {
 			wrapErr := errors.New("net.NewEpoll: " + err.Error())
 			log.Error(wrapErr)

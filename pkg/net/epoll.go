@@ -59,6 +59,12 @@ func Control(epollFD int, fd int, event int) error {
 	}
 }
 
+type Server interface {
+	OnAccept(conn *TcpConn)
+	OnClose(conn *TcpConn)
+	OnRead(conn *TcpConn)
+}
+
 type Epoll struct {
 	log        log.Logger
 	epollFD    int
@@ -70,9 +76,11 @@ type Epoll struct {
 	triggerBuf []byte
 	trigger    uint32
 	close      chan struct{}
+
+	server Server
 }
 
-func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
+func NewEpoll(log log.Logger, eventSize int, server Server) (*Epoll, error) {
 	epollFD, err := syscall.EpollCreate1(syscall.EPOLL_CLOEXEC)
 	if err != nil {
 		wrapErr := errors.New("syscall.EpollCreate1: " + err.Error())
@@ -103,6 +111,7 @@ func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
 		tcpConns:   make(map[int]*TcpConn),
 		triggerBuf: make([]byte, 8),
 		close:      make(chan struct{}, 1),
+		server:     server,
 	}, nil
 }
 
@@ -215,6 +224,7 @@ func (ep *Epoll) handler() bool {
 				continue
 			}
 			ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
+			ep.server.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
 			ep.connLock.Unlock()
@@ -224,6 +234,7 @@ func (ep *Epoll) handler() bool {
 				continue
 			}
 			ep.tcpConns[fd].handlerRead()
+			ep.server.OnRead(ep.tcpConns[fd])
 		case evt&syscall.EPOLLOUT != 0:
 			ep.tcpConns[fd].handlerWrite()
 		}
@@ -268,8 +279,10 @@ func (ep *Epoll) handlerAccept(fd int) {
 			ep.log.Errorf("net.Control: %v", err)
 			continue
 		}
+		tcpConn := NewTcpConn(ep.log, ep.epollFD, connFD, ep.listens[fd], ip)
 		ep.connLock.Lock()
-		ep.tcpConns[connFD] = NewTcpConn(ep.log, ep.epollFD, connFD, ep.listens[fd], ip)
+		ep.tcpConns[connFD] = tcpConn
+		ep.server.OnAccept(tcpConn)
 		ep.connLock.Unlock()
 	}
 }
