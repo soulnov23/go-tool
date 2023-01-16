@@ -15,9 +15,10 @@ import (
 var DefaultConfPath = "./go_tool.yaml"
 
 type AppConfig struct {
-	Server []*ServerConfig `yaml:"server"`
-	Client interface{}     `yaml:"client"`
-	Log    log.LogConfig   `yaml:"log"`
+	Server   []*ServerConfig `yaml:"server"`
+	Client   interface{}     `yaml:"client"`
+	FrameLog log.LogConfig   `yaml:"frame_log"`
+	AppLog   log.LogConfig   `yaml:"app_log"`
 }
 
 type ServerConfig struct {
