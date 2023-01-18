@@ -18,7 +18,8 @@ type AppConfig struct {
 	Server   []*ServerConfig `yaml:"server"`
 	Client   interface{}     `yaml:"client"`
 	FrameLog log.LogConfig   `yaml:"frame_log"`
-	AppLog   log.LogConfig   `yaml:"app_log"`
+	CallLog  log.LogConfig   `yaml:"call_log"`
+	RunLog   log.LogConfig   `yaml:"run_log"`
 }
 
 type ServerConfig struct {

@@ -24,26 +24,9 @@ frame_log: #框架日志配置
   core_config:
     - level: debug #标准输出滚动日志的级别
       formatter: console #日志打印格式
-      formatter_config:
-        time_key: Time
-        level_key: Level
-        name_key: Name
-        caller_key: Caller
-        function_key: #Function
-        message_key: Message
-        stacktrace_key: Stacktrace
       writer: console #标准输出日志
-      writer_config:
     - level: debug #本地文件滚动日志的级别
       formatter: console #日志打印格式
-      formatter_config:
-        time_key: Time
-        level_key: Level
-        name_key: Name
-        caller_key: Caller
-        function_key: #Function
-        message_key: Message
-        stacktrace_key: Stacktrace
       writer: file #本地文件日志
       writer_config:
         file_name: ../log/frame.log #本地文件滚动日志文件名
@@ -51,11 +34,11 @@ frame_log: #框架日志配置
         max_backups: 10 #最大日志文件数
         max_age: 7 #最大日志保留天数
         compress: false #日志文件是否压缩
-app_log: #应用日志配置
+call_log: #调用日志配置
   caller_skip: 0 #控制log函数嵌套深度
   core_config:
     - level: debug #标准输出滚动日志的级别
-      formatter: console #日志打印格式
+      formatter: json #日志打印格式
       formatter_config:
         time_key: Time
         level_key: Level
@@ -67,7 +50,7 @@ app_log: #应用日志配置
       writer: console #标准输出日志
       writer_config:
     - level: debug #本地文件滚动日志的级别
-      formatter: console #日志打印格式
+      formatter: json #日志打印格式
       formatter_config:
         time_key: Time
         level_key: Level
@@ -78,7 +61,22 @@ app_log: #应用日志配置
         stacktrace_key: Stacktrace
       writer: file #本地文件日志
       writer_config:
-        file_name: ../log/app.log #本地文件滚动日志文件名
+        file_name: ../log/call.log #本地文件滚动日志文件名
+        max_size: 128 #本地文件滚动日志的大小 单位 MB
+        max_backups: 10 #最大日志文件数
+        max_age: 7 #最大日志保留天数
+        compress: false #日志文件是否压缩
+run_log: #运行日志配置
+  caller_skip: 0 #控制log函数嵌套深度
+  core_config:
+    - level: debug #标准输出滚动日志的级别
+      formatter: console #日志打印格式
+      writer: console #标准输出日志
+    - level: debug #本地文件滚动日志的级别
+      formatter: console #日志打印格式
+      writer: file #本地文件日志
+      writer_config:
+        file_name: ../log/run.log #本地文件滚动日志文件名
         max_size: 128 #本地文件滚动日志的大小 单位 MB
         max_backups: 10 #最大日志文件数
         max_age: 7 #最大日志保留天数

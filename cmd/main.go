@@ -35,13 +35,19 @@ func main() {
 		panic(rt.GetCaller() + " " + err.Error())
 	}
 	defer frameLog.Sync()
-	appLog, err := log.NewZapLog(appConfig.AppLog)
+	callLog, err := log.NewZapLog(appConfig.CallLog)
 	if err != nil {
 		panic(rt.GetCaller() + " " + err.Error())
 	}
-	defer appLog.Sync()
+	defer callLog.Sync()
+	runLog, err := log.NewZapLog(appConfig.RunLog)
+	if err != nil {
+		panic(rt.GetCaller() + " " + err.Error())
+	}
+	defer runLog.Sync()
 
-	eventLoop, err := net.NewEventLoop(frameLog, &App{appLog: appLog}, net.WithLoopSize(runtime.NumCPU()))
+	runLog.Debugf("go-tool start")
+	eventLoop, err := net.NewEventLoop(frameLog, &internal.Server{CallLog: callLog, RunLog: runLog}, net.WithLoopSize(runtime.NumCPU()))
 	if err != nil {
 		panic(rt.GetCaller() + "\t" + err.Error())
 	}
@@ -53,7 +59,7 @@ func main() {
 	}
 	eventLoop.Wait()
 
-	appLog.Debugf("go-tool version: %s", os.Getenv("SERVER_VERSION"))
+	runLog.Debugf("go-tool version: %s", os.Getenv("SERVER_VERSION"))
 
 	signalClose := make(chan os.Signal, 1)
 	signal.Notify(signalClose, DefaultServerCloseSIG...)
@@ -61,10 +67,11 @@ func main() {
 	signal.Notify(signalUser, DefaultUserCustomSIG...)
 	select {
 	case sig := <-signalClose:
-		appLog.Debugf("signal: %s", sig.String())
+		runLog.Debugf("signal: %s", sig.String())
 		eventLoop.Close()
 	case sig := <-signalUser:
-		appLog.Debugf("signal: %s", sig.String())
+		runLog.Debugf("signal: %s", sig.String())
 		eventLoop.Trigger()
 	}
+	runLog.Debugf("go-tool stop")
 }
