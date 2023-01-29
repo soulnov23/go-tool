@@ -42,18 +42,13 @@ func DeleteWork(work *Work) {
 func (work *Work) Run() {
 	go func() {
 		for {
-			var task *Task
-			work.pool.lock.Lock()
-			if work.pool.head != nil {
-				task = work.pool.head
-				work.pool.head = task.next
-			}
-			work.pool.lock.Unlock()
-			if task == nil {
+			value := work.pool.taskQueue.DeQueue()
+			if value == nil {
 				work.pool.decWorker()
 				DeleteWork(work)
 				return
 			}
+			task := value.(*Task)
 			func() {
 				defer func() {
 					if e := recover(); e != nil {

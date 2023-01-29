@@ -1,29 +1,25 @@
 package copool
 
 import (
-	"sync"
 	"sync/atomic"
 
+	"github.com/SoulNov23/go-tool/pkg/lockfree"
 	"github.com/SoulNov23/go-tool/pkg/log"
 )
 
 type Pool struct {
-	log  log.Logger
-	head *Task
-	tail *Task
-	lock sync.Mutex
+	log       log.Logger
+	taskQueue *lockfree.Queue
 
-	poolSize int32
-
-	workerCount int32
+	poolSize    uint32 // 协程池额定大小
+	workerCount uint32 // 协程池实际大小
 }
 
 func NewPool(log log.Logger, poolSize int) *Pool {
 	return &Pool{
 		log:         log,
-		head:        nil,
-		tail:        nil,
-		poolSize:    int32(poolSize),
+		taskQueue:   lockfree.NewQueue(),
+		poolSize:    uint32(poolSize),
 		workerCount: 0,
 	}
 }
@@ -32,41 +28,35 @@ func DeletePool(pool *Pool) {
 	if pool == nil {
 		return
 	}
-	atomic.StoreInt32(&pool.workerCount, 0)
-	for task := pool.head; task != nil; {
-		next := task.next
+	for {
+		value := pool.taskQueue.DeQueue()
+		if value == nil {
+			break
+		}
+		task := value.(*Task)
 		DeleteTask(task)
-		task = next
 	}
-	pool.head, pool.tail = nil, nil
+	atomic.StoreUint32(&pool.workerCount, 0)
 }
 
 func (pool *Pool) Run(handler func()) {
 	task := NewTask(handler)
-	pool.lock.Lock()
-	if pool.head == nil {
-		pool.head = task
-		pool.tail = task
-	} else {
-		pool.tail.next = task
-		pool.tail = task
-	}
-	pool.lock.Unlock()
-	if pool.worker() == 0 || pool.worker() < atomic.LoadInt32(&pool.poolSize) {
+	pool.taskQueue.EnQueue(task)
+	if pool.worker() == 0 || pool.worker() < atomic.LoadUint32(&pool.poolSize) {
 		pool.incWorker()
 		work := NewWork(pool)
 		work.Run()
 	}
 }
 
-func (pool *Pool) worker() int32 {
-	return atomic.LoadInt32(&pool.workerCount)
+func (pool *Pool) worker() uint32 {
+	return atomic.LoadUint32(&pool.workerCount)
 }
 
 func (pool *Pool) incWorker() {
-	atomic.AddInt32(&pool.workerCount, 1)
+	atomic.AddUint32(&pool.workerCount, 1)
 }
 
 func (pool *Pool) decWorker() {
-	atomic.AddInt32(&pool.workerCount, -1)
+	atomic.AddUint32(&pool.workerCount, ^uint32(0))
 }
