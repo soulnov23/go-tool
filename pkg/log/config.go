@@ -57,23 +57,8 @@ type FormatConfig struct {
 var DefaultLogConfig = LogConfig{
 	CallerSkip: 0,
 	CoreConfig: []CoreConfig{
-		{
-			Level:     "debug",
-			Formatter: "console",
-			Writer:    logTypeConsole,
-		},
-		{
-			Level:     "debug",
-			Formatter: "console",
-			Writer:    logTypeFile,
-			WriteConfig: WriteConfig{
-				FileName:   "app.log",
-				MaxSize:    128,
-				MaxBackups: 10,
-				MaxAge:     7,
-				Compress:   false,
-			},
-		},
+		consoleCore,
+		fileCore,
 	},
 }
 
@@ -81,11 +66,7 @@ var DefaultLogConfig = LogConfig{
 var DefaultConsoleLogConfig = LogConfig{
 	CallerSkip: 0,
 	CoreConfig: []CoreConfig{
-		{
-			Level:     "debug",
-			Formatter: "console",
-			Writer:    logTypeConsole,
-		},
+		consoleCore,
 	},
 }
 
@@ -93,17 +74,25 @@ var DefaultConsoleLogConfig = LogConfig{
 var DefaultFileLogConfig = LogConfig{
 	CallerSkip: 0,
 	CoreConfig: []CoreConfig{
-		{
-			Level:     "debug",
-			Formatter: "console",
-			Writer:    logTypeFile,
-			WriteConfig: WriteConfig{
-				FileName:   "app.log",
-				MaxSize:    128,
-				MaxBackups: 10,
-				MaxAge:     7,
-				Compress:   false,
-			},
-		},
+		fileCore,
+	},
+}
+
+var consoleCore = CoreConfig{
+	Level:     "debug",
+	Formatter: "console",
+	Writer:    logTypeConsole,
+}
+
+var fileCore = CoreConfig{
+	Level:     "debug",
+	Formatter: "console",
+	Writer:    logTypeFile,
+	WriteConfig: WriteConfig{
+		FileName:   "run.log",
+		MaxSize:    128,
+		MaxBackups: 10,
+		MaxAge:     7,
+		Compress:   false,
 	},
 }
