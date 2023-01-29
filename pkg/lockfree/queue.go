@@ -72,10 +72,10 @@ func (q *Queue) DeQueue() interface{} {
 		}
 		// 因为引入了dummy节点，当队列中只有一个元素时，head!=tail，所以当队列中没有元素时，head==tail，分两种情况
 		// 1. head==tail且head.next==nil，队列为空，返回nil
-		// 2. 如果其它线程EnQueue做了一半导致head.next!=nil，但是tail还没有移到新位置
 		if head == tail && headNext == nil {
 			return nil
 		}
+		// 2. 如果其它线程EnQueue做了一半导致head.next!=nil，但是tail还没有移到新位置
 		if head == tail && headNext != nil {
 			// 尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
 			cas(&q.tail, tail, headNext)
