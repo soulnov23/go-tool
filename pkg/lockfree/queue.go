@@ -13,7 +13,7 @@ import (
 type Queue struct {
 	head unsafe.Pointer
 	tail unsafe.Pointer
-	len  int32
+	len  uint64
 }
 
 func NewQueue() *Queue {
@@ -52,7 +52,7 @@ func (q *Queue) EnQueue(value interface{}) {
 		if cas(&tail.next, tailNext, p) {
 			// 入列成功，尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
 			cas(&q.tail, tail, p)
-			atomic.AddInt32(&q.len, 1)
+			atomic.AddUint64(&q.len, 1)
 			return
 		}
 		// 入列失败继续try
@@ -85,9 +85,13 @@ func (q *Queue) DeQueue() interface{} {
 		// 执行cas前先把head.next的值保存下来，避免cas刚执行完那一刻，其它线程也同时DeQueue把head移动了，那么cas后再取值可能就是head.next.next的值
 		value := headNext.value
 		if cas(&q.head, head, headNext) {
-			atomic.AddInt32(&q.len, -1)
+			atomic.AddUint64(&q.len, ^uint64(0))
 			return value
 		}
 		// 出列失败继续try
 	}
+}
+
+func (q *Queue) Len() uint64 {
+	return atomic.LoadUint64(&q.len)
 }
