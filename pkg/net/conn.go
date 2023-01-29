@@ -104,16 +104,10 @@ func (conn *TcpConn) handlerRead() {
 }
 
 func (conn *TcpConn) handlerWrite() {
-	if conn.writeBuffer.Len() == 0 {
-		return
-	}
-	buf, err := conn.writeBuffer.Peek(conn.writeBuffer.Len())
+	buf, err := conn.writeBuffer.Peek(int(conn.writeBuffer.Len()))
 	if err != nil {
+		// 数据发送完了返回err
 		conn.log.Errorf("TcpConn.writeBuffer.Peek: " + err.Error())
-		// 发送失败，再触发一次EPOLLOUT
-		if err := Control(conn.epollFD, conn.fd, ModReadWritable); err != nil {
-			conn.log.Errorf("net.Control: " + err.Error())
-		}
 		return
 	}
 	conn.writeBuffer.Skip(cap(buf))

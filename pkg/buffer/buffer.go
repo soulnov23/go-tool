@@ -28,7 +28,7 @@ type LinkedBuffer struct {
 	readLock  sync.Mutex
 	writeLock sync.Mutex
 
-	len int32
+	len uint64
 }
 
 func NewBuffer() *LinkedBuffer {
@@ -48,7 +48,7 @@ func DeleteBuffer(buffer *LinkedBuffer) {
 	defer buffer.readLock.Unlock()
 	buffer.writeLock.Lock()
 	defer buffer.writeLock.Unlock()
-	atomic.StoreInt32(&buffer.len, 0)
+	atomic.StoreUint64(&buffer.len, 0)
 	for node := buffer.head; node != nil; {
 		next := node.next
 		DeleteNode(node)
@@ -57,8 +57,8 @@ func DeleteBuffer(buffer *LinkedBuffer) {
 	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 }
 
-func (buffer *LinkedBuffer) Len() int {
-	return int(atomic.LoadInt32(&buffer.len))
+func (buffer *LinkedBuffer) Len() uint64 {
+	return atomic.LoadUint64(&buffer.len)
 }
 
 func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
@@ -67,7 +67,7 @@ func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 	}
 	buffer.readLock.Lock()
 	defer buffer.readLock.Unlock()
-	if buffer.Len() < size {
+	if buffer.Len() < uint64(size) {
 		return nil, ErrNotEnoughData
 	}
 	// 遍历前面已经读取过的节点
@@ -108,7 +108,7 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 	}
 	buffer.readLock.Lock()
 	defer buffer.readLock.Unlock()
-	if buffer.Len() < size {
+	if buffer.Len() < uint64(size) {
 		return ErrNotEnoughData
 	}
 	// 遍历前面已经读取过的节点
@@ -118,7 +118,7 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 	// size只需要读取一个节点的buf就足够了
 	node := buffer.readNode
 	if node.Len() >= size {
-		atomic.AddInt32(&buffer.len, -int32(size))
+		atomic.AddUint64(&buffer.len, ^uint64(size-1))
 		node.Skip(size)
 		return nil
 	}
@@ -139,7 +139,7 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 		ack += offset
 	}
 	buffer.readNode = node
-	atomic.AddInt32(&buffer.len, -int32(ack))
+	atomic.AddUint64(&buffer.len, ^uint64(ack-1))
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
 	}
 	buffer.readLock.Lock()
 	defer buffer.readLock.Unlock()
-	if buffer.Len() < size {
+	if buffer.Len() < uint64(size) {
 		return nil, ErrNotEnoughData
 	}
 	// 遍历前面已经读取过的节点
@@ -159,7 +159,7 @@ func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
 	// size只需要读取一个节点的buf就足够了
 	node := buffer.readNode
 	if node.Len() >= size {
-		atomic.AddInt32(&buffer.len, -int32(size))
+		atomic.AddUint64(&buffer.len, ^uint64(size-1))
 		return node.Next(size), nil
 	}
 	// size需要读取多个节点的buf
@@ -181,7 +181,7 @@ func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
 		ack += offset
 	}
 	buffer.readNode = node
-	atomic.AddInt32(&buffer.len, -int32(ack))
+	atomic.AddUint64(&buffer.len, ^uint64(ack-1))
 	return buf[:ack], nil
 }
 
@@ -218,5 +218,5 @@ func (buffer *LinkedBuffer) Write(buf []byte) {
 		buffer.writeNode.next = node
 		buffer.writeNode = node
 	}
-	atomic.AddInt32(&buffer.len, int32(size))
+	atomic.AddUint64(&buffer.len, uint64(size))
 }
