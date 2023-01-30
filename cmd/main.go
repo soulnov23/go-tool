@@ -47,14 +47,23 @@ func main() {
 	defer runLog.Sync()
 
 	runLog.Debugf("go-tool start")
-	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
+	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(1 /*runtime.NumCPU()*/))
 	if err != nil {
-		panic(rt.GetCaller() + "\t" + err.Error())
+		panic(rt.GetCaller() + " " + err.Error())
 	}
 	for _, serverConfig := range appConfig.Server {
-		err := eventLoop.Listen(serverConfig.Network, serverConfig.Ip+":"+serverConfig.Port, &internal.Server{CallLog: callLog, RunLog: runLog})
-		if err != nil {
-			panic(rt.GetCaller() + "\t" + err.Error())
+		if serverConfig.Protocol == "rpc" {
+			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.RPCServer{CallLog: callLog, RunLog: runLog})
+			if err != nil {
+				panic(rt.GetCaller() + " " + err.Error())
+			}
+		} else if serverConfig.Protocol == "http" {
+			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{CallLog: callLog, RunLog: runLog})
+			if err != nil {
+				panic(rt.GetCaller() + " " + err.Error())
+			}
+		} else {
+			panic(rt.GetCaller() + " protocol " + serverConfig.Protocol + " not support")
 		}
 	}
 	eventLoop.Wait()

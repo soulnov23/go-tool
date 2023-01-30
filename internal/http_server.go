@@ -5,19 +5,19 @@ import (
 	"github.com/SoulNov23/go-tool/pkg/net"
 )
 
-type Server struct {
+type HTTPServer struct {
 	CallLog log.Logger
 	RunLog  log.Logger
 }
 
-func (svr *Server) OnAccept(conn *net.TcpConn) {
+func (svr *HTTPServer) OnAccept(conn *net.TcpConn) {
 	// TODO
 }
 
-func (svr *Server) OnClose(conn *net.TcpConn) {
+func (svr *HTTPServer) OnClose(conn *net.TcpConn) {
 	// TODO
 }
 
-func (svr *Server) OnRead(conn *net.TcpConn) {
+func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	svr.RunLog.Debug("TODO")
 }

@@ -24,9 +24,8 @@ type AppConfig struct {
 
 type ServerConfig struct {
 	Name     string `yaml:"name"`
-	Ip       string `yaml:"ip"`
-	Port     string `yaml:"port"`
 	Network  string `yaml:"network"`
+	Address  string `yaml:"address"`
 	Protocol string `yaml:"protocol"`
 	Timeout  string `yaml:"timeout"`
 }
