@@ -102,7 +102,7 @@ func (conn *TcpConn) handlerRead() {
 			}
 		}
 		offset += n
-		if n == 0 || offset == 1024 {
+		if n == 0 || offset == buffer.Block8k {
 			break
 		}
 	}
