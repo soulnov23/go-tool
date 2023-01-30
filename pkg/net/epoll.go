@@ -2,10 +2,7 @@ package net
 
 import (
 	"errors"
-	"net"
-	"net/netip"
 	"runtime"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -141,18 +138,12 @@ func (ep *Epoll) Listen(network string, address string, backlog int) error {
 		ep.log.Error(wrapErr)
 		return wrapErr
 	}
-	addr, err := net.ResolveTCPAddr(network, address)
+	sa, err := GetSocketAddr(network, address)
 	if err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("net.ResolveTCPAddr: " + err.Error())
+		wrapErr := errors.New("net.GetSocketAddr: " + err.Error())
 		ep.log.Error(wrapErr)
 		return wrapErr
-	}
-	sa := &syscall.SockaddrInet4{
-		Port: addr.Port,
-	}
-	for i := 0; i < net.IPv4len; i++ {
-		sa.Addr[i] = addr.IP[i]
 	}
 	if err := syscall.Bind(listenFD, sa); err != nil {
 		syscall.Close(listenFD)
@@ -256,12 +247,11 @@ func (ep *Epoll) handlerAccept(fd int) {
 				continue
 			}
 		}
-		sa, ok := addr.(*syscall.SockaddrInet4)
-		if !ok {
-			ep.log.Errorf("convert addr to syscall.SockaddrInet4 failed")
+		ip, err := GetSocketIP(addr)
+		if err != nil {
+			ep.log.Errorf("GetSocketIP: %s", err.Error())
 			continue
 		}
-		ip := netip.AddrFrom4(sa.Addr).String() + ":" + strconv.Itoa(sa.Port)
 		ep.log.Debugf("accept %s->%s fd: %d", ip, ep.listens[fd], connFD)
 		SetSocketCloseExec(connFD)
 		if err := SetSocketNonBlock(connFD); err != nil {
