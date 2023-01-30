@@ -80,7 +80,7 @@ func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
 	eventFD, err := unix.Eventfd(0, unix.EFD_NONBLOCK|unix.EFD_CLOEXEC)
 	if err != nil {
 		syscall.Close(epollFD)
-		wrapErr := errors.New("net.Eventfd: " + err.Error())
+		wrapErr := errors.New("unix.Eventfd: " + err.Error())
 		log.Error(wrapErr)
 		return nil, wrapErr
 	}
@@ -180,6 +180,7 @@ func (ep *Epoll) Wait() error {
 		}
 		msec = 0
 		if ep.handler() {
+			ep.close <- struct{}{}
 			return nil
 		}
 	}
@@ -191,12 +192,42 @@ func (ep *Epoll) handler() bool {
 		fd := int(ep.events[i].Fd)
 		// 通过write evfd触发
 		if fd == ep.eventFD {
-			// 主动触发循环
-			ep.log.Debug("trigger")
-			// 将eventfd清零
-			syscall.Read(fd, ep.triggerBuf)
+			offset := 0
+			for {
+				n, err := syscall.Read(fd, ep.triggerBuf)
+				if err != nil {
+					if err == syscall.EAGAIN {
+						break
+					} else if err == syscall.EINTR {
+						continue
+					} else {
+						ep.log.Errorf("syscall.Read: %v", err)
+						break
+					}
+				}
+				offset += n
+				if n == 0 || offset == 8 {
+					break
+				}
+			}
 			atomic.StoreUint32(&ep.trigger, 0)
-			// TODO执行异步任务
+			// 主动触发循环优雅退出
+			if ep.triggerBuf[0] > 0 {
+				ep.log.Debug("exit gracefully")
+				ep.connLock.Lock()
+				for fd, conn := range ep.tcpConns {
+					ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
+					conn.operator.OnClose(conn)
+					DeleteTcpConn(conn)
+					delete(ep.tcpConns, fd)
+				}
+				ep.connLock.Unlock()
+				syscall.Close(ep.eventFD)
+				syscall.Close(ep.epollFD)
+				return true
+			}
+			// 主动触发循环执行异步任务
+			ep.log.Debug("trigger")
 			continue
 		}
 		evt := ep.events[i].Events
@@ -288,7 +319,12 @@ func (ep *Epoll) Trigger() error {
 	return nil
 }
 
-func (ep *Epoll) Close() {
-	syscall.Close(ep.eventFD)
-	syscall.Close(ep.epollFD)
+func (ep *Epoll) Close() error {
+	if _, err := syscall.Write(ep.eventFD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+		wrapErr := errors.New("notify eventFD close: " + err.Error())
+		ep.log.Error(wrapErr)
+		return wrapErr
+	}
+	<-ep.close
+	return nil
 }

@@ -75,8 +75,14 @@ func (loop *EventLoop) Trigger() error {
 	return nil
 }
 
-func (loop *EventLoop) Close() {
+func (loop *EventLoop) Close() error {
 	for _, epoll := range loop.epolls {
-		epoll.Close()
+		err := epoll.Close()
+		if err != nil {
+			wrapErr := errors.New("epoll.Close: " + err.Error())
+			loop.log.Error(wrapErr)
+			return wrapErr
+		}
 	}
+	return nil
 }
