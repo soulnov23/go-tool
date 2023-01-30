@@ -9,6 +9,12 @@ import (
 	"github.com/SoulNov23/go-tool/pkg/unsafe"
 )
 
+type Operator interface {
+	OnAccept(conn *TcpConn)
+	OnClose(conn *TcpConn)
+	OnRead(conn *TcpConn)
+}
+
 type TcpConn struct {
 	log         log.Logger
 	epollFD     int
@@ -17,9 +23,10 @@ type TcpConn struct {
 	remoteAddr  string
 	readBuffer  *buffer.LinkedBuffer
 	writeBuffer *buffer.LinkedBuffer
+	operator    Operator
 }
 
-func NewTcpConn(log log.Logger, epollFD int, fd int, localAddr string, remoteAddr string) *TcpConn {
+func NewTcpConn(log log.Logger, epollFD int, fd int, localAddr string, remoteAddr string, operator Operator) *TcpConn {
 	return &TcpConn{
 		log:         log,
 		epollFD:     epollFD,
@@ -28,6 +35,7 @@ func NewTcpConn(log log.Logger, epollFD int, fd int, localAddr string, remoteAdd
 		remoteAddr:  remoteAddr,
 		readBuffer:  buffer.NewBuffer(),
 		writeBuffer: buffer.NewBuffer(),
+		operator:    operator,
 	}
 }
 

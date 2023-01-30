@@ -13,7 +13,7 @@ type EventLoop struct {
 	epolls []*Epoll
 }
 
-func NewEventLoop(log log.Logger, server Server, opts ...Option) (*EventLoop, error) {
+func NewEventLoop(log log.Logger, opts ...Option) (*EventLoop, error) {
 	eventLoop := &EventLoop{
 		log: log,
 		opts: &Options{
@@ -28,7 +28,7 @@ func NewEventLoop(log log.Logger, server Server, opts ...Option) (*EventLoop, er
 	log.Debugf("EventLoop loopSize: %d, eventSize: %d, backlog: %d", eventLoop.opts.loopSize, eventLoop.opts.eventSize, eventLoop.opts.backlog)
 
 	for i := 0; i < eventLoop.opts.loopSize; i++ {
-		epoll, err := NewEpoll(log, eventLoop.opts.eventSize, server)
+		epoll, err := NewEpoll(log, eventLoop.opts.eventSize)
 		if err != nil {
 			wrapErr := errors.New("net.NewEpoll: " + err.Error())
 			log.Error(wrapErr)
@@ -39,9 +39,9 @@ func NewEventLoop(log log.Logger, server Server, opts ...Option) (*EventLoop, er
 	return eventLoop, nil
 }
 
-func (loop *EventLoop) Listen(network string, address string) error {
+func (loop *EventLoop) Listen(network string, address string, operator Operator) error {
 	for _, epoll := range loop.epolls {
-		err := epoll.Listen(network, address, loop.opts.backlog)
+		err := epoll.Listen(network, address, loop.opts.backlog, operator)
 		if err != nil {
 			wrapErr := errors.New("epoll.Listen: " + err.Error())
 			loop.log.Error(wrapErr)
