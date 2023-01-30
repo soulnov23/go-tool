@@ -47,12 +47,12 @@ func main() {
 	defer runLog.Sync()
 
 	runLog.Debugf("go-tool start")
-	eventLoop, err := net.NewEventLoop(frameLog, &internal.Server{CallLog: callLog, RunLog: runLog}, net.WithLoopSize(runtime.NumCPU()))
+	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
 	if err != nil {
 		panic(rt.GetCaller() + "\t" + err.Error())
 	}
 	for _, serverConfig := range appConfig.Server {
-		err := eventLoop.Listen(serverConfig.Network, serverConfig.Ip+":"+serverConfig.Port)
+		err := eventLoop.Listen(serverConfig.Network, serverConfig.Ip+":"+serverConfig.Port, &internal.Server{CallLog: callLog, RunLog: runLog})
 		if err != nil {
 			panic(rt.GetCaller() + "\t" + err.Error())
 		}
@@ -67,10 +67,10 @@ func main() {
 	signal.Notify(signalUser, DefaultUserCustomSIG...)
 	select {
 	case sig := <-signalClose:
-		runLog.Debugf("signal: %s", sig.String())
+		runLog.Debugf("signal close: %s", sig.String())
 		eventLoop.Close()
 	case sig := <-signalUser:
-		runLog.Debugf("signal: %s", sig.String())
+		runLog.Debugf("signal user: %s", sig.String())
 		eventLoop.Trigger()
 	}
 	runLog.Debugf("go-tool stop")
