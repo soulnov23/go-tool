@@ -5,10 +5,10 @@ DEBUG 	:= -gcflags='all=-N -l'
 RELEASE := -ldflags='-w -s'
 
 all:
-	go build $(DEBUG) -o $(BIN) $(SRC)
+	go build ${DEBUG} -o ${BIN} ${SRC}
 
 clean:
-	rm -rf $(BIN)
+	rm -rf ${BIN}
 
 .PHONY: all clean
 

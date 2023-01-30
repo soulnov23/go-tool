@@ -1,13 +1,13 @@
 server: #服务端配置
   - name: tcp
     ip: 0.0.0.0 #服务监听ip地址
-    port: 8000 #服务监听端口
+    port: 6666 #服务监听端口
     network: tcp #网络监听类型 tcp udp
     protocol: rpc #应用层协议 rpc http
     timeout: 3000 #请求最长处理时间 单位 毫秒
   - name: http
     ip: 0.0.0.0 #服务监听ip地址
-    port: 6000 #服务监听端口
+    port: 8888 #服务监听端口
     network: tcp #网络监听类型 tcp udp
     protocol: http #应用层协议 rpc http
     timeout: 3000 #请求最长处理时间 单位 毫秒
