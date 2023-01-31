@@ -3,7 +3,6 @@ package net
 import (
 	"errors"
 	"runtime"
-	"sync"
 	"sync/atomic"
 	"syscall"
 
@@ -64,7 +63,6 @@ type Epoll struct {
 	operators  map[int]Operator
 	events     []syscall.EpollEvent
 	tcpConns   map[int]*TcpConn
-	connLock   sync.Mutex
 	triggerBuf []byte
 	trigger    uint32
 	close      chan struct{}
@@ -192,72 +190,87 @@ func (ep *Epoll) handler() bool {
 		fd := int(ep.events[i].Fd)
 		// 通过write evfd触发
 		if fd == ep.eventFD {
-			offset := 0
-			for {
-				n, err := syscall.Read(fd, ep.triggerBuf)
-				if err != nil {
-					if err == syscall.EAGAIN {
-						break
-					} else if err == syscall.EINTR {
-						continue
-					} else {
-						ep.log.Errorf("syscall.Read: %v", err)
-						break
-					}
-				}
-				offset += n
-				if n == 0 || offset == 8 {
-					break
-				}
-			}
-			atomic.StoreUint32(&ep.trigger, 0)
-			// 主动触发循环优雅退出
-			if ep.triggerBuf[0] > 0 {
-				ep.log.Debug("exit gracefully")
-				ep.connLock.Lock()
-				for fd, conn := range ep.tcpConns {
-					ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
-					conn.operator.OnClose(conn)
-					DeleteTcpConn(conn)
-					delete(ep.tcpConns, fd)
-				}
-				ep.connLock.Unlock()
-				syscall.Close(ep.eventFD)
-				syscall.Close(ep.epollFD)
+			if ep.handlerEventFD() {
 				return true
 			}
-			// 主动触发循环执行异步任务
-			ep.log.Debug("trigger")
 			continue
 		}
 		evt := ep.events[i].Events
-		switch {
-		case evt&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0:
-			ep.connLock.Lock()
-			conn, ok := ep.tcpConns[fd]
+		conn, ok := ep.tcpConns[fd]
+		if evt&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0 {
 			if !ok {
-				ep.connLock.Unlock()
 				continue
 			}
 			ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
 			conn.operator.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
-			ep.connLock.Unlock()
-		case evt&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0:
+			continue
+		}
+
+		if evt&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0 {
 			if _, ok := ep.listens[fd]; ok {
 				ep.handlerAccept(fd)
 				continue
 			}
-			conn := ep.tcpConns[fd]
+			if !ok {
+				continue
+			}
 			conn.handlerRead()
 			conn.operator.OnRead(conn)
-		case evt&syscall.EPOLLOUT != 0:
-			conn := ep.tcpConns[fd]
+		}
+
+		if evt&syscall.EPOLLOUT != 0 {
+			if !ok {
+				continue
+			}
 			conn.handlerWrite()
 		}
 	}
 	// 是否退出循环：否
+	return false
+}
+
+func (ep *Epoll) handlerEventFD() bool {
+	offset := 0
+	for {
+		n, err := syscall.Read(ep.eventFD, ep.triggerBuf)
+		if err != nil {
+			if err == syscall.EAGAIN {
+				break
+			} else if err == syscall.EINTR {
+				continue
+			} else {
+				ep.log.Errorf("syscall.Read: %v", err)
+				break
+			}
+		}
+		offset += n
+		if n == 0 || offset == 8 {
+			break
+		}
+	}
+	atomic.StoreUint32(&ep.trigger, 0)
+	// 主动触发循环优雅退出
+	if ep.triggerBuf[0] > 0 {
+		ep.log.Debug("exit gracefully")
+		for fd, conn := range ep.tcpConns {
+			ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
+			conn.operator.OnClose(conn)
+			DeleteTcpConn(conn)
+			delete(ep.tcpConns, fd)
+		}
+		for fd := range ep.listens {
+			Control(ep.epollFD, fd, Detach)
+			syscall.Close(fd)
+			delete(ep.listens, fd)
+		}
+		syscall.Close(ep.eventFD)
+		syscall.Close(ep.epollFD)
+		return true
+	}
+	// 主动触发循环执行异步任务
+	ep.log.Debug("trigger")
 	return false
 }
 
@@ -299,10 +312,8 @@ func (ep *Epoll) handlerAccept(fd int) {
 		}
 		operator := ep.operators[fd]
 		tcpConn := NewTcpConn(ep.log, ep.epollFD, connFD, local, ip, operator)
-		ep.connLock.Lock()
 		ep.tcpConns[connFD] = tcpConn
 		operator.OnAccept(tcpConn)
-		ep.connLock.Unlock()
 	}
 }
 
