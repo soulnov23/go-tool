@@ -43,7 +43,6 @@ func DeleteTcpConn(conn *TcpConn) {
 	conn.log, conn.epollFD, conn.localAddr, conn.remoteAddr = nil, -1, "", ""
 	Control(conn.epollFD, conn.fd, Detach)
 	syscall.Close(conn.fd)
-	conn.fd = -1
 	buffer.DeleteBuffer(conn.readBuffer)
 	buffer.DeleteBuffer(conn.writeBuffer)
 }

@@ -25,6 +25,32 @@ const (
 	Detach
 )
 
+func EventString(event uint32) string {
+	eventString := "EPOLLET"
+	if event&unix.EPOLLET != 0 {
+		eventString += "EPOLLET"
+	}
+	if event&syscall.EPOLLIN != 0 {
+		eventString += "|EPOLLIN"
+	}
+	if event&syscall.EPOLLPRI != 0 {
+		eventString += "|EPOLLPRI"
+	}
+	if event&syscall.EPOLLOUT != 0 {
+		eventString += "|EPOLLOUT"
+	}
+	if event&syscall.EPOLLHUP != 0 {
+		eventString += "|EPOLLHUP"
+	}
+	if event&syscall.EPOLLRDHUP != 0 {
+		eventString += "|EPOLLRDHUP"
+	}
+	if event&syscall.EPOLLERR != 0 {
+		eventString += "|EPOLLERR"
+	}
+	return eventString
+}
+
 func Control(epollFD int, fd int, event int) error {
 	evt := &syscall.EpollEvent{
 		Fd: int32(fd),
@@ -156,7 +182,7 @@ func (ep *Epoll) Listen(network string, address string, backlog int, operator Op
 	}
 	ep.listens[listenFD] = address
 	ep.operators[listenFD] = operator
-	ep.log.Debugf("listen %s success, fd: %d", address, listenFD)
+	ep.log.Debugf("listen %s success, listen fd: %d", address, listenFD)
 	return nil
 }
 
@@ -177,17 +203,19 @@ func (ep *Epoll) Wait() error {
 			continue
 		}
 		msec = 0
-		if ep.handler() {
+		if ep.handler(n) {
 			ep.close <- struct{}{}
 			return nil
 		}
 	}
 }
 
-func (ep *Epoll) handler() bool {
-	ep.log.Debugf("wake epoll fd: %d", ep.epollFD)
-	for i := range ep.events {
+func (ep *Epoll) handler(eventSize int) bool {
+	for i := 0; i < eventSize; i++ {
 		fd := int(ep.events[i].Fd)
+		evt := ep.events[i].Events
+		ep.log.Debugf("wake epoll fd: %d, epoll event: %s, client fd: %d", ep.epollFD, EventString(evt), fd)
+
 		// 通过write evfd触发
 		if fd == ep.eventFD {
 			if ep.handlerEventFD() {
@@ -195,13 +223,13 @@ func (ep *Epoll) handler() bool {
 			}
 			continue
 		}
-		evt := ep.events[i].Events
+
 		conn, ok := ep.tcpConns[fd]
 		if evt&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0 {
 			if !ok {
 				continue
 			}
-			ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
+			ep.log.Debugf("close %s->%s, client fd: %d", conn.remoteAddr, conn.localAddr, fd)
 			conn.operator.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
@@ -255,7 +283,7 @@ func (ep *Epoll) handlerEventFD() bool {
 	if ep.triggerBuf[0] > 0 {
 		ep.log.Debug("exit gracefully")
 		for fd, conn := range ep.tcpConns {
-			ep.log.Debugf("close %s->%s, fd: %d", conn.remoteAddr, conn.localAddr, fd)
+			ep.log.Debugf("close %s->%s, client fd: %d", conn.remoteAddr, conn.localAddr, fd)
 			conn.operator.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
@@ -293,7 +321,7 @@ func (ep *Epoll) handlerAccept(fd int) {
 			continue
 		}
 		local := ep.listens[fd]
-		ep.log.Debugf("accept %s->%s fd: %d", ip, local, connFD)
+		ep.log.Debugf("accept %s->%s client fd: %d", ip, local, connFD)
 		SetSocketCloseExec(connFD)
 		if err := SetSocketNonBlock(connFD); err != nil {
 			syscall.Close(connFD)
