@@ -47,7 +47,7 @@ func main() {
 	defer runLog.Sync()
 
 	runLog.Debugf("go-tool start")
-	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(1 /*runtime.NumCPU()*/))
+	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
 	if err != nil {
 		panic(rt.GetCaller() + " " + err.Error())
 	}

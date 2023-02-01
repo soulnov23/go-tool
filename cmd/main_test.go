@@ -11,7 +11,7 @@ import (
 	"github.com/SoulNov23/go-tool/pkg/unsafe"
 )
 
-func TestEchoConnect(t *testing.T) {
+func TestConcurrentConnect(t *testing.T) {
 	close := make(chan struct{})
 	timeout := 30 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
@@ -24,14 +24,14 @@ func TestEchoConnect(t *testing.T) {
 					close <- struct{}{}
 					return
 				default:
-					conn, err := net.DialTimeout("tcp", "0.0.0.0:8000", 10*time.Millisecond)
+					conn, err := net.DialTimeout("tcp", "0.0.0.0:6666", 100*time.Millisecond)
 					if err != nil {
 						t.Logf("net.DialTimeout: %s", err.Error())
 					} else {
 						conn.Close()
 					}
 
-					conn, err = net.DialTimeout("tcp", "0.0.0.0:8080", 10*time.Millisecond)
+					conn, err = net.DialTimeout("tcp", "0.0.0.0:8888", 100*time.Millisecond)
 					if err != nil {
 						t.Logf("net.DialTimeout: %s", err.Error())
 					} else {
@@ -47,22 +47,52 @@ func TestEchoConnect(t *testing.T) {
 	<-close
 }
 
+func TestConnect(t *testing.T) {
+	timeout := 3 * time.Second
+
+	a, err := net.DialTimeout("tcp", "0.0.0.0:6666", 100*time.Millisecond)
+	if err != nil {
+		t.Fatalf("net.DialTimeout: %s", err.Error())
+	}
+
+	b, err := net.DialTimeout("tcp", "0.0.0.0:8888", 100*time.Millisecond)
+	if err != nil {
+		t.Fatalf("net.DialTimeout: %s", err.Error())
+	}
+
+	time.Sleep(timeout)
+
+	a.Close()
+	b.Close()
+}
+
 func TestKeepConnect(t *testing.T) {
-	timeout := 30 * time.Second
+	var conns []net.Conn
+	timeout := 10 * time.Second
 
 	for i := 0; i < 100000; i++ {
-		_, err := net.DialTimeout("tcp", "0.0.0.0:8000", 1000*time.Millisecond)
+		conn, err := net.DialTimeout("tcp", "0.0.0.0:6666", 100*time.Millisecond)
 		if err != nil {
-			t.Logf("net.DialTimeout: %s", err.Error())
+			t.Errorf("net.DialTimeout: %s", err.Error())
+		} else {
+			conns = append(conns, conn)
 		}
 
-		_, err = net.DialTimeout("tcp", "0.0.0.0:8080", 1000*time.Millisecond)
+		conn, err = net.DialTimeout("tcp", "0.0.0.0:8888", 100*time.Millisecond)
 		if err != nil {
-			t.Logf("net.DialTimeout: %s", err.Error())
+			t.Errorf("net.DialTimeout: %s", err.Error())
+		} else {
+			conns = append(conns, conn)
 		}
 	}
 
 	time.Sleep(timeout)
+
+	for _, conn := range conns {
+		if err := conn.Close(); err != nil {
+			t.Errorf("net.Conn.Close: %s", err.Error())
+		}
+	}
 }
 
 func TestRead(t *testing.T) {
@@ -70,14 +100,14 @@ func TestRead(t *testing.T) {
 	timeout := 30 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
-	tcpConn, err := net.DialTimeout("tcp", "0.0.0.0:8000", timeout)
+	tcpConn, err := net.DialTimeout("tcp", "0.0.0.0:6666", 100*time.Millisecond)
 	if err != nil {
-		t.Errorf("net.DialTimeout: %s", err.Error())
+		t.Fatalf("net.DialTimeout: %s", err.Error())
 	}
 
-	httpConn, err := net.DialTimeout("tcp", "0.0.0.0:8080", timeout)
+	httpConn, err := net.DialTimeout("tcp", "0.0.0.0:8888", 100*time.Millisecond)
 	if err != nil {
-		t.Errorf("net.DialTimeout: %s", err.Error())
+		t.Fatalf("net.DialTimeout: %s", err.Error())
 	}
 
 	buf := unsafe.String2Byte("hello world")
