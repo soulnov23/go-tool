@@ -1,6 +1,8 @@
 package json
 
 import (
+	"github.com/SoulNov23/go-tool/pkg/unsafe"
+
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -25,10 +27,18 @@ func init() {
 	}.Froze()
 }
 
-func Unmarshal(data []byte, v interface{}) error {
-	return api.Unmarshal(data, v)
+func Unmarshal(data []byte, value interface{}) error {
+	return api.Unmarshal(data, value)
 }
 
-func Marshal(v interface{}) ([]byte, error) {
-	return api.Marshal(v)
+func Marshal(value interface{}) ([]byte, error) {
+	return api.Marshal(value)
+}
+
+func Stringify(value interface{}) string {
+	data, err := Marshal(value)
+	if err != nil {
+		return ""
+	}
+	return unsafe.Byte2String(data)
 }
