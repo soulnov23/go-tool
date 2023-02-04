@@ -1,3 +1,4 @@
+// Package lockfree 使用链表实现
 package lockfree
 
 import (
@@ -10,12 +11,14 @@ import (
 // 2. 允许内存重用，对指向的内存采用标签指针(Tagged Pointers)的方式，标签作为一个版本号，随着标签指针上的每一次cas运算而增加，并且只增不减。
 // 对于go：自带GC的语言不可能出现new一个新的元素返回相同的地址这种情况，在cas期间元素都被引用中，不会释放
 
+// Queue
 type Queue struct {
 	head unsafe.Pointer
 	tail unsafe.Pointer
 	len  uint64
 }
 
+// NewQueue 创建无锁队列
 func NewQueue() *Queue {
 	// 分配一个空节点dummy头指针head来解决队列中如果只有一个元素，head和tail都指向同一个节点的问题
 	p := &node{
@@ -29,6 +32,7 @@ func NewQueue() *Queue {
 	}
 }
 
+// EnQueue 入队列
 func (q *Queue) EnQueue(value interface{}) {
 	p := &node{
 		value: value,
@@ -59,6 +63,7 @@ func (q *Queue) EnQueue(value interface{}) {
 	}
 }
 
+// DeQueue 出队列
 func (q *Queue) DeQueue() interface{} {
 	var head, tail, headNext *node
 	for {
@@ -92,6 +97,7 @@ func (q *Queue) DeQueue() interface{} {
 	}
 }
 
+// Len 实际大小
 func (q *Queue) Len() uint64 {
 	return atomic.LoadUint64(&q.len)
 }
