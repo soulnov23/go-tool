@@ -10,7 +10,7 @@ import (
 )
 
 type Logger interface {
-	With(args ...interface{}) Logger
+	With(args ...interface{}) *zap.SugaredLogger
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 	Info(args ...interface{})
