@@ -10,6 +10,7 @@ import (
 )
 
 type Logger interface {
+	With(args ...interface{}) Logger
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 	Info(args ...interface{})
@@ -20,6 +21,7 @@ type Logger interface {
 	Errorf(format string, args ...interface{})
 	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
+	Sync() error
 }
 
 const (
