@@ -23,52 +23,59 @@ func main() {
 		if err := recover(); err != nil {
 			buffer := make([]byte, 10*1024)
 			runtime.Stack(buffer, false)
-			fmt.Printf("[PANIC]%v\n%s\n", err, unsafe.Byte2String(buffer))
+			fmt.Printf("[PANIC] %v\n%s\n", err, unsafe.Byte2String(buffer))
 		}
 	}()
 	appConfig, err := internal.GetAppConfig()
 	if err != nil {
-		panic(rt.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + rt.GetCaller() + " " + err.Error())
+		return
 	}
 	frameLog, err := log.NewZapLog(appConfig.FrameLog)
 	if err != nil {
-		panic(rt.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + rt.GetCaller() + " " + err.Error())
+		return
 	}
 	defer frameLog.Sync()
 	callLog, err := log.NewZapLog(appConfig.CallLog)
 	if err != nil {
-		panic(rt.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + rt.GetCaller() + " " + err.Error())
+		return
 	}
 	defer callLog.Sync()
 	runLog, err := log.NewZapLog(appConfig.RunLog)
 	if err != nil {
-		panic(rt.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + rt.GetCaller() + " " + err.Error())
+		return
 	}
 	defer runLog.Sync()
 
-	runLog.Debugf("go-tool start")
+	frameLog.Debugf("go-tool start")
 	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
 	if err != nil {
-		panic(rt.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + rt.GetCaller() + " " + err.Error())
+		return
 	}
 	for _, serverConfig := range appConfig.Server {
 		if serverConfig.Protocol == "rpc" {
 			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.RPCServer{CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				panic(rt.GetCaller() + " " + err.Error())
+				fmt.Print("[ERROR] " + rt.GetCaller() + " " + err.Error())
+				return
 			}
 		} else if serverConfig.Protocol == "http" {
 			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				panic(rt.GetCaller() + " " + err.Error())
+				fmt.Print("[ERROR] " + rt.GetCaller() + " " + err.Error())
+				return
 			}
 		} else {
-			panic(rt.GetCaller() + " protocol " + serverConfig.Protocol + " not support")
+			fmt.Print("[ERROR] " + rt.GetCaller() + " protocol " + serverConfig.Protocol + " not support")
 		}
 	}
 	eventLoop.Wait()
 
-	runLog.Debugf("go-tool version: %s", os.Getenv("SERVER_VERSION"))
+	frameLog.Debugf("go-tool version: %s", os.Getenv("SERVER_VERSION"))
 
 	signalClose := make(chan os.Signal, 1)
 	signal.Notify(signalClose, DefaultServerCloseSIG...)
@@ -76,11 +83,11 @@ func main() {
 	signal.Notify(signalUser, DefaultUserCustomSIG...)
 	select {
 	case sig := <-signalClose:
-		runLog.Debugf("signal close: %s", sig.String())
+		frameLog.Debugf("signal close: %s", sig.String())
 		eventLoop.Close()
 	case sig := <-signalUser:
-		runLog.Debugf("signal user: %s", sig.String())
+		frameLog.Debugf("signal user: %s", sig.String())
 		eventLoop.Trigger()
 	}
-	runLog.Debugf("go-tool stop")
+	frameLog.Debugf("go-tool stop")
 }
