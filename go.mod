@@ -3,6 +3,7 @@ module github.com/SoulNov23/go-tool
 go 1.20
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/strftime v1.0.6
 	go.uber.org/zap v1.24.0
