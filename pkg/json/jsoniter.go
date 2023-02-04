@@ -1,3 +1,4 @@
+// Package json
 package json
 
 import (
@@ -27,14 +28,17 @@ func init() {
 	}.Froze()
 }
 
+// Unmarshal
 func Unmarshal(data []byte, value interface{}) error {
 	return api.Unmarshal(data, value)
 }
 
+// Marshal
 func Marshal(value interface{}) ([]byte, error) {
 	return api.Marshal(value)
 }
 
+// Stringify 使json struct字符串化
 func Stringify(value interface{}) string {
 	data, err := Marshal(value)
 	if err != nil {
