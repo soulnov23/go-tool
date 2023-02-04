@@ -47,6 +47,18 @@ func DeleteTcpConn(conn *TcpConn) {
 	buffer.DeleteBuffer(conn.writeBuffer)
 }
 
+func (conn *TcpConn) LocalAddr() string {
+	return conn.localAddr
+}
+
+func (conn *TcpConn) RemoteAddr() string {
+	return conn.remoteAddr
+}
+
+func (conn *TcpConn) ReadBufferLen() uint64 {
+	return conn.readBuffer.Len()
+}
+
 func (conn *TcpConn) Peek(size int) ([]byte, error) {
 	return conn.readBuffer.Peek(size)
 }
