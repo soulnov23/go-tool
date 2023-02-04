@@ -1,8 +1,9 @@
+// Package env 环境变量
 package env
 
 import "os"
 
-// 使用环境变量中的值替换源字符串中的${var}
+// ExpandEnv 使用环境变量中的值替换源字符串中的${var}
 func ExpandEnv(s string) string {
 	var buf []byte
 	i := 0
