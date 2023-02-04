@@ -54,7 +54,7 @@ func (work *Work) Run() {
 					if e := recover(); e != nil {
 						buffer := make([]byte, 10*1024)
 						runtime.Stack(buffer, false)
-						work.pool.log.Errorf("[PANIC]%v\n%s\n", e, unsafe.Byte2String(buffer))
+						work.pool.log.Errorf("[PANIC] %v\n%s\n", e, unsafe.Byte2String(buffer))
 					}
 				}()
 				task.handler()
