@@ -2,8 +2,7 @@
 package json
 
 import (
-	"github.com/SoulNov23/go-tool/pkg/unsafe"
-
+	"github.com/SoulNov23/go-tool/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -44,5 +43,5 @@ func Stringify(value interface{}) string {
 	if err != nil {
 		return ""
 	}
-	return unsafe.Byte2String(data)
+	return utils.Byte2String(data)
 }

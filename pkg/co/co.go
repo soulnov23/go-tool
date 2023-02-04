@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/SoulNov23/go-tool/pkg/log"
-
-	"github.com/SoulNov23/go-tool/pkg/unsafe"
+	"github.com/SoulNov23/go-tool/pkg/utils"
 )
 
 /*
@@ -29,7 +28,7 @@ func GoAndWait(handlers ...func() error) error {
 				if e := recover(); e != nil {
 					buffer := make([]byte, 10*1024)
 					runtime.Stack(buffer, false)
-					strErr := fmt.Sprintf("[PANIC] %v\n%s\n", e, unsafe.Byte2String(buffer))
+					strErr := fmt.Sprintf("[PANIC] %v\n%s\n", e, utils.Byte2String(buffer))
 					once.Do(func() {
 						err = errors.New(strErr)
 					})
@@ -53,7 +52,7 @@ func Go(log log.Logger, handler func()) {
 			if e := recover(); e != nil {
 				buffer := make([]byte, 10*1024)
 				runtime.Stack(buffer, false)
-				log.Errorf("[PANIC] %v\n%s\n", e, unsafe.Byte2String(buffer))
+				log.Errorf("[PANIC] %v\n%s\n", e, utils.Byte2String(buffer))
 			}
 		}()
 		handler()
@@ -67,7 +66,7 @@ func GoAndRetry(log log.Logger, handler func(), retryDuration time.Duration) {
 			if e := recover(); e != nil {
 				buffer := make([]byte, 10*1024)
 				runtime.Stack(buffer, false)
-				log.Errorf("[PANIC] %v\n%s\n", e, unsafe.Byte2String(buffer))
+				log.Errorf("[PANIC] %v\n%s\n", e, utils.Byte2String(buffer))
 			}
 			time.Sleep(retryDuration)
 			GoAndRetry(log, handler, retryDuration)

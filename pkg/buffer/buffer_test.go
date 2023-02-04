@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SoulNov23/go-tool/pkg/unsafe"
+	"github.com/SoulNov23/go-tool/pkg/utils"
 )
 
 func TestBuffer(t *testing.T) {
@@ -17,7 +17,7 @@ func TestBuffer(t *testing.T) {
 	timeout := 3 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
-	buf := unsafe.String2Byte("hello world")
+	buf := utils.String2Byte("hello world")
 
 	go func(ctx context.Context, lkBuffer *LinkedBuffer) {
 		for {
@@ -43,7 +43,7 @@ func TestBuffer(t *testing.T) {
 					t.Logf("LinkedBuffer.Peek: %v", err)
 				} else {
 					lkBuffer.Skip(cap(res))
-					t.Logf("buf: %s", unsafe.Byte2String(res))
+					t.Logf("buf: %s", utils.Byte2String(res))
 				}
 				lkBuffer.GC()
 			}
@@ -61,7 +61,7 @@ func TestBuffer(t *testing.T) {
 				if err != nil {
 					t.Logf("LinkedBuffer.Read: %v", err)
 				} else {
-					t.Logf("buf: %s", unsafe.Byte2String(res))
+					t.Logf("buf: %s", utils.Byte2String(res))
 				}
 				lkBuffer.GC()
 			}

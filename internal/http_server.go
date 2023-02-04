@@ -6,7 +6,7 @@ import (
 
 	"github.com/SoulNov23/go-tool/pkg/log"
 	"github.com/SoulNov23/go-tool/pkg/net"
-	"github.com/SoulNov23/go-tool/pkg/unsafe"
+	"github.com/SoulNov23/go-tool/pkg/utils"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -35,12 +35,12 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	if err != nil {
 		return
 	}
-	index := strings.Index(unsafe.Byte2String(buf), "\r\n\r\n")
+	index := strings.Index(utils.Byte2String(buf), "\r\n\r\n")
 	if index == -1 {
 		svr.setBad(conn)
 		return
 	}
-	sliceTemp := strings.Split(unsafe.Byte2String(buf[:index]), "\r\n")
+	sliceTemp := strings.Split(utils.Byte2String(buf[:index]), "\r\n")
 	if len(sliceTemp) < 1 {
 		svr.RunLog.Error("HTTP protocol format invalid")
 		svr.setBad(conn)
@@ -106,7 +106,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 			svr.setBad(conn)
 			return
 		}
-		body = unsafe.Byte2String(buf[index+8 : index+8+length])
+		body = utils.Byte2String(buf[index+8 : index+8+length])
 		svr.RunLog.Debugf("Body: %s", body)
 	}
 	svr.setOK(conn)

@@ -6,7 +6,7 @@ import (
 	"github.com/SoulNov23/go-tool/pkg/buffer"
 	"github.com/SoulNov23/go-tool/pkg/cache"
 	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/unsafe"
+	"github.com/SoulNov23/go-tool/pkg/utils"
 )
 
 type Operator interface {
@@ -94,7 +94,7 @@ func (conn *TcpConn) Write(buf []byte) {
 			break
 		}
 	}
-	conn.log.Debugf("write: %s", unsafe.Byte2String(buf)[:offset])
+	conn.log.Debugf("write: %s", utils.Byte2String(buf)[:offset])
 }
 
 func (conn *TcpConn) handlerRead() {
@@ -117,7 +117,7 @@ func (conn *TcpConn) handlerRead() {
 			break
 		}
 	}
-	conn.log.Debugf("read: %s", unsafe.Byte2String(buf[:]))
+	conn.log.Debugf("read: %s", utils.Byte2String(buf[:]))
 	conn.readBuffer.Write(buf)
 	cache.Delete(buf)
 }

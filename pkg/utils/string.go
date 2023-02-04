@@ -1,4 +1,4 @@
-package unsafe
+package utils
 
 import (
 	"reflect"

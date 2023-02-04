@@ -9,7 +9,7 @@ import (
 
 	"github.com/SoulNov23/go-tool/pkg/env"
 	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/unsafe"
+	"github.com/SoulNov23/go-tool/pkg/utils"
 )
 
 var DefaultConfPath = "./go_tool.yaml"
@@ -40,7 +40,7 @@ func GetAppConfig() (*AppConfig, error) {
 	if err != nil {
 		return nil, errors.New("os.ReadFile: " + err.Error())
 	}
-	buffer = unsafe.String2Byte(env.ExpandEnv(unsafe.Byte2String(buffer)))
+	buffer = utils.String2Byte(env.ExpandEnv(utils.Byte2String(buffer)))
 	appConfig := &AppConfig{}
 	if err = yaml.Unmarshal(buffer, appConfig); err != nil {
 		return nil, errors.New("unmarshal " + DefaultConfPath + ": " + err.Error())
