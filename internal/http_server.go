@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/SoulNov23/go-tool/pkg/log"
 	"github.com/SoulNov23/go-tool/pkg/net"
 	"github.com/SoulNov23/go-tool/pkg/utils"
 	"github.com/google/uuid"
@@ -12,10 +11,10 @@ import (
 )
 
 type HTTPServer struct {
-	CallLog    log.Logger
-	RunLog     log.Logger
-	oldCallLog log.Logger
-	oldRunLog  log.Logger
+	CallLog    *zap.SugaredLogger
+	RunLog     *zap.SugaredLogger
+	oldCallLog *zap.SugaredLogger
+	oldRunLog  *zap.SugaredLogger
 }
 
 func (svr *HTTPServer) OnAccept(conn *net.TcpConn) {
