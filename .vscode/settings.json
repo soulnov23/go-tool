@@ -134,4 +134,10 @@
     //显示子文件夹的git
     "git-graph.maxDepthOfRepoSearch": 3,
     "window.title": "${dirty}${separator}${rootName}",
+    //excalidraw导出图片质量
+    "excalidraw.image": {
+        "exportScale": 3,
+        "exportWithBackground": true,
+        "exportWithDarkMode": false
+    },
 }
