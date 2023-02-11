@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/utils"
+	"github.com/soulnov23/go-tool/pkg/log"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 /*

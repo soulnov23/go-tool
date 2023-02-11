@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/SoulNov23/go-tool/pkg/net"
-	"github.com/SoulNov23/go-tool/pkg/utils"
 	"github.com/google/uuid"
+	"github.com/soulnov23/go-tool/pkg/net"
+	"github.com/soulnov23/go-tool/pkg/utils"
 	"go.uber.org/zap"
 )
 

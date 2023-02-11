@@ -1,8 +1,8 @@
 package internal
 
 import (
-	"github.com/SoulNov23/go-tool/pkg/net"
 	"github.com/google/uuid"
+	"github.com/soulnov23/go-tool/pkg/net"
 	"go.uber.org/zap"
 )
 

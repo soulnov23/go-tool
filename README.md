@@ -16,7 +16,7 @@
 
 ### Go Reference 
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/SoulNov23/go-tool.svg)](https://pkg.go.dev/github.com/SoulNov23/go-tool)
+[![Go Reference](https://pkg.go.dev/badge/github.com/soulnov23/go-tool.svg)](https://pkg.go.dev/github.com/soulnov23/go-tool)
 
 ### 工程规范
 

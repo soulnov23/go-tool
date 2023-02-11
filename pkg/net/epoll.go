@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	"github.com/SoulNov23/go-tool/pkg/log"
+	"github.com/soulnov23/go-tool/pkg/log"
 	"golang.org/x/sys/unix"
 )
 

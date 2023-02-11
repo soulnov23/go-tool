@@ -5,7 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/SoulNov23/go-tool/pkg/utils"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 var works sync.Pool

@@ -1,4 +1,4 @@
-module github.com/SoulNov23/go-tool
+module github.com/soulnov23/go-tool
 
 go 1.20
 

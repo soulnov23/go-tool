@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/SoulNov23/go-tool/pkg/log"
+	"github.com/soulnov23/go-tool/pkg/log"
 )
 
 func TestCoPool(t *testing.T) {

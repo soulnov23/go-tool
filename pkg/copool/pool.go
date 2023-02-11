@@ -3,8 +3,8 @@ package copool
 import (
 	"sync/atomic"
 
-	"github.com/SoulNov23/go-tool/pkg/lockfree"
-	"github.com/SoulNov23/go-tool/pkg/log"
+	"github.com/soulnov23/go-tool/pkg/lockfree"
+	"github.com/soulnov23/go-tool/pkg/log"
 )
 
 type Pool struct {

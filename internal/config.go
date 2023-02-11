@@ -7,9 +7,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/SoulNov23/go-tool/pkg/env"
-	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/utils"
+	"github.com/soulnov23/go-tool/pkg/env"
+	"github.com/soulnov23/go-tool/pkg/log"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 var DefaultConfPath = "./go_tool.yaml"

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/SoulNov23/go-tool/pkg/cache"
+	"github.com/soulnov23/go-tool/pkg/cache"
 )
 
 var nodes sync.Pool

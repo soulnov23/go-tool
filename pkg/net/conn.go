@@ -3,10 +3,10 @@ package net
 import (
 	"syscall"
 
-	"github.com/SoulNov23/go-tool/pkg/buffer"
-	"github.com/SoulNov23/go-tool/pkg/cache"
-	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/utils"
+	"github.com/soulnov23/go-tool/pkg/buffer"
+	"github.com/soulnov23/go-tool/pkg/cache"
+	"github.com/soulnov23/go-tool/pkg/log"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 type Operator interface {

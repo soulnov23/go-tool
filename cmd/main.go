@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/SoulNov23/go-tool/internal"
-	"github.com/SoulNov23/go-tool/pkg/log"
-	"github.com/SoulNov23/go-tool/pkg/net"
-	"github.com/SoulNov23/go-tool/pkg/utils"
+	"github.com/soulnov23/go-tool/internal"
+	"github.com/soulnov23/go-tool/pkg/log"
+	"github.com/soulnov23/go-tool/pkg/net"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 var DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}

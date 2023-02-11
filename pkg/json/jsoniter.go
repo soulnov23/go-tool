@@ -2,8 +2,8 @@
 package json
 
 import (
-	"github.com/SoulNov23/go-tool/pkg/utils"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 var api jsoniter.API
