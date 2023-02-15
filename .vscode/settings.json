@@ -57,13 +57,8 @@
     "C_Cpp.exclusionPolicy": "checkFilesAndFolders",
     "C_Cpp.autoAddFileAssociations": false,
     "C_Cpp.workspaceSymbols": "All",
-    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
     "C_Cpp.intelliSenseCachePath": "${workspaceFolder}/.vscode",
-    "C_Cpp.default.includePath": [
-        "/usr/include/**",
-        "/usr/local/include/**",
-        "${workspaceFolder}/**"
-    ],
     "C_Cpp.clang_format_fallbackStyle": "none",
     "C_Cpp.clang_format_style": "file",
     "C_Cpp.intelliSenseCacheSize": 10240,
