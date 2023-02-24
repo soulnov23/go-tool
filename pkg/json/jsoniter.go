@@ -3,7 +3,6 @@ package json
 
 import (
 	jsoniter "github.com/json-iterator/go"
-	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 var api jsoniter.API
@@ -37,11 +36,21 @@ func Marshal(value interface{}) ([]byte, error) {
 	return api.Marshal(value)
 }
 
+// UnmarshalFromString
+func UnmarshalFromString(data string, value interface{}) error {
+	return api.UnmarshalFromString(data, value)
+}
+
+// MarshalToString
+func MarshalToString(value interface{}) (string, error) {
+	return api.MarshalToString(value)
+}
+
 // Stringify 使json struct字符串化
 func Stringify(value interface{}) string {
-	data, err := Marshal(value)
+	data, err := MarshalToString(value)
 	if err != nil {
 		return ""
 	}
-	return utils.Byte2String(data)
+	return data
 }
