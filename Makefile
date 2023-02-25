@@ -4,8 +4,10 @@ BIN  := ./build/bin/go-tool
 DEBUG 	:= -gcflags='all=-N -l'
 RELEASE := -ldflags='-w -s'
 
+CGO := 0
+
 all:
-	go build ${DEBUG} -o ${BIN} ${SRC}
+	CGO_ENABLED=${CGO} go build ${DEBUG} -o ${BIN} ${SRC}
 
 clean:
 	rm -rf ${BIN}
