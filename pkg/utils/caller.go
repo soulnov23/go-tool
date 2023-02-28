@@ -7,8 +7,7 @@ import (
 )
 
 // 返回调用者的"package/file:line"
-func GetCaller() string {
-	skip := 1
+func GetCaller(skip int) string {
 	_, file, line, ok := runtime.Caller(skip)
 	if !ok {
 		return "unknown_caller"
