@@ -27,24 +27,25 @@ func main() {
 	}()
 	appConfig, err := internal.GetAppConfig()
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
 		return
 	}
 	frameLog, err := log.NewZapLog(appConfig.FrameLog)
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
 		return
 	}
 	defer frameLog.Sync()
-	callLog, err := log.NewZapLog(appConfig.CallLog)
+	sugaredCallLog, err := log.NewZapLog(appConfig.CallLog)
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
 		return
 	}
+	callLog := sugaredCallLog.Desugar()
 	defer callLog.Sync()
 	runLog, err := log.NewZapLog(appConfig.RunLog)
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
 		return
 	}
 	defer runLog.Sync()
@@ -52,24 +53,24 @@ func main() {
 	frameLog.Debugf("go-tool start")
 	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller() + " " + err.Error())
+		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
 		return
 	}
 	for _, serverConfig := range appConfig.Server {
 		if serverConfig.Protocol == "rpc" {
 			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.RPCServer{CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				fmt.Print("[ERROR] " + utils.GetCaller() + " " + err.Error())
+				fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
 				return
 			}
 		} else if serverConfig.Protocol == "http" {
 			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				fmt.Print("[ERROR] " + utils.GetCaller() + " " + err.Error())
+				fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
 				return
 			}
 		} else {
-			fmt.Print("[ERROR] " + utils.GetCaller() + " protocol " + serverConfig.Protocol + " not support")
+			fmt.Print("[ERROR] " + utils.GetCaller(1) + " protocol " + serverConfig.Protocol + " not support")
 		}
 	}
 	eventLoop.Wait()
