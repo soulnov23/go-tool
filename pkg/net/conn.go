@@ -98,6 +98,7 @@ func (conn *TcpConn) Write(buf []byte) {
 }
 
 func (conn *TcpConn) handlerRead() {
+	conn.readBuffer.GC()
 	buf := cache.New(buffer.Block8k)
 	offset := 0
 	for {
@@ -119,7 +120,6 @@ func (conn *TcpConn) handlerRead() {
 	}
 	conn.log.Debugf("read: %s", utils.Byte2String(buf[:offset]))
 	conn.readBuffer.Write(buf[:offset])
-	cache.Delete(buf)
 }
 
 func (conn *TcpConn) handlerWrite() {
