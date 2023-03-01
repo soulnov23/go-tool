@@ -117,8 +117,8 @@ func (conn *TcpConn) handlerRead() {
 			break
 		}
 	}
-	conn.log.Debugf("read: %s", utils.Byte2String(buf[:]))
-	conn.readBuffer.Write(buf)
+	conn.log.Debugf("read: %s", utils.Byte2String(buf[:offset]))
+	conn.readBuffer.Write(buf[:offset])
 	cache.Delete(buf)
 }
 
