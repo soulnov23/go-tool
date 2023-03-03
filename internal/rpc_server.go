@@ -7,9 +7,9 @@ import (
 )
 
 type RPCServer struct {
-	CallLog    *zap.SugaredLogger
+	CallLog    *zap.Logger
 	RunLog     *zap.SugaredLogger
-	oldCallLog *zap.SugaredLogger
+	oldCallLog *zap.Logger
 	oldRunLog  *zap.SugaredLogger
 }
 

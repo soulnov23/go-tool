@@ -3,17 +3,20 @@ package internal
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/soulnov23/go-tool/pkg/json"
 	"github.com/soulnov23/go-tool/pkg/net"
 	"github.com/soulnov23/go-tool/pkg/utils"
 	"go.uber.org/zap"
 )
 
 type HTTPServer struct {
-	CallLog    *zap.SugaredLogger
+	UUID       string
+	CallLog    *zap.Logger
 	RunLog     *zap.SugaredLogger
-	oldCallLog *zap.SugaredLogger
+	oldCallLog *zap.Logger
 	oldRunLog  *zap.SugaredLogger
 }
 
@@ -29,7 +32,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	svr.setLog()
 	defer svr.resetLog()
 	bufferLen := conn.ReadBufferLen()
-	buf, err := conn.Read(int(bufferLen))
+	buf, err := conn.Peek(int(bufferLen))
 	// read buffer没数据了
 	if err != nil {
 		return
@@ -45,8 +48,9 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 		svr.setBad(conn)
 		return
 	}
-	var method, uri, version string
+	var method, url, version string
 	header := map[string]string{}
+	cookie := map[string]string{}
 	for index, line := range sliceTemp {
 		// request line
 		if index == 0 {
@@ -68,26 +72,31 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 				svr.setBad(conn)
 				return
 			}
-			uri = requestLine[1]
+			url = requestLine[1]
 			continue
 		}
 		// header
-		sliceKV := strings.Split(line, ": ")
-		if len(sliceKV) != 2 {
+		headerSlice := strings.Split(line, ": ")
+		if len(headerSlice) != 2 {
 			svr.RunLog.Error("HTTP header not support")
 			svr.setBad(conn)
 			return
 		}
-		header[sliceKV[0]] = sliceKV[1]
+		// cookie
+		if headerSlice[0] == "Cookie" {
+			cookie = utils.String2Map(headerSlice[1], "; ", "=")
+		} else {
+			header[headerSlice[0]] = headerSlice[1]
+		}
 	}
-	svr.RunLog.Debugf("Version: %s", version)
-	svr.RunLog.Debugf("Method: %s", method)
-	svr.RunLog.Debugf("%s->%s%s", conn.RemoteAddr(), conn.LocalAddr(), uri)
-	for key, value := range header {
-		svr.RunLog.Debugf("%s: %s", key, value)
-	}
-	var body string
-	if method == "POST" {
+	var query, body string
+	if method == "GET" {
+		querySlice := strings.Split(url, "?")
+		if len(querySlice) == 2 {
+			url = querySlice[0]
+			query = querySlice[1]
+		}
+	} else if method == "POST" {
 		strLength, ok := header["Content-Length"]
 		if !ok {
 			svr.RunLog.Error("HTTP body is empty")
@@ -101,33 +110,87 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 			return
 		}
 		if index+length > int(bufferLen) {
-			svr.RunLog.Error("HTTP body is larger than 8k")
-			svr.setBad(conn)
+			svr.RunLog.Debug("HTTP body not complete, continue")
 			return
 		}
 		body = utils.Byte2String(buf[index+8 : index+8+length])
-		svr.RunLog.Debugf("Body: %s", body)
 	}
-	svr.setOK(conn)
+	svr.RunLog.Debugf("Version: %s, Method: %s, %s->%s%s", version, method, conn.RemoteAddr(), conn.LocalAddr(), url)
+	svr.RunLog.Debugf("Header: %s", json.Stringify(header))
+	svr.RunLog.Debugf("Cookie: %s", json.Stringify(cookie))
+	svr.RunLog.Debugf("Query: %s", query)
+	svr.RunLog.Debugf("Body: %s", body)
+	response, err := svr.Handler(conn, version, method, url, query, body, header, cookie)
+	if err != nil {
+		svr.RunLog.Errorf("svr.Handler: %s", err.Error())
+		svr.setBad(conn)
+		return
+	}
+	svr.setOK(conn, response)
+}
+
+func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, body string, header, cookie map[string]string) (string, error) {
+	begin := time.Now()
+	// TODO
+	time.Sleep(666 * time.Millisecond)
+	timeUsed := time.Since(begin).Milliseconds()
+	response := "{\"msg\":\"ok\",\"need_resend\":\"false\",\"ret\":0}"
+	if method == "GET" {
+		svr.RunLog.Debugf("Request: %s", query)
+		svr.RunLog.Debugf("Response: %s", response)
+		svr.CallLog.Info("call",
+			zap.String("UUID", svr.UUID),
+			zap.String("RemoteAddr", conn.RemoteAddr()),
+			zap.String("LocalAddr", conn.LocalAddr()),
+			zap.String("HttpVersion", version),
+			zap.String("HttpMethod", method),
+			zap.String("HttpURL", url),
+			zap.String("HttpHeaders", json.Stringify(header)),
+			zap.String("HttpCookies", json.Stringify(cookie)),
+			zap.String("HttpQuery", query),
+			zap.String("Request", query),
+			zap.String("Response", response),
+			zap.Int64("TimeUsed", timeUsed))
+	} else if method == "POST" {
+		svr.RunLog.Debugf("Request: %s", body)
+		svr.RunLog.Debugf("Response: %s", response)
+		svr.CallLog.Info("call",
+			zap.String("UUID", svr.UUID),
+			zap.String("RemoteAddr", conn.RemoteAddr()),
+			zap.String("LocalAddr", conn.LocalAddr()),
+			zap.String("HttpVersion", version),
+			zap.String("HttpMethod", method),
+			zap.String("HttpURL", url),
+			zap.String("HttpHeaders", json.Stringify(header)),
+			zap.String("HttpCookies", json.Stringify(cookie)),
+			zap.String("HttpQuery", query),
+			zap.String("Request", body),
+			zap.String("Response", response),
+			zap.Int64("TimeUsed", timeUsed))
+	}
+	return response, nil
 }
 
 func (svr *HTTPServer) setLog() {
+	svr.UUID = uuid.New().String()
 	svr.oldCallLog = svr.CallLog
 	svr.oldRunLog = svr.RunLog
-	uuid := uuid.New().String()
-	svr.CallLog = svr.CallLog.With(zap.String("uuid", uuid))
-	svr.RunLog = svr.RunLog.With(zap.String("uuid", uuid))
+	svr.CallLog = svr.CallLog.With(zap.String("UUID", svr.UUID))
+	svr.RunLog = svr.RunLog.With(zap.String("UUID", svr.UUID))
 }
 
 func (svr *HTTPServer) resetLog() {
+	svr.UUID = ""
 	svr.CallLog = svr.oldCallLog
 	svr.RunLog = svr.oldRunLog
 }
 
-func (svr *HTTPServer) setOK(conn *net.TcpConn) {
-	conn.Write([]byte("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 42\r\n\r\n{\"msg\":\"ok\",\"need_resend\":\"false\",\"ret\":0}"))
+func (svr *HTTPServer) setOK(conn *net.TcpConn, response string) {
+	httpRsp := "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+	httpRsp += "Content-Length: " + strconv.Itoa(len(response)) + "\r\n\r\n" + response
+	conn.Write(utils.String2Byte(httpRsp))
 }
 
 func (svr *HTTPServer) setBad(conn *net.TcpConn) {
-	conn.Write([]byte("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n"))
+	conn.Write(utils.String2Byte("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n"))
 }
