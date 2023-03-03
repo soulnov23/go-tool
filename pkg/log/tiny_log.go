@@ -11,6 +11,7 @@ const (
 	ColorRed    = "\033[1;31m"
 	ColorGreen  = "\033[1;32m"
 	ColorYellow = "\033[1;33m"
+	ColorPurple = "\033[1;35m"
 	ColorWhite  = "\033[1;37m"
 	ColorReset  = "\033[m"
 
@@ -34,5 +35,5 @@ func Error(formatter string, args ...interface{}) {
 }
 
 func Fatal(formatter string, args ...interface{}) {
-	fmt.Printf("%s%s FATAL %s %s%s\n", ColorRed, time.Now().Format(DefaultTimeFormat), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+	fmt.Printf("%s%s FATAL %s %s%s\n", ColorPurple, time.Now().Format(DefaultTimeFormat), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
