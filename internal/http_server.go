@@ -113,7 +113,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 			svr.RunLog.Debug("HTTP body not complete, continue")
 			return
 		}
-		body = utils.Byte2String(buf[index+8 : index+8+length])
+		body = utils.Byte2String(buf[index+4 : index+4+length])
 	}
 	svr.RunLog.Debugf("Version: %s, Method: %s, %s->%s%s", version, method, conn.RemoteAddr(), conn.LocalAddr(), url)
 	svr.RunLog.Debugf("Header: %s", json.Stringify(header))
