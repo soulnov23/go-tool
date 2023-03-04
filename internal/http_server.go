@@ -13,7 +13,6 @@ import (
 )
 
 type HTTPServer struct {
-	UUID       string
 	CallLog    *zap.Logger
 	RunLog     *zap.SugaredLogger
 	oldCallLog *zap.Logger
@@ -139,7 +138,6 @@ func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, b
 		svr.RunLog.Debugf("Request: %s", query)
 		svr.RunLog.Debugf("Response: %s", response)
 		svr.CallLog.Info("call",
-			zap.String("UUID", svr.UUID),
 			zap.String("RemoteAddr", conn.RemoteAddr()),
 			zap.String("LocalAddr", conn.LocalAddr()),
 			zap.String("HttpVersion", version),
@@ -155,7 +153,6 @@ func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, b
 		svr.RunLog.Debugf("Request: %s", body)
 		svr.RunLog.Debugf("Response: %s", response)
 		svr.CallLog.Info("call",
-			zap.String("UUID", svr.UUID),
 			zap.String("RemoteAddr", conn.RemoteAddr()),
 			zap.String("LocalAddr", conn.LocalAddr()),
 			zap.String("HttpVersion", version),
@@ -172,15 +169,14 @@ func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, b
 }
 
 func (svr *HTTPServer) setLog() {
-	svr.UUID = uuid.New().String()
 	svr.oldCallLog = svr.CallLog
 	svr.oldRunLog = svr.RunLog
-	svr.CallLog = svr.CallLog.With(zap.String("UUID", svr.UUID))
-	svr.RunLog = svr.RunLog.With(zap.String("UUID", svr.UUID))
+	uuid := uuid.New().String()
+	svr.CallLog = svr.CallLog.With(zap.String("UUID", uuid))
+	svr.RunLog = svr.RunLog.With(zap.String("UUID", uuid))
 }
 
 func (svr *HTTPServer) resetLog() {
-	svr.UUID = ""
 	svr.CallLog = svr.oldCallLog
 	svr.RunLog = svr.oldRunLog
 }
