@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -22,55 +21,68 @@ func main() {
 		if err := recover(); err != nil {
 			buffer := make([]byte, 10*1024)
 			runtime.Stack(buffer, false)
-			fmt.Printf("[PANIC] %v\n%s\n", err, utils.Byte2String(buffer))
+			log.Info("[PANIC] %v\n%s", err, utils.Byte2String(buffer))
 		}
 	}()
+
+	log.Debug("internal.GetAppConfig begin...")
 	appConfig, err := internal.GetAppConfig()
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
+		log.Error("internal.GetAppConfig: " + err.Error())
 		return
 	}
+	log.Debug("internal.GetAppConfig success")
+
+	log.Debug("log.NewZapLog frame log begin...")
 	frameLog, err := log.NewZapLog(appConfig.FrameLog)
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
+		log.Error("log.NewZapLog: " + err.Error())
 		return
 	}
 	defer frameLog.Sync()
+	log.Debug("log.NewZapLog frame log success")
+
+	log.Debug("log.NewZapLog call log begin...")
 	sugaredCallLog, err := log.NewZapLog(appConfig.CallLog)
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
+		log.Error("log.NewZapLog: " + err.Error())
 		return
 	}
 	callLog := sugaredCallLog.Desugar()
 	defer callLog.Sync()
+	log.Debug("log.NewZapLog call log success")
+
+	log.Debug("log.NewZapLog run log begin...")
 	runLog, err := log.NewZapLog(appConfig.RunLog)
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
+		log.Error("log.NewZapLog: " + err.Error())
 		return
 	}
 	defer runLog.Sync()
+	log.Debug("log.NewZapLog run log success")
 
 	frameLog.Debugf("go-tool start")
 	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
 	if err != nil {
-		fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
+		log.Error("net.NewEventLoop: " + err.Error())
 		return
 	}
 	for _, serverConfig := range appConfig.Server {
 		if serverConfig.Protocol == "rpc" {
 			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.RPCServer{CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
+				log.Error("eventLoop.Listen: " + err.Error())
 				return
 			}
 		} else if serverConfig.Protocol == "http" {
 			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				fmt.Print("[ERROR] " + utils.GetCaller(1) + " " + err.Error())
+				log.Error("eventLoop.Listen: " + err.Error())
 				return
 			}
 		} else {
-			fmt.Print("[ERROR] " + utils.GetCaller(1) + " protocol " + serverConfig.Protocol + " not support")
+			log.Error("protocol " + serverConfig.Protocol + " not support")
+			return
 		}
 	}
 	eventLoop.Wait()

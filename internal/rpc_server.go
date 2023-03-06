@@ -24,15 +24,14 @@ func (svr *RPCServer) OnClose(conn *net.TcpConn) {
 func (svr *RPCServer) OnRead(conn *net.TcpConn) {
 	svr.setLog()
 	defer svr.resetLog()
-	svr.RunLog.Debug("TODO")
 }
 
 func (svr *RPCServer) setLog() {
 	svr.oldCallLog = svr.CallLog
 	svr.oldRunLog = svr.RunLog
 	uuid := uuid.New().String()
-	svr.CallLog = svr.CallLog.With(zap.String("uuid", uuid))
-	svr.RunLog = svr.RunLog.With(zap.String("uuid", uuid))
+	svr.CallLog = svr.CallLog.With(zap.String("UUID", uuid))
+	svr.RunLog = svr.RunLog.With(zap.String("UUID", uuid))
 }
 
 func (svr *RPCServer) resetLog() {
