@@ -9,7 +9,7 @@
             "command": [
                 "cd ${workspaceFolder} &&",
                 "go mod tidy && make clean && make all &&",
-                "cd ${workspaceFolder}/build/bin && ./start.sh"
+                "cd ${workspaceFolder}/build/bin && ./nohup.sh"
             ],
             "group": {
                 "kind": "build",
