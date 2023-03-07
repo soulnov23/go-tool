@@ -1,16 +1,13 @@
 package internal
 
 import (
-	"github.com/google/uuid"
 	"github.com/soulnov23/go-tool/pkg/net"
 	"go.uber.org/zap"
 )
 
 type RPCServer struct {
-	CallLog    *zap.Logger
-	RunLog     *zap.SugaredLogger
-	oldCallLog *zap.Logger
-	oldRunLog  *zap.SugaredLogger
+	CallLog *zap.Logger
+	RunLog  *zap.SugaredLogger
 }
 
 func (svr *RPCServer) OnAccept(conn *net.TcpConn) {
@@ -22,19 +19,4 @@ func (svr *RPCServer) OnClose(conn *net.TcpConn) {
 }
 
 func (svr *RPCServer) OnRead(conn *net.TcpConn) {
-	svr.setLog()
-	defer svr.resetLog()
-}
-
-func (svr *RPCServer) setLog() {
-	svr.oldCallLog = svr.CallLog
-	svr.oldRunLog = svr.RunLog
-	uuid := uuid.New().String()
-	svr.CallLog = svr.CallLog.With(zap.String("UUID", uuid))
-	svr.RunLog = svr.RunLog.With(zap.String("UUID", uuid))
-}
-
-func (svr *RPCServer) resetLog() {
-	svr.CallLog = svr.oldCallLog
-	svr.RunLog = svr.oldRunLog
 }

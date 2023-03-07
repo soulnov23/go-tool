@@ -13,10 +13,8 @@ import (
 )
 
 type HTTPServer struct {
-	CallLog    *zap.Logger
-	RunLog     *zap.SugaredLogger
-	oldCallLog *zap.Logger
-	oldRunLog  *zap.SugaredLogger
+	CallLog *zap.Logger
+	RunLog  *zap.SugaredLogger
 }
 
 func (svr *HTTPServer) OnAccept(conn *net.TcpConn) {
@@ -28,8 +26,10 @@ func (svr *HTTPServer) OnClose(conn *net.TcpConn) {
 }
 
 func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
-	svr.setLog()
-	defer svr.resetLog()
+	uuid := uuid.New().String()
+	callLog := svr.CallLog.With()
+	runLog := svr.RunLog.With(zap.String("UUID", uuid))
+
 	bufferLen := conn.ReadBufferLen()
 	buf, err := conn.Peek(int(bufferLen))
 	// read buffer没数据了
@@ -43,7 +43,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	}
 	sliceTemp := strings.Split(utils.Byte2String(buf[:index]), "\r\n")
 	if len(sliceTemp) < 1 {
-		svr.RunLog.Error("HTTP protocol format invalid")
+		runLog.Error("HTTP protocol format invalid")
 		svr.setBad(conn)
 		return
 	}
@@ -55,19 +55,19 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 		if index == 0 {
 			requestLine := strings.Split(line, " ")
 			if len(requestLine) != 3 {
-				svr.RunLog.Error("HTTP protocol format invalid")
+				runLog.Error("HTTP protocol format invalid")
 				svr.setBad(conn)
 				return
 			}
 			version = requestLine[2]
 			if version != "HTTP/1.0" && version != "HTTP/1.1" {
-				svr.RunLog.Error("HTTP version not support")
+				runLog.Error("HTTP version not support")
 				svr.setBad(conn)
 				return
 			}
 			method = requestLine[0]
 			if method != "GET" && method != "POST" {
-				svr.RunLog.Error("HTTP method not support")
+				runLog.Error("HTTP method not support")
 				svr.setBad(conn)
 				return
 			}
@@ -77,7 +77,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 		// header
 		headerSlice := strings.Split(line, ": ")
 		if len(headerSlice) != 2 {
-			svr.RunLog.Error("HTTP header not support")
+			runLog.Error("HTTP header not support")
 			svr.setBad(conn)
 			return
 		}
@@ -98,45 +98,46 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	} else if method == "POST" {
 		strLength, ok := header["Content-Length"]
 		if !ok {
-			svr.RunLog.Error("HTTP body is empty")
+			runLog.Error("HTTP body is empty")
 			svr.setBad(conn)
 			return
 		}
 		length, err := strconv.Atoi(strLength)
 		if err != nil {
-			svr.RunLog.Error("HTTP header Content-Length format invalid")
+			runLog.Error("HTTP header Content-Length format invalid")
 			svr.setBad(conn)
 			return
 		}
 		if index+length > int(bufferLen) {
-			svr.RunLog.Debug("HTTP body not complete, continue")
+			runLog.Debug("HTTP body not complete, continue")
 			return
 		}
 		body = utils.Byte2String(buf[index+4 : index+4+length])
 	}
-	svr.RunLog.Debugf("Version: %s, Method: %s, %s->%s%s", version, method, conn.RemoteAddr(), conn.LocalAddr(), url)
-	svr.RunLog.Debugf("Header: %s", json.Stringify(header))
-	svr.RunLog.Debugf("Cookie: %s", json.Stringify(cookie))
-	svr.RunLog.Debugf("Query: %s", query)
-	svr.RunLog.Debugf("Body: %s", body)
-	response, err := svr.Handler(conn, version, method, url, query, body, header, cookie)
+	runLog.Debugf("Version: %s, Method: %s, %s->%s%s", version, method, conn.RemoteAddr(), conn.LocalAddr(), url)
+	runLog.Debugf("Header: %s", json.Stringify(header))
+	runLog.Debugf("Cookie: %s", json.Stringify(cookie))
+	runLog.Debugf("Query: %s", query)
+	runLog.Debugf("Body: %s", body)
+	response, err := svr.Handler(conn, version, method, url, query, body, header, cookie, callLog, runLog)
 	if err != nil {
-		svr.RunLog.Errorf("svr.Handler: %s", err.Error())
+		runLog.Errorf("svr.Handler: %s", err.Error())
 		svr.setBad(conn)
 		return
 	}
 	svr.setOK(conn, response)
 }
 
-func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, body string, header, cookie map[string]string) (string, error) {
+func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, body string, header, cookie map[string]string, callLog *zap.Logger,
+	runLog *zap.SugaredLogger) (string, error) {
 	begin := time.Now()
 	// TODO
 	time.Sleep(666 * time.Millisecond)
 	timeUsed := time.Since(begin).Milliseconds()
 	response := "{\"msg\":\"ok\",\"need_resend\":\"false\",\"ret\":0}"
 	if method == "GET" {
-		svr.RunLog.Debugf("Request: %s", query)
-		svr.RunLog.Debugf("Response: %s", response)
+		runLog.Debugf("Request: %s", query)
+		runLog.Debugf("Response: %s", response)
 		svr.CallLog.Info("call",
 			zap.String("RemoteAddr", conn.RemoteAddr()),
 			zap.String("LocalAddr", conn.LocalAddr()),
@@ -150,8 +151,8 @@ func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, b
 			zap.String("Response", response),
 			zap.Int64("TimeUsed", timeUsed))
 	} else if method == "POST" {
-		svr.RunLog.Debugf("Request: %s", body)
-		svr.RunLog.Debugf("Response: %s", response)
+		runLog.Debugf("Request: %s", body)
+		runLog.Debugf("Response: %s", response)
 		svr.CallLog.Info("call",
 			zap.String("RemoteAddr", conn.RemoteAddr()),
 			zap.String("LocalAddr", conn.LocalAddr()),
@@ -166,19 +167,6 @@ func (svr *HTTPServer) Handler(conn *net.TcpConn, version, method, url, query, b
 			zap.Int64("TimeUsed", timeUsed))
 	}
 	return response, nil
-}
-
-func (svr *HTTPServer) setLog() {
-	svr.oldCallLog = svr.CallLog
-	svr.oldRunLog = svr.RunLog
-	uuid := uuid.New().String()
-	svr.CallLog = svr.CallLog.With(zap.String("UUID", uuid))
-	svr.RunLog = svr.RunLog.With(zap.String("UUID", uuid))
-}
-
-func (svr *HTTPServer) resetLog() {
-	svr.CallLog = svr.oldCallLog
-	svr.RunLog = svr.oldRunLog
 }
 
 func (svr *HTTPServer) setOK(conn *net.TcpConn, response string) {
