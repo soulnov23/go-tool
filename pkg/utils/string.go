@@ -87,7 +87,7 @@ func Intf2String(row interface{}) string {
 		}
 		return string(result)
 	case *interface{}:
-		return InterfaceToString(*v)
+		return Intf2String(*v)
 	case interface{}:
 		switch vv := v.(type) {
 		case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
