@@ -14,7 +14,8 @@ import (
 )
 
 var DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}
-var DefaultUserCustomSIG = []os.Signal{syscall.SIGUSR1, syscall.SIGUSR2}
+var DefaultHotRestartSIG = []os.Signal{syscall.SIGUSR1}
+var DefaultTriggerSIG = []os.Signal{syscall.SIGUSR2}
 
 func main() {
 	defer func() {
@@ -91,14 +92,19 @@ func main() {
 
 	signalClose := make(chan os.Signal, 1)
 	signal.Notify(signalClose, DefaultServerCloseSIG...)
-	signalUser := make(chan os.Signal, 1)
-	signal.Notify(signalUser, DefaultUserCustomSIG...)
+	signalHotRestart := make(chan os.Signal, 1)
+	signal.Notify(signalHotRestart, DefaultHotRestartSIG...)
+	signalTrigger := make(chan os.Signal, 1)
+	signal.Notify(signalTrigger, DefaultTriggerSIG...)
 	select {
 	case sig := <-signalClose:
 		frameLog.Debugf("signal close: %s", sig.String())
 		eventLoop.Close()
-	case sig := <-signalUser:
-		frameLog.Debugf("signal user: %s", sig.String())
+	case sig := <-signalHotRestart:
+		frameLog.Debugf("signal hot restart: %s", sig.String())
+		// TODO
+	case sig := <-signalTrigger:
+		frameLog.Debugf("signal trigger: %s", sig.String())
 		eventLoop.Trigger()
 	}
 	frameLog.Debugf("go-tool stop")
