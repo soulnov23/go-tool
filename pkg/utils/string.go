@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"unsafe"
@@ -38,4 +40,64 @@ func Map2String(recordMap map[string]string) string {
 	}
 	builder.Len()
 	return builder.String()[0 : builder.Len()-1]
+}
+
+func Intf2String(row interface{}) string {
+	switch v := row.(type) {
+	case nil:
+		return ""
+	case *string:
+		return fmt.Sprintf("%v", *v)
+	case *bool:
+		return fmt.Sprintf("%v", *v)
+	case *uint8:
+		return fmt.Sprintf("%v", *v)
+	case *uint16:
+		return fmt.Sprintf("%v", *v)
+	case *uint32:
+		return fmt.Sprintf("%v", *v)
+	case *uint64:
+		return fmt.Sprintf("%v", *v)
+	case *int8:
+		return fmt.Sprintf("%v", *v)
+	case *int16:
+		return fmt.Sprintf("%v", *v)
+	case *int32:
+		return fmt.Sprintf("%v", *v)
+	case *int64:
+		return fmt.Sprintf("%v", *v)
+	case *float32:
+		return fmt.Sprintf("%v", *v)
+	case *float64:
+		return fmt.Sprintf("%v", *v)
+	case *int:
+		return fmt.Sprintf("%v", *v)
+	case *uint:
+		return fmt.Sprintf("%v", *v)
+	case *[]byte:
+		return fmt.Sprintf("%v", *v)
+	case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
+		return fmt.Sprintf("%v", v)
+	case []byte:
+		return string(v)
+	case *struct{}:
+		result, err := json.Marshal(*v)
+		if err != nil {
+			return ""
+		}
+		return string(result)
+	case *interface{}:
+		return InterfaceToString(*v)
+	case interface{}:
+		switch vv := v.(type) {
+		case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
+			return fmt.Sprintf("%v", vv)
+		case []byte:
+			return string(vv)
+		default:
+			return fmt.Sprintf("%v", vv)
+		}
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
