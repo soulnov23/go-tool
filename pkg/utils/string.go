@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 	"unsafe"
+
+	"github.com/soulnov23/go-tool/pkg/json"
 )
 
 func Byte2String(b []byte) string {
