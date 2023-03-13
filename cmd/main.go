@@ -11,6 +11,7 @@ import (
 	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/net"
 	"github.com/soulnov23/go-tool/pkg/utils"
+	"go.uber.org/automaxprocs/maxprocs"
 )
 
 var DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}
@@ -61,6 +62,8 @@ func main() {
 	}
 	defer runLog.Sync()
 	log.Debug("log.NewZapLog run log success")
+
+	maxprocs.Set(maxprocs.Logger(log.Debug))
 
 	frameLog.Debugf("go-tool start")
 	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
