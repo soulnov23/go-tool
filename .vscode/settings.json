@@ -87,7 +87,6 @@
     //"remote.SSH.showLoginTerminal": true,
     "remote.SSH.remotePlatform": {
         "cloud": "linux",
-        "docker": "linux"
     },
     "remote.SSH.configFile": "~\\.ssh\\config",
     //git选项
@@ -137,4 +136,6 @@
         "exportWithBackground": true,
         "exportWithDarkMode": false
     },
+    //使用shfmt格式化shell脚本
+    "shellformat.flag": "-i=4",
 }
