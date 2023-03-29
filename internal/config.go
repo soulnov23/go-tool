@@ -7,7 +7,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/soulnov23/go-tool/pkg/env"
 	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
@@ -40,7 +39,7 @@ func GetAppConfig() (*AppConfig, error) {
 	if err != nil {
 		return nil, errors.New("os.ReadFile: " + err.Error())
 	}
-	buffer = utils.String2Byte(env.ExpandEnv(utils.Byte2String(buffer)))
+	buffer = utils.String2Byte(os.ExpandEnv(utils.Byte2String(buffer)))
 	appConfig := &AppConfig{}
 	if err = yaml.Unmarshal(buffer, appConfig); err != nil {
 		return nil, errors.New("unmarshal " + DefaultConfPath + ": " + err.Error())
