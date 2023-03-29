@@ -11,7 +11,7 @@ func init() {
 	api = jsoniter.Config{
 		IndentionStep:           0,
 		MarshalFloatWith6Digits: false,
-		EscapeHTML:              true,
+		EscapeHTML:              false,
 		SortMapKeys:             true,
 		// https://github.com/json-iterator/go/blob/master/adapter.go:100
 		// 当用interface{}来Unmarshal接收值的时候jsoniter会解析成float64，有精度丢失，UseNumber=true使用Number类型接收，后续通过接口转换成需要的类型
