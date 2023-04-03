@@ -29,6 +29,8 @@ func String2Map(data string, fieldSep string, valueSep string) map[string]string
 		valueSlice := strings.Split(kv, valueSep)
 		if len(valueSlice) == 2 {
 			recordMap[valueSlice[0]] = valueSlice[1]
+		} else if len(valueSlice) == 1 && strings.Count(kv, valueSep) == 1 {
+			recordMap[valueSlice[0]] = ""
 		}
 	}
 	return recordMap
@@ -41,6 +43,18 @@ func Map2String(recordMap map[string]string) string {
 	}
 	builder.Len()
 	return builder.String()[0 : builder.Len()-1]
+}
+
+func Map2Struct(recordMap map[string]interface{}, resultStruct interface{}) error {
+	recordData, err := json.Marshal(recordMap)
+	if err != nil {
+		return fmt.Errorf("json marshal[%v] invalid", recordMap)
+	}
+	err = json.Unmarshal(recordData, resultStruct)
+	if err != nil {
+		return fmt.Errorf("json unmarshal[%v] invalid", recordData)
+	}
+	return nil
 }
 
 func Intf2String(row interface{}) string {
