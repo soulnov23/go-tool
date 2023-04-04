@@ -47,8 +47,9 @@ default_log: #默认日志配置
       writer: file #本地文件日志
       writer_config:
         file_name: run.log #本地文件滚动日志文件名
+        time_format: .%Y-%m-%d #日志文件名后缀日期格式
         max_size: 10 #本地文件滚动日志的大小 单位 MB
-        max_backups: 10 #最大日志文件数
+        max_backups: 70 #最大日志文件数
         max_age: 7 #最大日志保留天数
         compress: false #日志文件是否压缩
 

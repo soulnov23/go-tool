@@ -3,12 +3,14 @@ package log
 import (
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -18,8 +20,7 @@ import (
 )
 
 const (
-	BackupTimeFormat = ".15:04:05"
-	CompressSuffix   = ".gz"
+	CompressSuffix = ".gz"
 )
 
 // ensure we always implement io.WriteCloser.
@@ -36,6 +37,8 @@ type rollWriter struct {
 	currPath string
 	currSize int64
 	currFile atomic.Value
+	currTime string
+	currNum  int
 	openTime int64
 
 	mu         sync.Mutex
@@ -65,7 +68,7 @@ func NewRollWriter(filePath string, opt ...Option) (*rollWriter, error) {
 
 	pattern, err := strftime.New(filePath + opts.TimeFormat)
 	if err != nil {
-		return nil, errors.New("strftime.New: " + err.Error())
+		return nil, errors.New("get file pattern: " + err.Error())
 	}
 
 	w := &rollWriter{
@@ -84,28 +87,59 @@ func NewRollWriter(filePath string, opt ...Option) (*rollWriter, error) {
 
 // Write writes logs. It implements io.Writer.
 func (w *rollWriter) Write(v []byte) (n int, err error) {
+	now := time.Now()
 	// reopen file every 10 seconds.
-	if w.getCurrFile() == nil || time.Now().Unix()-atomic.LoadInt64(&w.openTime) > 10 {
+	if w.getCurrFile() == nil || now.Unix()-atomic.LoadInt64(&w.openTime) > 10 {
 		w.mu.Lock()
-		w.reopenFile()
+		if w.getCurrFile() == nil || now.Unix()-atomic.LoadInt64(&w.openTime) > 10 {
+			formatString := w.pattern.FormatString(now)
+			lastFileNum := w.getLastFileNum(filepath.Base(formatString))
+			if lastFileNum == -1 {
+				lastFileNum = 0
+			}
+			currPath := w.fileNameWithTimeAndNum(w.pattern, lastFileNum)
+			if w.currPath != currPath {
+				w.notify()
+			}
+			if w.doReopenFile(currPath) == nil {
+				w.currPath = currPath
+				w.currNum = lastFileNum
+				w.currTime = formatString
+				atomic.StoreInt64(&w.openTime, now.Unix())
+			}
+		}
 		w.mu.Unlock()
 	}
 
 	// return when failed to open the file.
 	if w.getCurrFile() == nil {
-		return 0, errors.New("log.getCurrFile: open file fail")
+		return 0, errors.New("get current file: open file fail")
+	}
+
+	// rolling on full
+	if w.currTime != w.pattern.FormatString(now) || (w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize)+int64(len(v)) >= w.opts.MaxSize) {
+		w.mu.Lock()
+		if w.currTime != w.pattern.FormatString(now) || (w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize)+int64(len(v)) >= w.opts.MaxSize) {
+			formatString := w.pattern.FormatString(now)
+			lastFileNum := w.getLastFileNum(filepath.Base(formatString))
+			currPath := w.fileNameWithTimeAndNum(w.pattern, lastFileNum+1)
+			if w.currPath != currPath {
+				w.notify()
+			}
+			if w.doReopenFile(currPath) == nil {
+				w.currPath = currPath
+				w.currNum = lastFileNum
+				w.currTime = formatString
+				atomic.StoreInt64(&w.openTime, now.Unix())
+			}
+		}
+		w.mu.Unlock()
 	}
 
 	// write logs to file.
 	n, err = w.getCurrFile().Write(v)
 	atomic.AddInt64(&w.currSize, int64(n))
 
-	// rolling on full
-	if w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize) >= w.opts.MaxSize {
-		w.mu.Lock()
-		w.backupFile()
-		w.mu.Unlock()
-	}
 	return n, err
 }
 
@@ -143,22 +177,8 @@ func (w *rollWriter) setCurrFile(file *os.File) {
 	w.currFile.Store(file)
 }
 
-// reopenFile reopen the file regularly. It notifies the scavenger if file path has changed.
-func (w *rollWriter) reopenFile() {
-	if w.getCurrFile() == nil || time.Now().Unix()-atomic.LoadInt64(&w.openTime) > 10 {
-		atomic.StoreInt64(&w.openTime, time.Now().Unix())
-		currPath := w.pattern.FormatString(time.Now())
-		if w.currPath != currPath {
-			w.currPath = currPath
-			w.notify()
-		}
-		_ = w.doReopenFile(w.currPath)
-	}
-}
-
 // doReopenFile reopen the file.
 func (w *rollWriter) doReopenFile(path string) error {
-	atomic.StoreInt64(&w.openTime, time.Now().Unix())
 	lastFile := w.getCurrFile()
 	of, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err == nil {
@@ -173,23 +193,6 @@ func (w *rollWriter) doReopenFile(path string) error {
 		}
 	}
 	return err
-}
-
-// backupFile backs this file up and reopen a new one if file size is too large.
-func (w *rollWriter) backupFile() {
-	if w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize) >= w.opts.MaxSize {
-		atomic.StoreInt64(&w.currSize, 0)
-
-		// rename the old file.
-		newName := w.currPath + time.Now().Format(BackupTimeFormat)
-		if _, e := os.Stat(w.currPath); !os.IsNotExist(e) {
-			_ = os.Rename(w.currPath, newName)
-		}
-
-		// reopen a new one.
-		_ = w.doReopenFile(w.currPath)
-		w.notify()
-	}
 }
 
 // notify runs scavengers.
@@ -255,6 +258,35 @@ func (w *rollWriter) cleanFiles() {
 
 	// compress log files.
 	w.compressFiles(compress)
+}
+
+// getLastFileNum returns the log file list ordered by modified time.
+func (w *rollWriter) getLastFileNum(fileName string) int {
+	var files []string
+	number := -1
+	fileInfo, err := os.ReadDir(w.currDir)
+	if err != nil {
+		return number
+	}
+	for _, file := range fileInfo {
+		if strings.HasPrefix(file.Name(), fileName) {
+			files = append(files, file.Name())
+		}
+	}
+	for _, file := range files {
+		ext := filepath.Ext(file)
+		if len(ext) > 0 {
+			extNum, err := strconv.Atoi(strings.TrimLeft(ext, "."))
+			if err == nil && extNum > number {
+				number = extNum
+			}
+		}
+	}
+	return number
+}
+
+func (w *rollWriter) fileNameWithTimeAndNum(pattern *strftime.Strftime, fileNum int) string {
+	return fmt.Sprintf("%s.%d", pattern.FormatString(time.Now()), fileNum)
 }
 
 // getOldLogFiles returns the log file list ordered by modified time.
