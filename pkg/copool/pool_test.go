@@ -12,7 +12,7 @@ func TestCoPool(t *testing.T) {
 	if err != nil {
 		t.Logf("log.NewZapLog: %s", err.Error())
 	}
-	pool := NewPool(zapLog, 10)
+	pool := NewPool(zapLog.Errorf, 10)
 	handler := func() {
 		t.Logf("runtime.NumGoroutine: %d", runtime.NumGoroutine())
 	}

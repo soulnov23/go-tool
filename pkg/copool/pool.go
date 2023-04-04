@@ -8,16 +8,16 @@ import (
 )
 
 type Pool struct {
-	log       log.Logger
+	printf    log.PrintfFunc
 	taskQueue *lockfree.Queue
 
 	poolSize    uint32 // 协程池额定大小
 	workerCount uint32 // 协程池实际大小
 }
 
-func NewPool(log log.Logger, poolSize int) *Pool {
+func NewPool(printf log.PrintfFunc, poolSize int) *Pool {
 	return &Pool{
-		log:         log,
+		printf:      printf,
 		taskQueue:   lockfree.NewQueue(),
 		poolSize:    uint32(poolSize),
 		workerCount: 0,

@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type PrintfFunc func(format string, args ...interface{})
+
 type Logger interface {
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})

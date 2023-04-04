@@ -28,7 +28,7 @@ func GoAndWait(handlers ...func() error) error {
 				if e := recover(); e != nil {
 					buffer := make([]byte, 10*1024)
 					runtime.Stack(buffer, false)
-					strErr := fmt.Sprintf("[PANIC] %v\n%s\n", e, utils.Byte2String(buffer))
+					strErr := fmt.Sprintf("[PANIC] %v\n%s", e, utils.Byte2String(buffer))
 					once.Do(func() {
 						err = errors.New(strErr)
 					})
@@ -46,13 +46,13 @@ func GoAndWait(handlers ...func() error) error {
 	return err
 }
 
-func Go(log log.Logger, handler func()) {
+func Go(printf log.PrintfFunc, handler func()) {
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
 				buffer := make([]byte, 10*1024)
 				runtime.Stack(buffer, false)
-				log.Errorf("[PANIC] %v\n%s\n", e, utils.Byte2String(buffer))
+				printf("[PANIC] %v\n%s", e, utils.Byte2String(buffer))
 			}
 		}()
 		handler()
@@ -60,16 +60,16 @@ func Go(log log.Logger, handler func()) {
 }
 
 // 如果我们有定时任务需要执行，同时我们不希望失败就退出，而是要继续执行，封装co.GoAndRetry接口
-func GoAndRetry(log log.Logger, handler func(), retryDuration time.Duration) {
+func GoAndRetry(printf log.PrintfFunc, handler func(), retryDuration time.Duration) {
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
 				buffer := make([]byte, 10*1024)
 				runtime.Stack(buffer, false)
-				log.Errorf("[PANIC] %v\n%s\n", e, utils.Byte2String(buffer))
+				printf("[PANIC] %v\n%s", e, utils.Byte2String(buffer))
 			}
 			time.Sleep(retryDuration)
-			GoAndRetry(log, handler, retryDuration)
+			GoAndRetry(printf, handler, retryDuration)
 		}()
 		handler()
 	}()
