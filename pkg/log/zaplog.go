@@ -31,11 +31,11 @@ func (z *ZapLogger) With(fields ...zap.Field) Logger {
 	}
 }
 
-func (z *ZapLogger) Debug(args ...interface{}) {
+func (z *ZapLogger) Debug(args ...any) {
 	z.l.Debug(fmt.Sprint(args...))
 }
 
-func (z *ZapLogger) Debugf(formatter string, args ...interface{}) {
+func (z *ZapLogger) Debugf(formatter string, args ...any) {
 	z.l.Debug(fmt.Sprintf(formatter, args...))
 }
 
@@ -43,11 +43,11 @@ func (z *ZapLogger) DebugFields(msg string, fields ...zap.Field) {
 	z.l.Debug(msg, fields...)
 }
 
-func (z *ZapLogger) Info(args ...interface{}) {
+func (z *ZapLogger) Info(args ...any) {
 	z.l.Info(fmt.Sprint(args...))
 }
 
-func (z *ZapLogger) Infof(formatter string, args ...interface{}) {
+func (z *ZapLogger) Infof(formatter string, args ...any) {
 	z.l.Info(fmt.Sprintf(formatter, args...))
 }
 
@@ -55,11 +55,11 @@ func (z *ZapLogger) InfoFields(msg string, fields ...zap.Field) {
 	z.l.Info(msg, fields...)
 }
 
-func (z *ZapLogger) Warn(args ...interface{}) {
+func (z *ZapLogger) Warn(args ...any) {
 	z.l.Warn(fmt.Sprint(args...))
 }
 
-func (z *ZapLogger) Warnf(formatter string, args ...interface{}) {
+func (z *ZapLogger) Warnf(formatter string, args ...any) {
 	z.l.Warn(fmt.Sprintf(formatter, args...))
 }
 
@@ -67,11 +67,11 @@ func (z *ZapLogger) WarnFields(msg string, fields ...zap.Field) {
 	z.l.Warn(msg, fields...)
 }
 
-func (z *ZapLogger) Error(args ...interface{}) {
+func (z *ZapLogger) Error(args ...any) {
 	z.l.Error(fmt.Sprint(args...))
 }
 
-func (z *ZapLogger) Errorf(formatter string, args ...interface{}) {
+func (z *ZapLogger) Errorf(formatter string, args ...any) {
 	z.l.Error(fmt.Sprintf(formatter, args...))
 }
 
@@ -79,11 +79,11 @@ func (z *ZapLogger) ErrorFields(msg string, fields ...zap.Field) {
 	z.l.Error(msg, fields...)
 }
 
-func (z *ZapLogger) Fatal(args ...interface{}) {
+func (z *ZapLogger) Fatal(args ...any) {
 	z.l.Fatal(fmt.Sprint(args...))
 }
 
-func (z *ZapLogger) Fatalf(formatter string, args ...interface{}) {
+func (z *ZapLogger) Fatalf(formatter string, args ...any) {
 	z.l.Fatal(fmt.Sprintf(formatter, args...))
 }
 

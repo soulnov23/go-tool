@@ -15,6 +15,6 @@ func TestGetCaller(t *testing.T) {
 	print(2, "hello %s", "world")
 }
 
-func print(skip int, formatter string, args ...interface{}) {
+func print(skip int, formatter string, args ...any) {
 	fmt.Printf("%s %s\n", GetCaller(skip), fmt.Sprintf(formatter, args...))
 }

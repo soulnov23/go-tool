@@ -15,7 +15,7 @@ var DefaultConfPath = "./go_tool.yaml"
 
 type AppConfig struct {
 	Server   []*ServerConfig `yaml:"server"`
-	Client   interface{}     `yaml:"client"`
+	Client   any             `yaml:"client"`
 	FrameLog log.LogConfig   `yaml:"frame_log"`
 	CallLog  log.LogConfig   `yaml:"call_log"`
 	RunLog   log.LogConfig   `yaml:"run_log"`

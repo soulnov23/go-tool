@@ -33,7 +33,7 @@ func NewQueue() *Queue {
 }
 
 // EnQueue 入队列
-func (q *Queue) EnQueue(value interface{}) {
+func (q *Queue) EnQueue(value any) {
 	p := &node{
 		value: value,
 		next:  nil,
@@ -64,7 +64,7 @@ func (q *Queue) EnQueue(value interface{}) {
 }
 
 // DeQueue 出队列
-func (q *Queue) DeQueue() interface{} {
+func (q *Queue) DeQueue() any {
 	var head, tail, headNext *node
 	for {
 		// 执行cas前先把上一刻的head，tail和head.next保存

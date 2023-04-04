@@ -6,7 +6,7 @@ import (
 )
 
 type node struct {
-	value interface{}
+	value any
 	next  unsafe.Pointer
 }
 

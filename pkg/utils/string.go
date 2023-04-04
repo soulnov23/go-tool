@@ -45,7 +45,7 @@ func Map2String(recordMap map[string]string) string {
 	return builder.String()[0 : builder.Len()-1]
 }
 
-func Map2Struct(recordMap map[string]interface{}, resultStruct interface{}) error {
+func Map2Struct(recordMap map[string]any, resultStruct any) error {
 	recordData, err := json.Marshal(recordMap)
 	if err != nil {
 		return fmt.Errorf("json marshal[%v] invalid", recordMap)
@@ -57,7 +57,7 @@ func Map2Struct(recordMap map[string]interface{}, resultStruct interface{}) erro
 	return nil
 }
 
-func Intf2String(row interface{}) string {
+func Any2String(row any) string {
 	switch v := row.(type) {
 	case nil:
 		return ""
@@ -101,9 +101,9 @@ func Intf2String(row interface{}) string {
 			return ""
 		}
 		return string(result)
-	case *interface{}:
-		return Intf2String(*v)
-	case interface{}:
+	case *any:
+		return Any2String(*v)
+	case any:
 		switch vv := v.(type) {
 		case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
 			return fmt.Sprintf("%v", vv)

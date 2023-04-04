@@ -14,7 +14,7 @@ func init() {
 		EscapeHTML:              false,
 		SortMapKeys:             true,
 		// https://github.com/json-iterator/go/blob/master/adapter.go:100
-		// 当用interface{}来Unmarshal接收值的时候jsoniter会解析成float64，有精度丢失，UseNumber=true使用Number类型接收，后续通过接口转换成需要的类型
+		// 当用any来Unmarshal接收值的时候jsoniter会解析成float64，有精度丢失，UseNumber=true使用Number类型接收，后续通过接口转换成需要的类型
 		UseNumber: true,
 		// 允许定义的Struct中有未知的字段
 		DisallowUnknownFields:         false,
@@ -27,27 +27,27 @@ func init() {
 }
 
 // Unmarshal
-func Unmarshal(data []byte, value interface{}) error {
+func Unmarshal(data []byte, value any) error {
 	return api.Unmarshal(data, value)
 }
 
 // Marshal
-func Marshal(value interface{}) ([]byte, error) {
+func Marshal(value any) ([]byte, error) {
 	return api.Marshal(value)
 }
 
 // UnmarshalFromString
-func UnmarshalFromString(data string, value interface{}) error {
+func UnmarshalFromString(data string, value any) error {
 	return api.UnmarshalFromString(data, value)
 }
 
 // MarshalToString
-func MarshalToString(value interface{}) (string, error) {
+func MarshalToString(value any) (string, error) {
 	return api.MarshalToString(value)
 }
 
 // Stringify 使json struct字符串化
-func Stringify(value interface{}) string {
+func Stringify(value any) string {
 	data, err := MarshalToString(value)
 	if err != nil {
 		return ""
