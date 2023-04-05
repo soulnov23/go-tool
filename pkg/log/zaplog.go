@@ -97,6 +97,7 @@ func (z *ZapLogger) Sync() error {
 
 // Levels is the map from string to zapcore.Level.
 var zapCoreLevelMap = map[string]zapcore.Level{
+	"":      zapcore.DebugLevel,
 	"debug": zapcore.DebugLevel,
 	"info":  zapcore.InfoLevel,
 	"warn":  zapcore.WarnLevel,
