@@ -39,19 +39,19 @@ type WriteConfig struct {
 
 // FormatConfig is the log format config.
 type FormatConfig struct {
-	// TimeKey is the time key of log output, default as "Time".
+	// TimeKey is the time key of log output, default as "time".
 	TimeKey string `yaml:"time_key"`
-	// LevelKey is the level key of log output, default as "Level".
+	// LevelKey is the level key of log output, default as "level".
 	LevelKey string `yaml:"level_key"`
-	// NameKey is the name key of log output, default as "Name".
+	// NameKey is the name key of log output, default as "name".
 	NameKey string `yaml:"name_key"`
-	// CallerKey is the caller key of log output, default as "Caller".
+	// CallerKey is the caller key of log output, default as "caller".
 	CallerKey string `yaml:"caller_key"`
 	// FunctionKey is the function key of log output, default as "", which means not to print function name.
 	FunctionKey string `yaml:"function_key"`
-	// MessageKey is the message key of log output, default as "Message".
+	// MessageKey is the message key of log output, default as "msg".
 	MessageKey string `yaml:"message_key"`
-	// StackTraceKey is the stack trace key of log output, default as "Stacktrace".
+	// StackTraceKey is the stack trace key of log output, default as "stack".
 	StacktraceKey string `yaml:"stacktrace_key"`
 }
 
@@ -88,13 +88,13 @@ var JsonConfig = LogConfig{
 			Level:     "debug",
 			Formatter: "json",
 			FormatConfig: FormatConfig{
-				TimeKey:       "Time",
-				LevelKey:      "Level",
-				NameKey:       "Name",
-				CallerKey:     "Caller",
-				FunctionKey:   "Function",
-				MessageKey:    "Message",
-				StacktraceKey: "Stacktrace",
+				TimeKey:       "time",
+				LevelKey:      "level",
+				NameKey:       "name",
+				CallerKey:     "caller",
+				FunctionKey:   "func",
+				MessageKey:    "msg",
+				StacktraceKey: "stack",
 			},
 			Writer: logTypeConsole,
 		},
@@ -102,13 +102,13 @@ var JsonConfig = LogConfig{
 			Level:     "debug",
 			Formatter: "json",
 			FormatConfig: FormatConfig{
-				TimeKey:       "Time",
-				LevelKey:      "Level",
-				NameKey:       "Name",
-				CallerKey:     "Caller",
-				FunctionKey:   "Function",
-				MessageKey:    "Message",
-				StacktraceKey: "Stacktrace",
+				TimeKey:       "time",
+				LevelKey:      "level",
+				NameKey:       "name",
+				CallerKey:     "caller",
+				FunctionKey:   "func",
+				MessageKey:    "msg",
+				StacktraceKey: "stack",
 			},
 			Writer: logTypeFile,
 			WriteConfig: WriteConfig{

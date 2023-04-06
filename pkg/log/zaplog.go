@@ -153,13 +153,13 @@ func newFileCore(c CoreConfig) (zapcore.Core, error) {
 
 func newEncoder(c CoreConfig) zapcore.Encoder {
 	cfg := zapcore.EncoderConfig{
-		TimeKey:       getLogEncoderKey("Time", c.FormatConfig.TimeKey),
-		LevelKey:      getLogEncoderKey("Level", c.FormatConfig.LevelKey),
-		NameKey:       getLogEncoderKey("Name", c.FormatConfig.NameKey),
-		CallerKey:     getLogEncoderKey("Caller", c.FormatConfig.CallerKey),
+		TimeKey:       getLogEncoderKey("time", c.FormatConfig.TimeKey),
+		LevelKey:      getLogEncoderKey("level", c.FormatConfig.LevelKey),
+		NameKey:       getLogEncoderKey("name", c.FormatConfig.NameKey),
+		CallerKey:     getLogEncoderKey("caller", c.FormatConfig.CallerKey),
 		FunctionKey:   getLogEncoderKey(zapcore.OmitKey, c.FormatConfig.FunctionKey),
-		MessageKey:    getLogEncoderKey("Message", c.FormatConfig.MessageKey),
-		StacktraceKey: getLogEncoderKey("Stacktrace", c.FormatConfig.StacktraceKey),
+		MessageKey:    getLogEncoderKey("message", c.FormatConfig.MessageKey),
+		StacktraceKey: getLogEncoderKey("stacktrace", c.FormatConfig.StacktraceKey),
 		LineEnding:    zapcore.DefaultLineEnding,
 		EncodeLevel:   zapcore.CapitalLevelEncoder,
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
