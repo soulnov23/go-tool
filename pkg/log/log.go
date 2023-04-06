@@ -5,7 +5,6 @@ import "go.uber.org/zap"
 type PrintfFunc func(formatter string, args ...any)
 
 type Logger interface {
-	Named(s string) Logger
 	With(fields ...zap.Field) Logger
 	Debug(args ...any)
 	Debugf(formatter string, args ...any)

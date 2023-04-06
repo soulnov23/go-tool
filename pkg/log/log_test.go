@@ -12,7 +12,7 @@ func TestLog(t *testing.T) {
 		t.Logf("NewZapLog: %s", err.Error())
 		return
 	}
-	clog = clog.Named("clog")
+	clog = clog.With(zap.String("name", "clog"))
 	clog.Debug("hello world")
 	clog.Debugf("%s %s", "hello", "world")
 	clog.DebugFields("hello world", zap.String("hello", "world"))
@@ -22,7 +22,7 @@ func TestLog(t *testing.T) {
 		t.Logf("NewZapLog: %s", err.Error())
 		return
 	}
-	jlog = jlog.Named("jlog")
+	jlog = jlog.With(zap.String("name", "jlog"))
 	jlog.Debug("hello world")
 	jlog.Debugf("%s %s", "hello", "world")
 	jlog.DebugFields("hello world", zap.String("hello", "world"))
@@ -76,7 +76,7 @@ func TestCutLog(t *testing.T) {
 		t.Logf("NewZapLog: %s", err.Error())
 		return
 	}
-	jlog = jlog.Named("jlog")
+	jlog = jlog.With(zap.String("name", "jlog"))
 
 	for {
 		jlog.DebugFields("hello world", zap.String("hello", "world"))

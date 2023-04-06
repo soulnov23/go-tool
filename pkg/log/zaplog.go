@@ -19,12 +19,6 @@ type ZapLogger struct {
 	l *zap.Logger
 }
 
-func (z *ZapLogger) Named(s string) Logger {
-	return &ZapLogger{
-		l: z.l.Named(s),
-	}
-}
-
 func (z *ZapLogger) With(fields ...zap.Field) Logger {
 	return &ZapLogger{
 		l: z.l.With(fields...),
