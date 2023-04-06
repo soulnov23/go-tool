@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/soulnov23/go-tool/pkg/log"
+	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
 )
 
@@ -97,25 +98,22 @@ type Epoll struct {
 func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
 	epollFD, err := syscall.EpollCreate1(syscall.EPOLL_CLOEXEC)
 	if err != nil {
-		wrapErr := errors.New("syscall.EpollCreate1: " + err.Error())
-		log.Error(wrapErr)
-		return nil, wrapErr
+		log.ErrorFields("epoll create", zap.Error(err))
+		return nil, errors.New("epoll create: " + err.Error())
 	}
 	eventFD, err := unix.Eventfd(0, unix.EFD_NONBLOCK|unix.EFD_CLOEXEC)
 	if err != nil {
 		syscall.Close(epollFD)
-		wrapErr := errors.New("unix.Eventfd: " + err.Error())
-		log.Error(wrapErr)
-		return nil, wrapErr
+		log.ErrorFields("new event fd", zap.Error(err))
+		return nil, errors.New("new event fd: " + err.Error())
 	}
 	if err := Control(epollFD, eventFD, Readable); err != nil {
 		syscall.Close(eventFD)
 		syscall.Close(epollFD)
-		wrapErr := errors.New("net.Control: " + err.Error())
-		log.Error(wrapErr)
-		return nil, wrapErr
+		log.ErrorFields("epoll control event fd", zap.Error(err), zap.Int("epoll_fd", epollFD), zap.Int("event_fd", eventFD))
+		return nil, errors.New("epoll control event fd: " + err.Error())
 	}
-	log.Debugf("create epoll fd: %d, event fd: %d", epollFD, eventFD)
+	log.DebugFields("new epoll success", zap.Int("epoll_fd", epollFD), zap.Int("event_fd", eventFD))
 	return &Epoll{
 		log:        log,
 		epollFD:    epollFD,
@@ -132,57 +130,49 @@ func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
 func (ep *Epoll) Listen(network string, address string, backlog int, operator Operator) error {
 	listenFD, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, syscall.IPPROTO_TCP)
 	if err != nil {
-		wrapErr := errors.New("syscall.Socket: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("new listen fd", zap.Error(err))
+		return errors.New("new listen fd: " + err.Error())
 	}
 	SetSocketCloseExec(listenFD)
 	if err := SetSocketNonBlock(listenFD); err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("SetSocketNonBlock: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("set listen fd non-blocking", zap.Error(err), zap.Int("listen_fd", listenFD))
+		return errors.New("set listen fd non-blocking: " + err.Error())
 	}
 	if err := SetSocketReuseaddr(listenFD); err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("SetSocketReuseaddr: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("set listen fd reuse address", zap.Error(err), zap.Int("listen_fd", listenFD))
+		return errors.New("set listen fd reuse address: " + err.Error())
 	}
 	if err := SetSocketReUsePort(listenFD); err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("SetSocketReUsePort: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("set listen fd reuse port", zap.Error(err), zap.Int("listen_fd", listenFD))
+		return errors.New("set listen fd reuse port: " + err.Error())
 	}
 	sa, err := GetSocketAddr(network, address)
 	if err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("net.GetSocketAddr: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("get listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address))
+		return errors.New("get listen fd bind address: " + err.Error())
 	}
 	if err := syscall.Bind(listenFD, sa); err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("syscall.Bind: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("set listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address), zap.Any("sockaddr", sa))
+		return errors.New("set listen fd bind address: " + err.Error())
 	}
 	if err := syscall.Listen(listenFD, backlog); err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("syscall.Listen: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("set listen fd backlog", zap.Error(err), zap.Int("listen_fd", listenFD), zap.Int("backlog", backlog))
+		return errors.New("set listen fd backlog: " + err.Error())
 	}
 	if err := Control(ep.epollFD, listenFD, Readable); err != nil {
 		syscall.Close(listenFD)
-		wrapErr := errors.New("net.Control: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("epoll control listen fd", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("listen_fd", listenFD))
+		return errors.New("epoll control listen fd: " + err.Error())
 	}
 	ep.listens[listenFD] = address
 	ep.operators[listenFD] = operator
-	ep.log.Debugf("listen %s success, listen fd: %d", address, listenFD)
+	ep.log.DebugFields("listen success", zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address))
 	return nil
 }
 
@@ -192,9 +182,8 @@ func (ep *Epoll) Wait() error {
 	for {
 		n, err := syscall.EpollWait(ep.epollFD, ep.events, msec)
 		if err != nil && err != syscall.EINTR {
-			wrapErr := errors.New("syscall.EpollWait: " + err.Error())
-			ep.log.Error(wrapErr)
-			return wrapErr
+			ep.log.ErrorFields("epoll wait", zap.Error(err), zap.Int("epoll_fd", ep.epollFD))
+			return errors.New("epoll wait: " + err.Error())
 		}
 		// 轮询没有事件发生，直接阻塞协程，然后主动切换协程
 		if n <= 0 {
@@ -214,7 +203,7 @@ func (ep *Epoll) handler(eventSize int) bool {
 	for i := 0; i < eventSize; i++ {
 		fd := int(ep.events[i].Fd)
 		evt := ep.events[i].Events
-		ep.log.Debugf("wake epoll fd: %d, epoll event: %s, client fd: %d", ep.epollFD, EventString(evt), fd)
+		ep.log.DebugFields("wake epoll wait", zap.Int("epoll_fd", ep.epollFD), zap.String("epoll_event", EventString(evt)), zap.Int("client_fd", fd))
 
 		// 通过write evfd触发
 		if fd == ep.eventFD {
@@ -229,7 +218,7 @@ func (ep *Epoll) handler(eventSize int) bool {
 			if !ok {
 				continue
 			}
-			ep.log.Debugf("close %s->%s, client fd: %d", conn.remoteAddr, conn.localAddr, fd)
+			ep.log.DebugFields("close client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
 			conn.operator.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
@@ -269,7 +258,7 @@ func (ep *Epoll) handlerEventFD() bool {
 			} else if err == syscall.EINTR {
 				continue
 			} else {
-				ep.log.Errorf("syscall.Read: %v", err)
+				ep.log.ErrorFields("read event fd", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("event_fd", ep.eventFD))
 				break
 			}
 		}
@@ -281,9 +270,9 @@ func (ep *Epoll) handlerEventFD() bool {
 	atomic.StoreUint32(&ep.trigger, 0)
 	// 主动触发循环优雅退出
 	if ep.triggerBuf[0] > 0 {
-		ep.log.Debug("exit gracefully")
+		ep.log.DebugFields("exit gracefully")
 		for fd, conn := range ep.tcpConns {
-			ep.log.Debugf("close %s->%s, client fd: %d", conn.remoteAddr, conn.localAddr, fd)
+			ep.log.DebugFields("close client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
 			conn.operator.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
@@ -298,7 +287,7 @@ func (ep *Epoll) handlerEventFD() bool {
 		return true
 	}
 	// 主动触发循环执行异步任务
-	ep.log.Debug("trigger")
+	ep.log.DebugFields("trigger")
 	return false
 }
 
@@ -311,31 +300,31 @@ func (ep *Epoll) handlerAccept(fd int) {
 			} else if err == syscall.EINTR {
 				continue
 			} else {
-				ep.log.Errorf("syscall.Accept4: %v", err)
+				ep.log.ErrorFields("accept client", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd))
 				continue
 			}
 		}
 		ip, err := GetSocketIP(addr)
 		if err != nil {
-			ep.log.Errorf("GetSocketIP: %s", err.Error())
+			ep.log.ErrorFields("get client remote ip", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd))
 			continue
 		}
 		local := ep.listens[fd]
-		ep.log.Debugf("accept %s->%s client fd: %d", ip, local, connFD)
+		ep.log.DebugFields("accept client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", ip), zap.String("local_address", local))
 		SetSocketCloseExec(connFD)
 		if err := SetSocketNonBlock(connFD); err != nil {
 			syscall.Close(connFD)
-			ep.log.Errorf("SetSocketNonBlock: %v", err)
+			ep.log.ErrorFields("set client fd non-blocking", zap.Error(err), zap.Int("client_fd", fd))
 			continue
 		}
 		if err := SetSocketTcpNodelay(connFD); err != nil {
 			syscall.Close(connFD)
-			ep.log.Errorf("SetSocketTcpNodelay: %v", err)
+			ep.log.ErrorFields("set client fd tcp no delay", zap.Error(err), zap.Int("client_fd", fd))
 			continue
 		}
 		if err := Control(ep.epollFD, connFD, Readable); err != nil {
 			syscall.Close(connFD)
-			ep.log.Errorf("net.Control: %v", err)
+			ep.log.ErrorFields("epoll control client fd", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("epoll_event", EventString(Readable)))
 			continue
 		}
 		operator := ep.operators[fd]
@@ -351,18 +340,16 @@ func (ep *Epoll) Trigger() error {
 		return nil
 	}
 	if _, err := syscall.Write(ep.eventFD, []byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
-		wrapErr := errors.New("notify eventFD trigger: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("write event fd trigger", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("event_fd", ep.eventFD))
+		return errors.New("write event fd trigger: " + err.Error())
 	}
 	return nil
 }
 
 func (ep *Epoll) Close() error {
 	if _, err := syscall.Write(ep.eventFD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
-		wrapErr := errors.New("notify eventFD close: " + err.Error())
-		ep.log.Error(wrapErr)
-		return wrapErr
+		ep.log.ErrorFields("write event fd close", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("event_fd", ep.eventFD))
+		return errors.New("write event fd close: " + err.Error())
 	}
 	<-ep.close
 	return nil

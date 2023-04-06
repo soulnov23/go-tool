@@ -1,13 +1,14 @@
 package internal
 
 import (
+	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/net"
-	"go.uber.org/zap"
 )
 
 type RPCServer struct {
-	CallLog *zap.Logger
-	RunLog  *zap.SugaredLogger
+	FrameLog log.Logger
+	CallLog  log.Logger
+	RunLog   log.Logger
 }
 
 func (svr *RPCServer) OnAccept(conn *net.TcpConn) {

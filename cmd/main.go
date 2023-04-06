@@ -12,6 +12,7 @@ import (
 	"github.com/soulnov23/go-tool/pkg/net"
 	"github.com/soulnov23/go-tool/pkg/utils"
 	"go.uber.org/automaxprocs/maxprocs"
+	"go.uber.org/zap"
 )
 
 var DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}
@@ -27,71 +28,62 @@ func main() {
 		}
 	}()
 
-	log.Debug("internal.GetAppConfig begin...")
 	appConfig, err := internal.GetAppConfig()
 	if err != nil {
-		log.Error("internal.GetAppConfig: " + err.Error())
+		log.Error("get app config: " + err.Error())
 		return
 	}
-	log.Debug("internal.GetAppConfig success")
 
-	log.Debug("log.NewZapLog frame log begin...")
 	frameLog, err := log.NewZapLog(appConfig.FrameLog)
 	if err != nil {
-		log.Error("log.NewZapLog: " + err.Error())
+		log.Error("new frame log: " + err.Error())
 		return
 	}
+	frameLog = frameLog.With(zap.String("name", "frame"), zap.String("version", os.Getenv("GO_TOOL_VERSION")))
 	defer frameLog.Sync()
-	log.Debug("log.NewZapLog frame log success")
 
-	log.Debug("log.NewZapLog call log begin...")
-	sugaredCallLog, err := log.NewZapLog(appConfig.CallLog)
+	callLog, err := log.NewZapLog(appConfig.CallLog)
 	if err != nil {
-		log.Error("log.NewZapLog: " + err.Error())
+		log.Error("new call log: " + err.Error())
 		return
 	}
-	callLog := sugaredCallLog.Desugar()
 	defer callLog.Sync()
-	log.Debug("log.NewZapLog call log success")
 
-	log.Debug("log.NewZapLog run log begin...")
 	runLog, err := log.NewZapLog(appConfig.RunLog)
 	if err != nil {
-		log.Error("log.NewZapLog: " + err.Error())
+		log.Error("new run log: " + err.Error())
 		return
 	}
 	defer runLog.Sync()
-	log.Debug("log.NewZapLog run log success")
 
-	maxprocs.Set(maxprocs.Logger(log.Debug))
+	maxprocs.Set(maxprocs.Logger(frameLog.Debugf))
 
-	frameLog.Debugf("go-tool start")
-	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(runtime.NumCPU()))
+	frameLog.DebugFields("go-tool start...")
+	loopSize := runtime.NumCPU()
+	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(loopSize))
 	if err != nil {
-		log.Error("net.NewEventLoop: " + err.Error())
+		frameLog.ErrorFields("new event loop", zap.Error(err), zap.Int("loop_size", loopSize))
 		return
 	}
 	for _, serverConfig := range appConfig.Server {
 		if serverConfig.Protocol == "rpc" {
-			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.RPCServer{CallLog: callLog, RunLog: runLog})
+			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.RPCServer{FrameLog: frameLog, CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				log.Error("eventLoop.Listen: " + err.Error())
+				frameLog.ErrorFields("event loop start rpc", zap.Error(err))
 				return
 			}
 		} else if serverConfig.Protocol == "http" {
-			err := eventLoop.Listen(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{CallLog: callLog, RunLog: runLog})
+			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{FrameLog: frameLog, CallLog: callLog, RunLog: runLog})
 			if err != nil {
-				log.Error("eventLoop.Listen: " + err.Error())
+				frameLog.ErrorFields("event loop start http", zap.Error(err))
 				return
 			}
 		} else {
-			log.Error("protocol " + serverConfig.Protocol + " not support")
+			frameLog.ErrorFields("protocol not support", zap.String("protocol", serverConfig.Protocol))
 			return
 		}
 	}
 	eventLoop.Wait()
-
-	frameLog.Debugf("go-tool version: %s", os.Getenv("SERVER_VERSION"))
 
 	signalClose := make(chan os.Signal, 1)
 	signal.Notify(signalClose, DefaultServerCloseSIG...)
@@ -101,14 +93,13 @@ func main() {
 	signal.Notify(signalTrigger, DefaultTriggerSIG...)
 	select {
 	case sig := <-signalClose:
-		frameLog.Debugf("signal close: %s", sig.String())
+		frameLog.DebugFields("signal close", zap.String("sig", sig.String()))
 		eventLoop.Close()
 	case sig := <-signalHotRestart:
-		frameLog.Debugf("signal hot restart: %s", sig.String())
-		// TODO
+		frameLog.DebugFields("signal hot restart", zap.String("sig", sig.String()))
 	case sig := <-signalTrigger:
-		frameLog.Debugf("signal trigger: %s", sig.String())
+		frameLog.DebugFields("signal trigger", zap.String("sig", sig.String()))
 		eventLoop.Trigger()
 	}
-	frameLog.Debugf("go-tool stop")
+	frameLog.DebugFields("go-tool closed")
 }

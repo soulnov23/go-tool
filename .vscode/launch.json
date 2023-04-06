@@ -17,7 +17,7 @@
             "cwd": "./build/bin",
             "env": {
                 "GOTRACEBACK": "crash",
-                "SERVER_VERSION": "v0.0.1",
+                "GO_TOOL_VERSION": "v0.0.1",
             },
             "mode": "exec",
             // path to the program folder 
@@ -35,7 +35,7 @@
             "cwd": "./build/bin",
             "env": {
                 "GOTRACEBACK": "crash",
-                "SERVER_VERSION": "v0.0.1",
+                "GO_TOOL_VERSION": "v0.0.1",
             },
             "mode": "core",
             // path to the program folder 

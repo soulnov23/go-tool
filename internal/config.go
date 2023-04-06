@@ -37,7 +37,7 @@ func GetAppConfig() (*AppConfig, error) {
 	flag.Parse()
 	buffer, err := os.ReadFile(confPath)
 	if err != nil {
-		return nil, errors.New("os.ReadFile: " + err.Error())
+		return nil, errors.New("read config file " + confPath + ": " + err.Error())
 	}
 	buffer = utils.String2Byte(os.ExpandEnv(utils.Byte2String(buffer)))
 	appConfig := &AppConfig{}

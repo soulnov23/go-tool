@@ -1,10 +1,10 @@
 package net
 
 import (
-	"errors"
 	"runtime"
 
 	"github.com/soulnov23/go-tool/pkg/log"
+	"go.uber.org/zap"
 )
 
 type EventLoop struct {
@@ -25,27 +25,23 @@ func NewEventLoop(log log.Logger, opts ...Option) (*EventLoop, error) {
 	for _, o := range opts {
 		o(eventLoop.opts)
 	}
-	log.Debugf("EventLoop loopSize: %d, eventSize: %d, backlog: %d", eventLoop.opts.loopSize, eventLoop.opts.eventSize, eventLoop.opts.backlog)
+	log.DebugFields("new event loop", zap.Int("loop_size", eventLoop.opts.loopSize), zap.Int("event_size", eventLoop.opts.eventSize), zap.Int("backlog", eventLoop.opts.backlog))
 
 	for i := 0; i < eventLoop.opts.loopSize; i++ {
 		epoll, err := NewEpoll(log, eventLoop.opts.eventSize)
 		if err != nil {
-			wrapErr := errors.New("net.NewEpoll: " + err.Error())
-			log.Error(wrapErr)
-			return nil, wrapErr
+			return nil, err
 		}
 		eventLoop.epolls = append(eventLoop.epolls, epoll)
 	}
 	return eventLoop, nil
 }
 
-func (loop *EventLoop) Listen(network string, address string, operator Operator) error {
+func (loop *EventLoop) Start(network string, address string, operator Operator) error {
 	for _, epoll := range loop.epolls {
 		err := epoll.Listen(network, address, loop.opts.backlog, operator)
 		if err != nil {
-			wrapErr := errors.New("epoll.Listen: " + err.Error())
-			loop.log.Error(wrapErr)
-			return wrapErr
+			return err
 		}
 	}
 	return nil
@@ -56,8 +52,7 @@ func (loop *EventLoop) Wait() {
 		go func(epoll *Epoll) {
 			err := epoll.Wait()
 			if err != nil {
-				wrapErr := errors.New("epoll.Wait: " + err.Error())
-				loop.log.Error(wrapErr)
+				loop.log.ErrorFields("event loop wait", zap.Error(err))
 			}
 		}(epoll)
 	}
@@ -67,9 +62,7 @@ func (loop *EventLoop) Trigger() error {
 	for _, epoll := range loop.epolls {
 		err := epoll.Trigger()
 		if err != nil {
-			wrapErr := errors.New("epoll.Trigger: " + err.Error())
-			loop.log.Error(wrapErr)
-			return wrapErr
+			return err
 		}
 	}
 	return nil
@@ -79,9 +72,7 @@ func (loop *EventLoop) Close() error {
 	for _, epoll := range loop.epolls {
 		err := epoll.Close()
 		if err != nil {
-			wrapErr := errors.New("epoll.Close: " + err.Error())
-			loop.log.Error(wrapErr)
-			return wrapErr
+			return err
 		}
 	}
 	return nil

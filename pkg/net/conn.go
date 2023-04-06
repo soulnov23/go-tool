@@ -7,6 +7,7 @@ import (
 	"github.com/soulnov23/go-tool/pkg/cache"
 	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/utils"
+	"go.uber.org/zap"
 )
 
 type Operator interface {
@@ -78,14 +79,15 @@ func (conn *TcpConn) Write(buf []byte) {
 		if err != nil {
 			if err == syscall.EAGAIN {
 				if err := Control(conn.epollFD, conn.fd, ModReadWritable); err != nil {
-					conn.log.Errorf("net.Control: " + err.Error())
+					conn.log.ErrorFields("epoll control client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd), zap.String("epoll_event", EventString(ModReadWritable)))
+					break
 				}
 				conn.writeBuffer.Write(buf)
 				break
 			} else if err == syscall.EINTR {
 				continue
 			} else {
-				conn.log.Errorf("syscall.Write: %v", err)
+				conn.log.ErrorFields("write client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 				break
 			}
 		}
@@ -94,7 +96,7 @@ func (conn *TcpConn) Write(buf []byte) {
 			break
 		}
 	}
-	conn.log.Debugf("write: %s", utils.Byte2String(buf)[:offset])
+	conn.log.DebugFields("write success", zap.String("msg", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 }
 
 func (conn *TcpConn) handlerRead() {
@@ -109,7 +111,7 @@ func (conn *TcpConn) handlerRead() {
 			} else if err == syscall.EINTR {
 				continue
 			} else {
-				conn.log.Errorf("syscall.Read: %v", err)
+				conn.log.ErrorFields("read client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 				break
 			}
 		}
@@ -118,7 +120,7 @@ func (conn *TcpConn) handlerRead() {
 			break
 		}
 	}
-	conn.log.Debugf("read: %s", utils.Byte2String(buf[:offset]))
+	conn.log.DebugFields("read success", zap.String("msg", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 	conn.readBuffer.Write(buf[:offset])
 }
 
@@ -126,7 +128,7 @@ func (conn *TcpConn) handlerWrite() {
 	buf, err := conn.writeBuffer.Peek(int(conn.writeBuffer.Len()))
 	if err != nil {
 		// 数据发送完了返回err
-		conn.log.Errorf("TcpConn.writeBuffer.Peek: " + err.Error())
+		conn.log.ErrorFields("peek write buffer", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 		return
 	}
 	conn.writeBuffer.Skip(cap(buf))
