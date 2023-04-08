@@ -83,6 +83,9 @@
         "**/.obj": true
     },
     "files.defaultLanguage": "json",
+    "files.associations": {
+        "*.log.*": "json"
+    },
     //remote选项
     //"remote.SSH.showLoginTerminal": true,
     "remote.SSH.remotePlatform": {
