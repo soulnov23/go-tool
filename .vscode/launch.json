@@ -16,8 +16,7 @@
             // working directory of the program being debugged
             "cwd": "./build/bin",
             "env": {
-                "GOTRACEBACK": "crash",
-                "GO_TOOL_VERSION": "v0.0.1",
+                "GOTRACEBACK": "crash"
             },
             "mode": "exec",
             // path to the program folder 
@@ -34,8 +33,7 @@
             // working directory of the program being debugged
             "cwd": "./build/bin",
             "env": {
-                "GOTRACEBACK": "crash",
-                "GO_TOOL_VERSION": "v0.0.1",
+                "GOTRACEBACK": "crash"
             },
             "mode": "core",
             // path to the program folder 

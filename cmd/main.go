@@ -2,6 +2,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -15,43 +17,70 @@ import (
 	"go.uber.org/zap"
 )
 
-var DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}
-var DefaultHotRestartSIG = []os.Signal{syscall.SIGUSR1}
-var DefaultTriggerSIG = []os.Signal{syscall.SIGUSR2}
+var (
+	goVersion     string
+	gitBranch     string
+	gitCommitID   string
+	gitCommitTime string
+
+	DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}
+	DefaultHotRestartSIG  = []os.Signal{syscall.SIGUSR1}
+	DefaultTriggerSIG     = []os.Signal{syscall.SIGUSR2}
+)
 
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
 			buffer := make([]byte, 10*1024)
 			runtime.Stack(buffer, false)
-			log.Info("[PANIC] %v\n%s", err, utils.Byte2String(buffer))
+			fmt.Printf("[PANIC] %v\n%s\n", err, utils.Byte2String(buffer))
 		}
 	}()
 
-	appConfig, err := internal.GetAppConfig()
+	// 定义需要解析的命令行参数
+	var version bool
+	var path string
+	flag.BoolVar(&version, "version", false, "show server version")
+	flag.StringVar(&path, "conf", "./go_tool.yaml", "server config file path")
+	// 开始解析命令行
+	flag.Parse()
+	// 命令行参数都不匹配，打印help
+	if flag.NFlag() == 0 {
+		flag.Usage()
+		return
+	}
+	if version {
+		fmt.Printf("go version: %s\n", goVersion)
+		fmt.Printf("git branch: %s\n", gitBranch)
+		fmt.Printf("git commit id: %s\n", gitCommitID)
+		fmt.Printf("git commit time: %s\n", gitCommitTime)
+		return
+	}
+
+	appConfig, err := internal.GetAppConfig(path)
 	if err != nil {
-		log.Error("get app config: " + err.Error())
+		fmt.Printf("get app config: \n" + err.Error())
 		return
 	}
 
 	frameLog, err := log.NewZapLog(appConfig.FrameLog)
 	if err != nil {
-		log.Error("new frame log: " + err.Error())
+		fmt.Printf("new frame log: \n" + err.Error())
 		return
 	}
-	frameLog = frameLog.With(zap.String("name", "frame"), zap.String("version", os.Getenv("GO_TOOL_VERSION")))
+	frameLog = frameLog.With(zap.String("name", "frame"))
 	defer frameLog.Sync()
 
 	callLog, err := log.NewZapLog(appConfig.CallLog)
 	if err != nil {
-		log.Error("new call log: " + err.Error())
+		fmt.Printf("new call log: \n" + err.Error())
 		return
 	}
 	defer callLog.Sync()
 
 	runLog, err := log.NewZapLog(appConfig.RunLog)
 	if err != nil {
-		log.Error("new run log: " + err.Error())
+		fmt.Printf("new run log: \n" + err.Error())
 		return
 	}
 	defer runLog.Sync()

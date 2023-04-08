@@ -2,7 +2,6 @@ package internal
 
 import (
 	"errors"
-	"flag"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -10,8 +9,6 @@ import (
 	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
-
-var DefaultConfPath = "./go_tool.yaml"
 
 type AppConfig struct {
 	Server   []*ServerConfig `yaml:"server"`
@@ -29,20 +26,15 @@ type ServerConfig struct {
 	Timeout  string `yaml:"timeout"`
 }
 
-func GetAppConfig() (*AppConfig, error) {
-	// 定义需要解析的命令行参数
-	var confPath string
-	flag.StringVar(&confPath, "conf", DefaultConfPath, "server config path")
-	// 开始解析命令行
-	flag.Parse()
-	buffer, err := os.ReadFile(confPath)
+func GetAppConfig(path string) (*AppConfig, error) {
+	buffer, err := os.ReadFile(path)
 	if err != nil {
-		return nil, errors.New("read config file " + confPath + ": " + err.Error())
+		return nil, errors.New("read config file " + path + ": " + err.Error())
 	}
 	buffer = utils.String2Byte(os.ExpandEnv(utils.Byte2String(buffer)))
 	appConfig := &AppConfig{}
 	if err = yaml.Unmarshal(buffer, appConfig); err != nil {
-		return nil, errors.New("unmarshal " + DefaultConfPath + ": " + err.Error())
+		return nil, errors.New("unmarshal " + path + ": " + err.Error())
 	}
 	return appConfig, nil
 }
