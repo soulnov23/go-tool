@@ -59,13 +59,13 @@ func main() {
 
 	appConfig, err := internal.GetAppConfig(path)
 	if err != nil {
-		fmt.Printf("get app config: \n" + err.Error())
+		fmt.Printf("get app config: %s\n" + err.Error())
 		return
 	}
 
 	frameLog, err := log.NewZapLog(appConfig.FrameLog)
 	if err != nil {
-		fmt.Printf("new frame log: \n" + err.Error())
+		fmt.Printf("new frame log: %s\n" + err.Error())
 		return
 	}
 	frameLog = frameLog.With(zap.String("name", "frame"))
@@ -73,14 +73,14 @@ func main() {
 
 	callLog, err := log.NewZapLog(appConfig.CallLog)
 	if err != nil {
-		fmt.Printf("new call log: \n" + err.Error())
+		fmt.Printf("new call log: %s\n" + err.Error())
 		return
 	}
 	defer callLog.Sync()
 
 	runLog, err := log.NewZapLog(appConfig.RunLog)
 	if err != nil {
-		fmt.Printf("new run log: \n" + err.Error())
+		fmt.Printf("new run log: %s\n" + err.Error())
 		return
 	}
 	defer runLog.Sync()
