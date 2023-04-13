@@ -11,11 +11,16 @@ server: #服务端配置
     timeout: 3000 #请求最长处理时间 单位 毫秒
 
 client: #客户端调用的后端配置
-  - name: mysql
+  - name: a
     network: tcp
-    protocol: http
-    target:
-    timeout:
+    address: 0.0.0.0:6666
+    protocol: rpc
+    timeout: 3000
+  - name: b
+    network: tcp
+    address: 0.0.0.0:8888
+    protocol: rpc
+    timeout: 3000
 
 default_log: #默认日志配置
   caller_skip: &caller 1 #控制log函数嵌套深度
@@ -58,17 +63,6 @@ frame_log: #框架日志配置
     - <<: *file
       writer_config:
         file_name: ../log/frame.log
-        time_format: *time_format
-        max_size: *max_size
-        max_backups: *max_backups
-        max_age: *max_age
-call_log: #调用日志配置
-  caller_skip: *caller
-  core_config:
-    - <<: *console
-    - <<: *file
-      writer_config:
-        file_name: ../log/call.log
         time_format: *time_format
         max_size: *max_size
         max_backups: *max_backups

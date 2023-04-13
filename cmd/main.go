@@ -71,18 +71,12 @@ func main() {
 	frameLog = frameLog.With(zap.String("name", "frame"))
 	defer frameLog.Sync()
 
-	callLog, err := log.NewZapLog(appConfig.CallLog)
-	if err != nil {
-		fmt.Printf("new call log: %s\n" + err.Error())
-		return
-	}
-	defer callLog.Sync()
-
 	runLog, err := log.NewZapLog(appConfig.RunLog)
 	if err != nil {
 		fmt.Printf("new run log: %s\n" + err.Error())
 		return
 	}
+	runLog = runLog.With(zap.String("name", "run"))
 	defer runLog.Sync()
 
 	maxprocs.Set(maxprocs.Logger(frameLog.Debugf))
@@ -96,13 +90,13 @@ func main() {
 	}
 	for _, serverConfig := range appConfig.Server {
 		if serverConfig.Protocol == "rpc" {
-			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.RPCServer{FrameLog: frameLog, CallLog: callLog, RunLog: runLog})
+			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.RPCServer{FrameLog: frameLog, RunLog: runLog})
 			if err != nil {
 				frameLog.ErrorFields("event loop start rpc", zap.Error(err))
 				return
 			}
 		} else if serverConfig.Protocol == "http" {
-			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{FrameLog: frameLog, CallLog: callLog, RunLog: runLog})
+			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{FrameLog: frameLog, RunLog: runLog})
 			if err != nil {
 				frameLog.ErrorFields("event loop start http", zap.Error(err))
 				return

@@ -14,16 +14,7 @@ import (
 
 type HTTPServer struct {
 	FrameLog log.Logger
-	CallLog  log.Logger
 	RunLog   log.Logger
-}
-
-func (svr *HTTPServer) OnAccept(conn *net.TcpConn) {
-	// TODO
-}
-
-func (svr *HTTPServer) OnClose(conn *net.TcpConn) {
-	// TODO
 }
 
 func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
@@ -111,14 +102,21 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 		}
 		body = utils.Byte2String(buf[index+4 : index+4+length])
 	}
-	svr.FrameLog.DebugFields("codec success", zap.String("version", version), zap.String("method", method), zap.String("remote_address", conn.RemoteAddr()), zap.String("local_address", conn.LocalAddr()), zap.String("url", url), zap.Any("header", header), zap.Any("cookie", cookie), zap.String("query", query), zap.String("body", body))
+	svr.FrameLog.DebugFields("codec success",
+		zap.String("remote_address", conn.RemoteAddr()),
+		zap.String("local_address", conn.LocalAddr()),
+		zap.String("http_version", version),
+		zap.String("http_method", method),
+		zap.String("http_url", url),
+		zap.Any("http_header", header),
+		zap.Any("http_cookie", cookie),
+		zap.String("http_query", query),
+		zap.String("http_body", body))
 
 	traceId := uuid.New().String()
-	callLog := svr.CallLog.With(zap.String("name", "call")).With(zap.String("trace_id", traceId))
-	defer callLog.Sync()
-	runLog := svr.RunLog.With(zap.String("name", "run")).With(zap.String("trace_id", traceId))
-	defer runLog.Sync()
-	response, err := svr.handle(conn, version, method, url, query, body, header, cookie, callLog, runLog)
+	log := svr.RunLog.With(zap.String("trace_id", traceId))
+	defer log.Sync()
+	response, err := svr.handle(conn, version, method, url, query, body, header, cookie, log)
 	if err != nil {
 		svr.FrameLog.ErrorFields("http server handle", zap.Error(err))
 		svr.setBad(conn)
@@ -127,8 +125,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	svr.setOK(conn, response)
 }
 
-func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, body string, header, cookie map[string]string, callLog log.Logger,
-	runLog log.Logger) (string, error) {
+func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, body string, header, cookie map[string]string, log log.Logger) (string, error) {
 	var request string
 	if method == "GET" {
 		request = query
@@ -140,7 +137,7 @@ func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, bo
 	begin := time.Now()
 	time.Sleep(666 * time.Millisecond)
 	timeUsed := time.Since(begin).Milliseconds()
-	callLog.InfoFields("call",
+	log.InfoFields("call",
 		zap.String("remote_address", conn.RemoteAddr()),
 		zap.String("local_address", conn.LocalAddr()),
 		zap.String("http_version", version),
@@ -149,12 +146,13 @@ func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, bo
 		zap.Any("http_header", header),
 		zap.Any("http_cookie", cookie),
 		zap.String("http_query", query),
+		zap.String("http_body", body),
 		zap.String("request", request),
 		zap.String("response", response),
 		zap.Int64("time_used", timeUsed))
 
-	runLog.DebugFields("handle begin", zap.String("request", request))
-	runLog.DebugFields("handle end", zap.String("response", response))
+	log.DebugFields("handle begin", zap.String("request", request))
+	log.DebugFields("handle end", zap.String("response", response))
 	return response, nil
 }
 

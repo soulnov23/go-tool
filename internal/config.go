@@ -11,14 +11,13 @@ import (
 )
 
 type AppConfig struct {
-	Server   []*ServerConfig `yaml:"server"`
-	Client   any             `yaml:"client"`
-	FrameLog log.LogConfig   `yaml:"frame_log"`
-	CallLog  log.LogConfig   `yaml:"call_log"`
-	RunLog   log.LogConfig   `yaml:"run_log"`
+	Server   []*ServiceConfig `yaml:"server"`
+	Client   []*ServiceConfig `yaml:"client"`
+	FrameLog log.LogConfig    `yaml:"frame_log"`
+	RunLog   log.LogConfig    `yaml:"run_log"`
 }
 
-type ServerConfig struct {
+type ServiceConfig struct {
 	Name     string `yaml:"name"`
 	Network  string `yaml:"network"`
 	Address  string `yaml:"address"`
