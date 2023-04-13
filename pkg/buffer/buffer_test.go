@@ -9,7 +9,7 @@ import (
 )
 
 func TestBuffer(t *testing.T) {
-	lkBuffer := NewBuffer()
+	lkBuffer := New()
 
 	write := make(chan struct{})
 	read := make(chan struct{})
@@ -70,7 +70,7 @@ func TestBuffer(t *testing.T) {
 
 	time.Sleep(timeout)
 
-	DeleteBuffer(lkBuffer)
+	lkBuffer.Close()
 
 	cancel()
 

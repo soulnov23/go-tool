@@ -31,30 +31,13 @@ type LinkedBuffer struct {
 	len uint64
 }
 
-func NewBuffer() *LinkedBuffer {
+func New() *LinkedBuffer {
 	return &LinkedBuffer{
 		head:      nil,
 		readNode:  nil,
 		writeNode: nil,
 		len:       0,
 	}
-}
-
-func DeleteBuffer(buffer *LinkedBuffer) {
-	if buffer == nil {
-		return
-	}
-	buffer.readLock.Lock()
-	defer buffer.readLock.Unlock()
-	buffer.writeLock.Lock()
-	defer buffer.writeLock.Unlock()
-	atomic.StoreUint64(&buffer.len, 0)
-	for node := buffer.head; node != nil; {
-		next := node.next
-		DeleteNode(node)
-		node = next
-	}
-	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 }
 
 func (buffer *LinkedBuffer) Len() uint64 {
@@ -195,7 +178,7 @@ func (buffer *LinkedBuffer) GC() {
 	}
 	for node := buffer.head; node != nil; {
 		next := node.next
-		DeleteNode(node)
+		node.Close()
 		node = next
 	}
 	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
@@ -219,4 +202,18 @@ func (buffer *LinkedBuffer) Write(buf []byte) {
 		buffer.writeNode = node
 	}
 	atomic.AddUint64(&buffer.len, uint64(size))
+}
+
+func (buffer *LinkedBuffer) Close() {
+	buffer.readLock.Lock()
+	defer buffer.readLock.Unlock()
+	buffer.writeLock.Lock()
+	defer buffer.writeLock.Unlock()
+	atomic.StoreUint64(&buffer.len, 0)
+	for node := buffer.head; node != nil; {
+		next := node.next
+		node.Close()
+		node = next
+	}
+	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 }

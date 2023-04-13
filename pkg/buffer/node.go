@@ -31,17 +31,6 @@ func NewNode(blockSize int) *LinkedBufferNode {
 	return node
 }
 
-func DeleteNode(node *LinkedBufferNode) {
-	if node == nil {
-		return
-	}
-	if atomic.AddInt32(&node.referCount, -1) == 0 {
-		cache.Delete(node.block)
-		node.block, node.readOffset, node.writeOffset, node.next = nil, 0, 0, nil
-		nodes.Put(node)
-	}
-}
-
 func (node *LinkedBufferNode) Len() int {
 	return node.writeOffset - node.readOffset
 }
@@ -58,4 +47,12 @@ func (node *LinkedBufferNode) Next(size int) []byte {
 	offset := node.readOffset
 	node.readOffset += size
 	return node.block[offset:node.readOffset]
+}
+
+func (node *LinkedBufferNode) Close() {
+	if atomic.AddInt32(&node.referCount, -1) == 0 {
+		cache.Delete(node.block)
+		node.block, node.readOffset, node.writeOffset, node.next = nil, 0, 0, nil
+		nodes.Put(node)
+	}
 }
