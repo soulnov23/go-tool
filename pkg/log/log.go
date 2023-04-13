@@ -2,8 +2,6 @@ package log
 
 import "go.uber.org/zap"
 
-type PrintfFunc func(formatter string, args ...any)
-
 type Logger interface {
 	With(fields ...zap.Field) Logger
 	Debug(args ...any)
