@@ -11,8 +11,6 @@ import (
 )
 
 type Operator interface {
-	OnAccept(conn *TcpConn)
-	OnClose(conn *TcpConn)
 	OnRead(conn *TcpConn)
 }
 

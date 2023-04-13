@@ -219,7 +219,6 @@ func (ep *Epoll) handler(eventSize int) bool {
 				continue
 			}
 			ep.log.DebugFields("close client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
-			conn.operator.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
 			continue
@@ -273,7 +272,6 @@ func (ep *Epoll) handlerEventFD() bool {
 		ep.log.DebugFields("exit gracefully")
 		for fd, conn := range ep.tcpConns {
 			ep.log.DebugFields("close client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
-			conn.operator.OnClose(conn)
 			DeleteTcpConn(conn)
 			delete(ep.tcpConns, fd)
 		}
@@ -330,7 +328,6 @@ func (ep *Epoll) handlerAccept(fd int) {
 		operator := ep.operators[fd]
 		tcpConn := NewTcpConn(ep.log, ep.epollFD, connFD, local, ip, operator)
 		ep.tcpConns[connFD] = tcpConn
-		operator.OnAccept(tcpConn)
 	}
 }
 
