@@ -94,7 +94,7 @@ func (conn *TcpConn) Write(buf []byte) {
 			break
 		}
 	}
-	conn.log.DebugFields("write success", zap.String("msg", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
+	conn.log.DebugFields("write success", zap.String("buffer", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 }
 
 func (conn *TcpConn) handlerRead() {
@@ -118,7 +118,7 @@ func (conn *TcpConn) handlerRead() {
 			break
 		}
 	}
-	conn.log.DebugFields("read success", zap.String("msg", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
+	conn.log.DebugFields("read success", zap.String("buffer", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 	conn.readBuffer.Write(buf[:offset])
 }
 
