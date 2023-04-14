@@ -52,8 +52,8 @@ default_log: #默认日志配置
       writer: file #本地文件日志
       writer_config:
         time_format: &time_format .%Y-%m-%d #日志文件名后缀日期格式
-        max_size: &max_size 10 #本地文件滚动日志的大小 单位 MB
-        max_backups: &max_backups 70 #最大日志文件数
+        max_size: &max_size 1 #本地文件滚动日志的大小 单位 MB
+        max_backups: &max_backups 0 #最大日志文件数
         max_age: &max_age 7 #最大日志保留天数
 
 frame_log: #框架日志配置

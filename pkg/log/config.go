@@ -71,8 +71,8 @@ var ConsoleConfig = LogConfig{
 			WriteConfig: WriteConfig{
 				FileName:   "run.log",
 				TimeFormat: ".%Y-%m-%d",
-				MaxSize:    10,
-				MaxBackups: 70,
+				MaxSize:    1,
+				MaxBackups: 0,
 				MaxAge:     7,
 				Compress:   false,
 			},
@@ -114,8 +114,8 @@ var JsonConfig = LogConfig{
 			WriteConfig: WriteConfig{
 				FileName:   "run.log",
 				TimeFormat: ".%Y-%m-%d",
-				MaxSize:    10,
-				MaxBackups: 70,
+				MaxSize:    1,
+				MaxBackups: 0,
 				MaxAge:     7,
 				Compress:   false,
 			},
