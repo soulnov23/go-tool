@@ -40,10 +40,15 @@
     "[xml]": {
         "editor.defaultFormatter": "DotJoshJohnson.xml"
     },
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml",
+        "editor.tabSize": 4
+    },
     "[proto3]": {
         "editor.defaultFormatter": "xaver.clang-format"
     },
-    "clang-format.language.proto.style": "{BasedOnStyle: Google,IndentWidth: 2,ColumnLimit: 130}",
+    "clang-format.language.proto.style": "{BasedOnStyle: Google,IndentWidth: 4,ColumnLimit: 130}",
+    "shellformat.flag": "-i=4",
     //workbench选项
     "workbench.editor.enablePreview": false,
     "workbench.activityBar.visible": true,
@@ -138,7 +143,5 @@
         "exportScale": 3,
         "exportWithBackground": true,
         "exportWithDarkMode": false
-    },
-    //使用shfmt格式化shell脚本
-    "shellformat.flag": "-i=4",
+    }
 }

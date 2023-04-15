@@ -1,80 +1,80 @@
 server: #服务端配置
-  - name: a
-    network: tcp #网络监听类型 tcp udp
-    address: 0.0.0.0:6666 #服务监听地址ipv4/ipv6
-    protocol: rpc #应用层协议 rpc http
-    timeout: 3000 #请求最长处理时间 单位 毫秒
-  - name: b
-    network: tcp #网络监听类型 tcp udp
-    address: 0.0.0.0:8888 #服务监听地址ipv4/ipv6
-    protocol: http #应用层协议 rpc http
-    timeout: 3000 #请求最长处理时间 单位 毫秒
+    - name: a
+      network: tcp #网络监听类型 tcp udp
+      address: 0.0.0.0:6666 #服务监听地址ipv4/ipv6
+      protocol: rpc #应用层协议 rpc http
+      timeout: 3000 #请求最长处理时间 单位 毫秒
+    - name: b
+      network: tcp #网络监听类型 tcp udp
+      address: 0.0.0.0:8888 #服务监听地址ipv4/ipv6
+      protocol: http #应用层协议 rpc http
+      timeout: 3000 #请求最长处理时间 单位 毫秒
 
 client: #客户端调用的后端配置
-  - name: a
-    network: tcp
-    address: 0.0.0.0:6666
-    protocol: rpc
-    timeout: 3000
-  - name: b
-    network: tcp
-    address: 0.0.0.0:8888
-    protocol: rpc
-    timeout: 3000
+    - name: a
+      network: tcp
+      address: 0.0.0.0:6666
+      protocol: rpc
+      timeout: 3000
+    - name: b
+      network: tcp
+      address: 0.0.0.0:8888
+      protocol: rpc
+      timeout: 3000
 
 default_log: #默认日志配置
-  caller_skip: &caller 1 #控制log函数嵌套深度
-  core_config:
-    - &console
-      level: debug #标准输出滚动日志的级别
-      formatter: json #日志打印格式
-      formatter_config:
-        time_key: time
-        level_key: level
-        name_key: name
-        caller_key: caller
-        function_key: func
-        message_key: msg
-        stacktrace_key: stack
-      writer: console #标准输出日志
-      writer_config:
-    - &file
-      level: debug #本地文件滚动日志的级别
-      formatter: json #日志打印格式
-      formatter_config:
-        time_key: time
-        level_key: level
-        name_key: name
-        caller_key: caller
-        function_key: func
-        message_key: msg
-        stacktrace_key: stack
-      writer: file #本地文件日志
-      writer_config:
-        time_format: &time_format .%Y-%m-%d #日志文件名后缀日期格式
-        max_size: &max_size 1 #本地文件滚动日志的大小 单位 MB
-        max_backups: &max_backups 0 #最大日志文件数
-        max_age: &max_age 7 #最大日志保留天数
+    caller_skip: &caller 1 #控制log函数嵌套深度
+    core_config:
+        - &console
+          level: debug #标准输出滚动日志的级别
+          formatter: json #日志打印格式
+          formatter_config:
+              time_key: time
+              level_key: level
+              name_key: name
+              caller_key: caller
+              function_key: func
+              message_key: msg
+              stacktrace_key: stack
+          writer: console #标准输出日志
+          writer_config:
+        - &file
+          level: debug #本地文件滚动日志的级别
+          formatter: json #日志打印格式
+          formatter_config:
+              time_key: time
+              level_key: level
+              name_key: name
+              caller_key: caller
+              function_key: func
+              message_key: msg
+              stacktrace_key: stack
+          writer: file #本地文件日志
+          writer_config:
+              time_format: &time_format .%Y-%m-%d #日志文件名后缀日期格式
+              max_size: &max_size 1 #本地文件滚动日志的大小 单位 MB
+              max_backups: &max_backups 0 #最大日志文件数
+              max_age: &max_age 7 #最大日志保留天数
 
 frame_log: #框架日志配置
-  caller_skip: *caller
-  core_config:
-    - <<: *console
-    - <<: *file
-      writer_config:
-        file_name: ../log/frame.log
-        time_format: *time_format
-        max_size: *max_size
-        max_backups: *max_backups
-        max_age: *max_age
+    caller_skip: *caller
+    core_config:
+        - <<: *console
+        - <<: *file
+          writer_config:
+              file_name: ../log/frame.log
+              time_format: *time_format
+              max_size: *max_size
+              max_backups: *max_backups
+              max_age: *max_age
 run_log: #运行日志配置
-  caller_skip: *caller
-  core_config:
-    - <<: *console
-    - <<: *file
-      writer_config:
-        file_name: ../log/run.log
-        time_format: *time_format
-        max_size: *max_size
-        max_backups: *max_backups
-        max_age: *max_age
+    caller_skip: *caller
+    core_config:
+        - <<: *console
+        - <<: *file
+          writer_config:
+              file_name: ../log/run.log
+              time_format: *time_format
+              max_size: *max_size
+              max_backups: *max_backups
+              max_age: *max_age
