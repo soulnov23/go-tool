@@ -25,7 +25,13 @@ client: #客户端调用的后端配置
 default_log: #默认日志配置
     caller_skip: &caller 1 #控制log函数嵌套深度
     core_config:
-        - &console
+        - &console_console
+          level: debug #标准输出滚动日志的级别
+          formatter: console #日志打印格式
+          formatter_config:
+          writer: console #标准输出日志
+          writer_config:
+        - &console_json
           level: debug #标准输出滚动日志的级别
           formatter: json #日志打印格式
           formatter_config:
@@ -38,7 +44,17 @@ default_log: #默认日志配置
               stacktrace_key: stack
           writer: console #标准输出日志
           writer_config:
-        - &file
+        - &file_console
+          level: debug #本地文件滚动日志的级别
+          formatter: console #日志打印格式
+          formatter_config:
+          writer: file #本地文件日志
+          writer_config: &writer_config
+              time_format: &time_format .%Y-%m-%d #日志文件名后缀日期格式
+              max_size: &max_size 1 #本地文件滚动日志的大小 单位 MB
+              max_backups: &max_backups 0 #最大日志文件数
+              max_age: &max_age 7 #最大日志保留天数
+        - &file_json
           level: debug #本地文件滚动日志的级别
           formatter: json #日志打印格式
           formatter_config:
@@ -50,17 +66,13 @@ default_log: #默认日志配置
               message_key: msg
               stacktrace_key: stack
           writer: file #本地文件日志
-          writer_config:
-              time_format: &time_format .%Y-%m-%d #日志文件名后缀日期格式
-              max_size: &max_size 1 #本地文件滚动日志的大小 单位 MB
-              max_backups: &max_backups 0 #最大日志文件数
-              max_age: &max_age 7 #最大日志保留天数
+          <<: *writer_config
 
 frame_log: #框架日志配置
     caller_skip: *caller
     core_config:
-        - <<: *console
-        - <<: *file
+        - <<: *console_console
+        - <<: *file_console
           writer_config:
               file_name: ../log/frame.log
               time_format: *time_format
@@ -70,8 +82,8 @@ frame_log: #框架日志配置
 run_log: #运行日志配置
     caller_skip: *caller
     core_config:
-        - <<: *console
-        - <<: *file
+        - <<: *console_console
+        - <<: *file_console
           writer_config:
               file_name: ../log/run.log
               time_format: *time_format
