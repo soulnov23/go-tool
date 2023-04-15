@@ -18,10 +18,11 @@ import (
 )
 
 var (
-	goVersion     string
-	gitBranch     string
-	gitCommitID   string
-	gitCommitTime string
+	goVersion       string
+	gitBranch       string
+	gitCommitID     string
+	gitCommitTime   string
+	gitCommitAuthor string
 
 	DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}
 	DefaultHotRestartSIG  = []os.Signal{syscall.SIGUSR1}
@@ -54,6 +55,7 @@ func main() {
 		fmt.Printf("git branch: %s\n", gitBranch)
 		fmt.Printf("git commit id: %s\n", gitCommitID)
 		fmt.Printf("git commit time: %s\n", gitCommitTime)
+		fmt.Printf("git commit author: %s\n", gitCommitAuthor)
 		return
 	}
 

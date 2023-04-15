@@ -7,7 +7,8 @@ RELEASE := -ldflags "-w -s"
 VERSION := -ldflags "-X 'main.goVersion=$(shell go version)' \
 					 -X 'main.gitBranch=$(shell git rev-parse --abbrev-ref HEAD)' \
 					 -X 'main.gitCommitID=$(shell git rev-parse HEAD)' \
-					 -X 'main.gitCommitTime=$(shell git show --pretty=format:"%ci %cr" | head -1)'"
+					 -X 'main.gitCommitTime=$(shell git log --pretty=format:"%ci" | head -1)' \
+					 -X 'main.gitCommitAuthor=$(shell git log --pretty=format:"%cn" | head -1)'" \
 
 CGO := CGO_ENABLED=0
 
