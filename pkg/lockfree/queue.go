@@ -18,8 +18,8 @@ type Queue struct {
 	len  uint64
 }
 
-// NewQueue 创建无锁队列
-func NewQueue() *Queue {
+// New 创建无锁队列
+func New() *Queue {
 	// 分配一个空节点dummy头指针head来解决队列中如果只有一个元素，head和tail都指向同一个节点的问题
 	p := &node{
 		value: nil,
@@ -32,8 +32,8 @@ func NewQueue() *Queue {
 	}
 }
 
-// EnQueue 入队列
-func (q *Queue) EnQueue(value any) {
+// PushBack 入队列尾
+func (q *Queue) PushBack(value any) {
 	p := &node{
 		value: value,
 		next:  nil,
@@ -63,8 +63,8 @@ func (q *Queue) EnQueue(value any) {
 	}
 }
 
-// DeQueue 出队列
-func (q *Queue) DeQueue() any {
+// PopFront 出队列头
+func (q *Queue) PopFront() any {
 	var head, tail, headNext *node
 	for {
 		// 执行cas前先把上一刻的head，tail和head.next保存

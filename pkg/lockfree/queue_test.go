@@ -7,7 +7,7 @@ import (
 )
 
 func TestQueue(t *testing.T) {
-	queue := NewQueue()
+	queue := New()
 
 	write := make(chan struct{})
 	read := make(chan struct{})
@@ -22,7 +22,7 @@ func TestQueue(t *testing.T) {
 				write <- struct{}{}
 				return
 			default:
-				queue.EnQueue("hello world")
+				queue.PushBack("hello world")
 			}
 		}
 	}(ctx, queue)
@@ -34,7 +34,7 @@ func TestQueue(t *testing.T) {
 				read <- struct{}{}
 				return
 			default:
-				temp := queue.DeQueue()
+				temp := queue.PopFront()
 				if temp == nil {
 					t.Log("empty")
 				}
@@ -49,7 +49,7 @@ func TestQueue(t *testing.T) {
 				read <- struct{}{}
 				return
 			default:
-				temp := queue.DeQueue()
+				temp := queue.PopFront()
 				if temp == nil {
 					t.Log("empty")
 				} else {
@@ -66,7 +66,7 @@ func TestQueue(t *testing.T) {
 				read <- struct{}{}
 				return
 			default:
-				temp := queue.DeQueue()
+				temp := queue.PopFront()
 				if temp == nil {
 					t.Log("empty")
 				} else {
