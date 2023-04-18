@@ -19,7 +19,7 @@ func TestBuffer(t *testing.T) {
 
 	buf := utils.String2Byte("hello world")
 
-	go func(ctx context.Context, lkBuffer *LinkedBuffer) {
+	go func(ctx context.Context, lkBuffer *Buffer) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -31,7 +31,7 @@ func TestBuffer(t *testing.T) {
 		}
 	}(ctx, lkBuffer)
 
-	go func(ctx context.Context, lkBuffer *LinkedBuffer) {
+	go func(ctx context.Context, lkBuffer *Buffer) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -40,7 +40,7 @@ func TestBuffer(t *testing.T) {
 			default:
 				res, err := lkBuffer.Peek(40)
 				if err != nil {
-					t.Logf("LinkedBuffer.Peek: %v", err)
+					t.Logf("Buffer.Peek: %v", err)
 				} else {
 					lkBuffer.Skip(cap(res))
 					t.Logf("buf: %s", utils.Byte2String(res))
@@ -50,7 +50,7 @@ func TestBuffer(t *testing.T) {
 		}
 	}(ctx, lkBuffer)
 
-	go func(ctx context.Context, lkBuffer *LinkedBuffer) {
+	go func(ctx context.Context, lkBuffer *Buffer) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -59,7 +59,7 @@ func TestBuffer(t *testing.T) {
 			default:
 				res, err := lkBuffer.Read(40)
 				if err != nil {
-					t.Logf("LinkedBuffer.Read: %v", err)
+					t.Logf("Buffer.Read: %v", err)
 				} else {
 					t.Logf("buf: %s", utils.Byte2String(res))
 				}

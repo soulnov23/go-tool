@@ -20,7 +20,7 @@ var (
 	ErrNotEnoughData = errors.New("data is not enough")
 )
 
-type LinkedBuffer struct {
+type Buffer struct {
 	head      *node
 	readNode  *node
 	writeNode *node // tail node
@@ -31,8 +31,8 @@ type LinkedBuffer struct {
 	len uint64
 }
 
-func New() *LinkedBuffer {
-	return &LinkedBuffer{
+func New() *Buffer {
+	return &Buffer{
 		head:      nil,
 		readNode:  nil,
 		writeNode: nil,
@@ -40,11 +40,11 @@ func New() *LinkedBuffer {
 	}
 }
 
-func (buffer *LinkedBuffer) Len() uint64 {
+func (buffer *Buffer) Len() uint64 {
 	return atomic.LoadUint64(&buffer.len)
 }
 
-func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
+func (buffer *Buffer) Peek(size int) ([]byte, error) {
 	if size <= 0 {
 		return nil, ErrInvalidParam
 	}
@@ -85,7 +85,7 @@ func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 	return buf[:ack], nil
 }
 
-func (buffer *LinkedBuffer) Skip(size int) error {
+func (buffer *Buffer) Skip(size int) error {
 	if size <= 0 {
 		return ErrInvalidParam
 	}
@@ -126,7 +126,7 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 	return nil
 }
 
-func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
+func (buffer *Buffer) Read(size int) ([]byte, error) {
 	if size <= 0 {
 		return nil, ErrInvalidParam
 	}
@@ -168,7 +168,7 @@ func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
 	return buf[:ack], nil
 }
 
-func (buffer *LinkedBuffer) GC() {
+func (buffer *Buffer) GC() {
 	buffer.readLock.Lock()
 	defer buffer.readLock.Unlock()
 	buffer.writeLock.Lock()
@@ -184,7 +184,7 @@ func (buffer *LinkedBuffer) GC() {
 	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 }
 
-func (buffer *LinkedBuffer) Write(buf []byte) {
+func (buffer *Buffer) Write(buf []byte) {
 	size := cap(buf)
 	if size == 0 {
 		return
@@ -204,7 +204,7 @@ func (buffer *LinkedBuffer) Write(buf []byte) {
 	atomic.AddUint64(&buffer.len, uint64(size))
 }
 
-func (buffer *LinkedBuffer) Close() {
+func (buffer *Buffer) Close() {
 	buffer.readLock.Lock()
 	defer buffer.readLock.Unlock()
 	buffer.writeLock.Lock()

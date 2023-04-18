@@ -20,8 +20,8 @@ type TcpConn struct {
 	fd          int
 	localAddr   string
 	remoteAddr  string
-	readBuffer  *buffer.LinkedBuffer
-	writeBuffer *buffer.LinkedBuffer
+	readBuffer  *buffer.Buffer
+	writeBuffer *buffer.Buffer
 	operator    Operator
 }
 
