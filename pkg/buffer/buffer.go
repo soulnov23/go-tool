@@ -21,9 +21,9 @@ var (
 )
 
 type LinkedBuffer struct {
-	head      *LinkedBufferNode
-	readNode  *LinkedBufferNode
-	writeNode *LinkedBufferNode // tail node
+	head      *node
+	readNode  *node
+	writeNode *node // tail node
 
 	readLock  sync.Mutex
 	writeLock sync.Mutex
@@ -54,13 +54,13 @@ func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 		return nil, ErrNotEnoughData
 	}
 	// 遍历前面已经读取过的节点
-	for buffer.readNode.Len() == 0 {
+	for buffer.readNode.len() == 0 {
 		buffer.readNode = buffer.readNode.next
 	}
 	// size只需要读取一个节点的buf就足够了
 	node := buffer.readNode
-	if node.Len() >= size {
-		return node.Peek(size), nil
+	if node.len() >= size {
+		return node.peek(size), nil
 	}
 	// size需要读取多个节点的buf
 	buf := cache.New(size)
@@ -68,15 +68,15 @@ func (buffer *LinkedBuffer) Peek(size int) ([]byte, error) {
 	ack := 0
 	for ack < size && node != nil {
 		// 遇到空节点跳下一个节点
-		if node.Len() == 0 {
+		if node.len() == 0 {
 			node = node.next
 			continue
 		}
-		offset := node.Len()
+		offset := node.len()
 		if ack+offset > size {
 			offset = size - ack
 		}
-		tempBuf := node.Peek(offset)
+		tempBuf := node.peek(offset)
 		copy(buf[ack:ack+offset], tempBuf)
 		ack += offset
 		// Peek不会修改readOffset需要手动跳下一个节点
@@ -95,14 +95,14 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 		return ErrNotEnoughData
 	}
 	// 遍历前面已经读取过的节点
-	for buffer.readNode.Len() == 0 {
+	for buffer.readNode.len() == 0 {
 		buffer.readNode = buffer.readNode.next
 	}
 	// size只需要读取一个节点的buf就足够了
 	node := buffer.readNode
-	if node.Len() >= size {
+	if node.len() >= size {
 		atomic.AddUint64(&buffer.len, ^uint64(size-1))
-		node.Skip(size)
+		node.skip(size)
 		return nil
 	}
 	// size需要读取多个节点的buf
@@ -110,15 +110,15 @@ func (buffer *LinkedBuffer) Skip(size int) error {
 	ack := 0
 	for ack < size && node != nil {
 		// 节点内容被读完了跳下一个节点
-		if node.Len() == 0 {
+		if node.len() == 0 {
 			node = node.next
 			continue
 		}
-		offset := node.Len()
+		offset := node.len()
 		if ack+offset > size {
 			offset = size - ack
 		}
-		node.Skip(offset)
+		node.skip(offset)
 		ack += offset
 	}
 	buffer.readNode = node
@@ -136,14 +136,14 @@ func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
 		return nil, ErrNotEnoughData
 	}
 	// 遍历前面已经读取过的节点
-	for buffer.readNode.Len() == 0 {
+	for buffer.readNode.len() == 0 {
 		buffer.readNode = buffer.readNode.next
 	}
 	// size只需要读取一个节点的buf就足够了
 	node := buffer.readNode
-	if node.Len() >= size {
+	if node.len() >= size {
 		atomic.AddUint64(&buffer.len, ^uint64(size-1))
-		return node.Next(size), nil
+		return node.read(size), nil
 	}
 	// size需要读取多个节点的buf
 	buf := cache.New(size)
@@ -151,15 +151,15 @@ func (buffer *LinkedBuffer) Read(size int) ([]byte, error) {
 	ack := 0
 	for ack < size && node != nil {
 		// 节点内容被读完了跳下一个节点
-		if node.Len() == 0 {
+		if node.len() == 0 {
 			node = node.next
 			continue
 		}
-		offset := node.Len()
+		offset := node.len()
 		if ack+offset > size {
 			offset = size - ack
 		}
-		tempBuf := node.Next(offset)
+		tempBuf := node.read(offset)
 		copy(buf[ack:ack+offset], tempBuf)
 		ack += offset
 	}
@@ -178,7 +178,7 @@ func (buffer *LinkedBuffer) GC() {
 	}
 	for node := buffer.head; node != nil; {
 		next := node.next
-		node.Close()
+		node.close()
 		node = next
 	}
 	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
@@ -193,7 +193,7 @@ func (buffer *LinkedBuffer) Write(buf []byte) {
 	defer buffer.readLock.Unlock()
 	buffer.writeLock.Lock()
 	defer buffer.writeLock.Unlock()
-	node := NewNode(size)
+	node := new(size)
 	node.block, node.writeOffset = buf[:size], size
 	if buffer.writeNode == nil {
 		buffer.head, buffer.readNode, buffer.writeNode = node, node, node
@@ -212,7 +212,7 @@ func (buffer *LinkedBuffer) Close() {
 	atomic.StoreUint64(&buffer.len, 0)
 	for node := buffer.head; node != nil; {
 		next := node.next
-		node.Close()
+		node.close()
 		node = next
 	}
 	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
