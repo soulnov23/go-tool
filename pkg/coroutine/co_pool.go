@@ -14,22 +14,22 @@ type Pool struct {
 	workerCount uint32 // 协程池实际大小
 }
 
-func NewPool(printf func(formatter string, args ...any), poolSize int) *Pool {
+func New(printf func(formatter string, args ...any), poolSize int) *Pool {
 	return &Pool{
 		printf:      printf,
-		taskQueue:   lockfree.NewQueue(),
+		taskQueue:   lockfree.New(),
 		poolSize:    uint32(poolSize),
 		workerCount: 0,
 	}
 }
 
-func (pool *Pool) Run(fn func()) {
-	task := NewTask(fn)
-	pool.taskQueue.EnQueue(task)
+func (pool *Pool) Run(fn func(...any), args ...any) {
+	task := newTask(fn, args...)
+	pool.taskQueue.PushBack(task)
 	if pool.worker() == 0 || pool.worker() < atomic.LoadUint32(&pool.poolSize) {
 		pool.incWorker()
-		work := NewWork(pool)
-		work.Run()
+		work := newWork(pool)
+		work.run()
 	}
 }
 

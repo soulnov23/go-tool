@@ -9,40 +9,40 @@ var works sync.Pool
 
 func init() {
 	works.New = func() any {
-		return &Work{
+		return &work{
 			referCount: 1,
 		}
 	}
 }
 
-type Work struct {
+type work struct {
 	pool       *Pool
 	referCount int32
 }
 
-func NewWork(pool *Pool) *Work {
-	work := works.Get().(*Work)
+func newWork(pool *Pool) *work {
+	work := works.Get().(*work)
 	work.pool = pool
 	return work
 }
 
-func (work *Work) Run() {
+func (work *work) run() {
 	Go(work.pool.printf, func() {
 		for {
-			value := work.pool.taskQueue.DeQueue()
+			value := work.pool.taskQueue.PopFront()
 			if value == nil {
 				work.pool.decWorker()
-				work.Close()
+				work.close()
 				return
 			}
-			task := value.(*Task)
-			task.fn()
-			task.Close()
+			task := value.(*task)
+			task.fn(task.args...)
+			task.close()
 		}
 	})
 }
 
-func (work *Work) Close() {
+func (work *work) close() {
 	if atomic.AddInt32(&work.referCount, -1) == 0 {
 		work.pool = nil
 		works.Put(work)
