@@ -1,8 +1,11 @@
 package coroutine
 
 import (
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
+
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 var works sync.Pool
@@ -27,7 +30,7 @@ func newWork(pool *Pool) *work {
 }
 
 func (work *work) run() {
-	Go(work.pool.printf, func() {
+	go func() {
 		for {
 			value := work.pool.taskQueue.PopFront()
 			if value == nil {
@@ -36,10 +39,19 @@ func (work *work) run() {
 				return
 			}
 			task := value.(*task)
-			task.fn(task.args...)
+			// 增加func()包住是为了防止task的执行panic导致协程池有协程退出，协程应该由协程池管理，退出条件是没有可执行任务了
+			// 其次协程退出没有调用decWorker，会导致pool.Close()锁死
+			func() {
+				defer func() {
+					if e := recover(); e != nil {
+						work.pool.printf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
+					}
+				}()
+				task.fn(task.args...)
+			}()
 			task.close()
 		}
-	})
+	}()
 }
 
 func (work *work) close() {
