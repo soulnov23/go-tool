@@ -3,7 +3,7 @@ package coroutine
 import (
 	"errors"
 	"fmt"
-	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -25,9 +25,7 @@ func GoAndWait(fns ...func() error) error {
 		go func(fn func() error) {
 			defer func() {
 				if e := recover(); e != nil {
-					buffer := make([]byte, 10*1024)
-					runtime.Stack(buffer, false)
-					strErr := fmt.Sprintf("[PANIC] %v\n%s", e, utils.Byte2String(buffer))
+					strErr := fmt.Sprintf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
 					once.Do(func() {
 						err = errors.New(strErr)
 					})
@@ -45,31 +43,32 @@ func GoAndWait(fns ...func() error) error {
 	return err
 }
 
-func Go(printf func(formatter string, args ...any), fn func()) {
+// 谨慎使用，仅适用旁路分支不需要对panic做处理的场景下
+// 考虑fn是事件循环模型，由于panic协程退出了，主协程没有感知还在运行，实际上svr已经无法提供服务了
+func Go(printf func(formatter string, args ...any), fn func(args ...any), args ...any) {
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
-				buffer := make([]byte, 10*1024)
-				runtime.Stack(buffer, false)
-				printf("[PANIC] %v\n%s", e, utils.Byte2String(buffer))
+				printf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
 			}
 		}()
-		fn()
+		fn(args...)
 	}()
 }
 
 // 如果我们有定时任务需要执行，同时我们不希望失败就退出，而是要继续执行，封装co.GoAndRetry接口
-func GoAndRetry(printf func(formatter string, args ...any), fn func(), retryDelay int) {
+func GoAndRetry(printf func(formatter string, args ...any), retryDelay int, fn func(args ...any) error, args ...any) {
 	go func() {
 		defer func() {
+			// panic打印后退出协程
 			if e := recover(); e != nil {
-				buffer := make([]byte, 10*1024)
-				runtime.Stack(buffer, false)
-				printf("[PANIC] %v\n%s", e, utils.Byte2String(buffer))
+				printf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
 			}
-			time.Sleep(time.Duration(retryDelay) * time.Millisecond)
-			GoAndRetry(printf, fn, retryDelay)
 		}()
-		fn()
+		// 任务报错sleep后继续执行
+		if e := fn(args...); e != nil {
+			time.Sleep(time.Duration(retryDelay) * time.Millisecond)
+			GoAndRetry(printf, retryDelay, fn, args...)
+		}
 	}()
 }
