@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/debug"
 	"syscall"
 
 	"github.com/soulnov23/go-tool/internal"
@@ -32,9 +33,7 @@ var (
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
-			buffer := make([]byte, 10*1024)
-			runtime.Stack(buffer, false)
-			fmt.Printf("[PANIC] %v\n%s\n", err, utils.Byte2String(buffer))
+			fmt.Printf("[PANIC] %v\n%s\n", err, utils.Byte2String(debug.Stack()))
 		}
 	}()
 
