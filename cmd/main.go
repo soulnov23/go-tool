@@ -64,7 +64,7 @@ func main() {
 		return
 	}
 
-	frameLog, err := log.NewZapLog(appConfig.FrameLog)
+	frameLog, err := log.New(appConfig.FrameLog)
 	if err != nil {
 		fmt.Printf("new frame log: %s\n" + err.Error())
 		return
@@ -72,7 +72,7 @@ func main() {
 	frameLog = frameLog.With(zap.String("name", "frame"))
 	defer frameLog.Sync()
 
-	runLog, err := log.NewZapLog(appConfig.RunLog)
+	runLog, err := log.New(appConfig.RunLog)
 	if err != nil {
 		fmt.Printf("new run log: %s\n" + err.Error())
 		return

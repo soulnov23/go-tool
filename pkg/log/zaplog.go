@@ -99,7 +99,7 @@ var zapCoreLevelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
-func NewZapLog(c LogConfig) (Logger, error) {
+func New(c LogConfig) (Logger, error) {
 	var cores []zapcore.Core
 	for _, cfg := range c.CoreConfig {
 		if cfg.Writer == logTypeConsole {
@@ -116,7 +116,7 @@ func NewZapLog(c LogConfig) (Logger, error) {
 		}
 	}
 	return &ZapLogger{
-		l: zap.New(zapcore.NewTee(cores...), zap.AddCaller(), zap.AddCallerSkip(c.CallerSkip)),
+		l: zap.New(zapcore.NewTee(cores...), zap.AddCaller(), zap.AddCallerSkip(c.CallerSkip), zap.AddStacktrace(zapcore.ErrorLevel)),
 	}, nil
 }
 

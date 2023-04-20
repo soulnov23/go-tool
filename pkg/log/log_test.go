@@ -7,9 +7,9 @@ import (
 )
 
 func TestLog(t *testing.T) {
-	clog, err := NewZapLog(ConsoleConfig)
+	clog, err := New(ConsoleConfig)
 	if err != nil {
-		t.Logf("NewZapLog: %s", err.Error())
+		t.Logf("new log: %s", err.Error())
 		return
 	}
 	clog = clog.With(zap.String("name", "clog"))
@@ -17,9 +17,9 @@ func TestLog(t *testing.T) {
 	clog.Debugf("%s %s", "hello", "world")
 	clog.DebugFields("hello world", zap.String("hello", "world"))
 
-	jlog, err := NewZapLog(JsonConfig)
+	jlog, err := New(JsonConfig)
 	if err != nil {
-		t.Logf("NewZapLog: %s", err.Error())
+		t.Logf("new log: %s", err.Error())
 		return
 	}
 	jlog = jlog.With(zap.String("name", "jlog"))
@@ -71,9 +71,9 @@ func TestCutLog(t *testing.T) {
 		},
 	}
 
-	jlog, err := NewZapLog(config)
+	jlog, err := New(config)
 	if err != nil {
-		t.Logf("NewZapLog: %s", err.Error())
+		t.Logf("new log: %s", err.Error())
 		return
 	}
 	jlog = jlog.With(zap.String("name", "jlog"))
@@ -81,4 +81,20 @@ func TestCutLog(t *testing.T) {
 	for {
 		jlog.DebugFields("hello world", zap.String("hello", "world"))
 	}
+}
+
+func TestStack(t *testing.T) {
+	jlog, err := New(JsonConfig)
+	if err != nil {
+		t.Logf("new log: %s", err.Error())
+		return
+	}
+	jlog = jlog.With(zap.String("name", "jlog"))
+	defer func() {
+		if err := recover(); err != nil {
+			jlog.DebugFields("[PANIC]", zap.Stack("stack"))
+			jlog.Errorf("[PANIC] %v", err)
+		}
+	}()
+	panic("test")
 }
