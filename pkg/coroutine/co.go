@@ -16,31 +16,31 @@ import (
 */
 func GoAndWait(fns ...func() error) error {
 	var (
-		wg   sync.WaitGroup
-		once sync.Once
-		err  error
+		wg     sync.WaitGroup
+		once   sync.Once
+		fnsErr error
 	)
 	for _, fn := range fns {
 		wg.Add(1)
 		go func(fn func() error) {
 			defer func() {
-				if e := recover(); e != nil {
-					strErr := fmt.Sprintf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
+				if err := recover(); err != nil {
+					strErr := fmt.Sprintf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
 					once.Do(func() {
-						err = errors.New(strErr)
+						fnsErr = errors.New(strErr)
 					})
 				}
 				wg.Done()
 			}()
-			if e := fn(); e != nil {
+			if err := fn(); err != nil {
 				once.Do(func() {
-					err = e
+					fnsErr = err
 				})
 			}
 		}(fn)
 	}
 	wg.Wait()
-	return err
+	return fnsErr
 }
 
 // 谨慎使用，仅适用旁路分支不需要对panic做处理的场景下
@@ -48,8 +48,8 @@ func GoAndWait(fns ...func() error) error {
 func Go(printf func(formatter string, args ...any), fn func(args ...any), args ...any) {
 	go func() {
 		defer func() {
-			if e := recover(); e != nil {
-				printf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
+			if err := recover(); err != nil {
+				printf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
 			}
 		}()
 		fn(args...)
@@ -61,12 +61,12 @@ func GoAndRetry(printf func(formatter string, args ...any), retryDelay int, fn f
 	go func() {
 		defer func() {
 			// panic打印后退出协程
-			if e := recover(); e != nil {
-				printf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
+			if err := recover(); err != nil {
+				printf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
 			}
 		}()
 		// 任务报错sleep后继续执行
-		if e := fn(args...); e != nil {
+		if err := fn(args...); err != nil {
 			time.Sleep(time.Duration(retryDelay) * time.Millisecond)
 			GoAndRetry(printf, retryDelay, fn, args...)
 		}

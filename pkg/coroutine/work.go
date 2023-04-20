@@ -43,8 +43,8 @@ func (work *work) run() {
 			// 其次协程退出没有调用decWorker，会导致pool.Close()锁死
 			func() {
 				defer func() {
-					if e := recover(); e != nil {
-						work.pool.printf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
+					if err := recover(); err != nil {
+						work.pool.printf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
 					}
 				}()
 				task.fn(task.args...)

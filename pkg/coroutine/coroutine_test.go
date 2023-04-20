@@ -10,11 +10,11 @@ import (
 
 func TestStack(t *testing.T) {
 	defer func() {
-		if e := recover(); e != nil {
+		if err := recover(); err != nil {
 			buffer := make([]byte, 10*1024)
 			runtime.Stack(buffer, false)
-			t.Logf("[PANIC] %v\n%s", e, utils.Byte2String(buffer))
-			t.Logf("[PANIC] %v\n%s", e, utils.Byte2String(debug.Stack()))
+			t.Logf("[PANIC] %v\n%s", err, utils.Byte2String(buffer))
+			t.Logf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
 		}
 	}()
 	panic("hello world")
