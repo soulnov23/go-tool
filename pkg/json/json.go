@@ -12,7 +12,7 @@ func init() {
 		IndentionStep:           0,
 		MarshalFloatWith6Digits: false,
 		EscapeHTML:              false,
-		SortMapKeys:             true,
+		SortMapKeys:             false,
 		// https://github.com/json-iterator/go/blob/master/adapter.go:100
 		// 当用any来Unmarshal接收值的时候jsoniter会解析成float64，有精度丢失，UseNumber=true使用Number类型接收，后续通过接口转换成需要的类型
 		UseNumber: true,
