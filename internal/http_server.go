@@ -108,8 +108,8 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 		zap.String("http_version", version),
 		zap.String("http_method", method),
 		zap.String("http_url", url),
-		zap.Any("http_header", header),
-		zap.Any("http_cookie", cookie),
+		zap.Reflect("http_header", header),
+		zap.Reflect("http_cookie", cookie),
 		zap.String("http_query", query),
 		zap.String("http_body", body))
 
@@ -143,8 +143,8 @@ func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, bo
 		zap.String("http_version", version),
 		zap.String("http_method", method),
 		zap.String("http_url", url),
-		zap.Any("http_header", header),
-		zap.Any("http_cookie", cookie),
+		zap.Reflect("http_header", header),
+		zap.Reflect("http_cookie", cookie),
 		zap.String("http_query", query),
 		zap.String("http_body", body),
 		zap.String("request", request),

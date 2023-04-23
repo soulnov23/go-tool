@@ -157,7 +157,7 @@ func (ep *Epoll) Listen(network string, address string, backlog int, operator Op
 	}
 	if err := syscall.Bind(listenFD, sa); err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("set listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address), zap.Any("sockaddr", sa))
+		ep.log.ErrorFields("set listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address), zap.Reflect("sockaddr", sa))
 		return errors.New("set listen fd bind address: " + err.Error())
 	}
 	if err := syscall.Listen(listenFD, backlog); err != nil {
