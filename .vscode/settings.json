@@ -50,6 +50,7 @@
     "clang-format.language.proto.style": "{BasedOnStyle: Google,IndentWidth: 4,ColumnLimit: 130}",
     "shellformat.flag": "-i=4",
     //workbench选项
+    "workbench.colorTheme": "Default Dark+",
     "workbench.editor.enablePreview": false,
     "workbench.activityBar.visible": true,
     "workbench.tree.renderIndentGuides": "none",
