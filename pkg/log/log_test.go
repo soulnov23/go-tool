@@ -26,7 +26,6 @@ func TestLog(t *testing.T) {
 	jlog.Debug("hello world")
 	jlog.Debugf("%s %s", "hello", "world")
 	jlog.DebugFields("hello world", zap.String("hello", "world"))
-
 	jlog.DebugFields("hello world", zap.Reflect("meta", nil))
 }
 
