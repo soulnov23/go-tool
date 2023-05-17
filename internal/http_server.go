@@ -132,7 +132,7 @@ func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, bo
 	} else if method == "POST" {
 		request = body
 	}
-	response := "{\"msg\":\"ok\",\"need_resend\":\"false\",\"ret\":0}"
+	response := "{\"ret_code\":0,\"msg\":\"ok\"}"
 
 	begin := time.Now()
 	time.Sleep(666 * time.Millisecond)

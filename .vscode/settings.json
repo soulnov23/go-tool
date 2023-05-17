@@ -144,5 +144,8 @@
         "exportScale": 3,
         "exportWithBackground": true,
         "exportWithDarkMode": false
-    }
+    },
+    //plantuml渲染服务器
+    "plantuml.server": "http://9.134.3.96:38080",
+    "plantuml.render": "PlantUMLServer"
 }
