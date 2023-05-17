@@ -15,11 +15,17 @@ VERSION := -ldflags "-X 'main.goVersion=$(shell go version)' \
 CGO := CGO_ENABLED=0
 
 all:
+	${CGO} go build ${VERSION} -o ${BIN} ${SRC}
+
+debug:
 	${CGO} go build ${VERSION} ${DEBUG} -o ${BIN} ${SRC}
+
+release:
+	${CGO} go build ${VERSION} ${RELEASE} -o ${BIN} ${SRC}
 
 clean:
 	rm -rf ${BIN}
 
-.PHONY: all clean
+.PHONY: all debug release clean
 
 .DEFAULT_GOAL: all
