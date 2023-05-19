@@ -19,7 +19,7 @@ type HTTPServer struct {
 
 func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	bufferLen := conn.ReadBufferLen()
-	buf, err := conn.Peek(int(bufferLen))
+	buf, err := conn.Read(int(bufferLen))
 	// read buffer没数据了
 	if err != nil {
 		return
