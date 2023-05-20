@@ -129,7 +129,8 @@ func (conn *TcpConn) handlerWrite() {
 		conn.log.ErrorFields("peek write buffer", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 		return
 	}
-	conn.writeBuffer.Skip(cap(buf))
+	size := len(buf)
+	conn.writeBuffer.Skip(size)
 	conn.writeBuffer.GC()
-	conn.Write(buf)
+	conn.Write(buf[:size])
 }

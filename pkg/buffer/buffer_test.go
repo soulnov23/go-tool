@@ -42,7 +42,7 @@ func TestBuffer(t *testing.T) {
 				if err != nil {
 					t.Logf("Buffer.Peek: %v", err)
 				} else {
-					lkBuffer.Skip(cap(res))
+					lkBuffer.Skip(len(res))
 					t.Logf("buf: %s", utils.Byte2String(res))
 				}
 				lkBuffer.GC()
