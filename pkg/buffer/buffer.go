@@ -185,7 +185,7 @@ func (buffer *Buffer) GC() {
 }
 
 func (buffer *Buffer) Write(buf []byte) {
-	size := cap(buf)
+	size := len(buf)
 	if size == 0 {
 		return
 	}
