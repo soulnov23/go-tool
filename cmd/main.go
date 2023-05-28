@@ -25,7 +25,7 @@ var (
 	gitCommitTime   string
 	gitCommitAuthor string
 
-	DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM, syscall.SIGSEGV}
+	DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGTERM, syscall.SIGSEGV}
 	DefaultHotRestartSIG  = []os.Signal{syscall.SIGUSR1}
 	DefaultTriggerSIG     = []os.Signal{syscall.SIGUSR2}
 )
