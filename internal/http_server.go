@@ -19,7 +19,7 @@ type HTTPServer struct {
 
 func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	bufferLen := conn.ReadBufferLen()
-	buf, err := conn.Read(int(bufferLen))
+	buf, err := conn.Peek(int(bufferLen))
 	// read buffer没数据了
 	if err != nil {
 		return
@@ -83,6 +83,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 			url = querySlice[0]
 			query = querySlice[1]
 		}
+		conn.Skip(index + 4)
 	} else if method == "POST" {
 		strLength, ok := header["Content-Length"]
 		if !ok {
@@ -101,6 +102,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 			return
 		}
 		body = utils.Byte2String(buf[index+4 : index+4+length])
+		conn.Skip(index + 4 + length)
 	}
 	svr.FrameLog.DebugFields("codec success",
 		zap.String("remote_address", conn.RemoteAddr()),
