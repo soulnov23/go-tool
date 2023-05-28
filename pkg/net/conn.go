@@ -75,22 +75,28 @@ func (conn *TcpConn) Write(buf []byte) {
 	for {
 		n, err := syscall.Write(conn.fd, buf[offset:])
 		if err != nil {
-			if err == syscall.EAGAIN {
+			if err == syscall.EINTR /*中断信号触发系统调用中断直接忽略继续读取*/ {
+				continue
+			} else if err == syscall.EAGAIN || err == syscall.EWOULDBLOCK /*非阻塞IO没有数据可读时直接返回等待OUT事件再次触发，不打印了不然日志太多*/ {
 				if err := Control(conn.epollFD, conn.fd, ModReadWritable); err != nil {
 					conn.log.ErrorFields("epoll control client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd), zap.String("epoll_event", EventString(ModReadWritable)))
 					break
 				}
 				conn.writeBuffer.Write(buf)
 				break
-			} else if err == syscall.EINTR {
-				continue
+			} else if err == syscall.EBADF || err == syscall.EINVAL /*fd被关闭已经是无效的文件描述符，在epoll事件模型中把HUP放最前面了，这里不会发生*/ {
+				goto ERROR
+			} else if err == syscall.EPIPE /*broken pipe在write进行中对端意外关闭连接，TCP发起RST报文，触发SIGPIPE信号*/ {
+				goto ERROR
 			} else {
-				conn.log.ErrorFields("write client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
-				break
+				goto ERROR
 			}
+		ERROR:
+			conn.log.ErrorFields("write client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
+			break
 		}
 		offset += n
-		if n == 0 || offset == len(buf) {
+		if offset == len(buf) /*buf全部写进去了*/ {
 			break
 		}
 	}
@@ -104,17 +110,23 @@ func (conn *TcpConn) handlerRead() {
 	for {
 		n, err := syscall.Read(conn.fd, buf[offset:])
 		if err != nil {
-			if err == syscall.EAGAIN {
-				break
-			} else if err == syscall.EINTR {
+			if err == syscall.EINTR /*中断信号触发系统调用中断直接忽略继续读取*/ {
 				continue
-			} else {
-				conn.log.ErrorFields("read client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
+			} else if err == syscall.EAGAIN || err == syscall.EWOULDBLOCK /*非阻塞IO没有数据可读时直接返回等待OUT事件再次触发，不打印了不然日志太多*/ {
 				break
+			} else if err == syscall.EBADF || err == syscall.EINVAL /*fd被关闭已经是无效的文件描述符，在epoll事件模型中把HUP放最前面了，这里不会发生*/ {
+				goto ERROR
+			} else if err == syscall.ECONNRESET /*connection reset by peer在read进行中对端意外关闭连接，TCP发起RST报文*/ {
+				goto ERROR
+			} else {
+				goto ERROR
 			}
+		ERROR:
+			conn.log.ErrorFields("read client fd", zap.Error(err), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
+			break
 		}
 		offset += n
-		if n == 0 || offset == buffer.Block8k {
+		if n == 0 /*在read进行中对端主动关闭连接调用了Close，TCP发起FIN报文*/ || offset == buffer.Block8k /*读取8k就走避免饥饿连接*/ {
 			break
 		}
 	}
