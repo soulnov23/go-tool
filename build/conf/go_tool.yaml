@@ -1,10 +1,10 @@
 server: #服务端配置
-    - name: a
+    - name: rpc_service
       network: tcp #网络监听类型 tcp udp
       address: 0.0.0.0:6666 #服务监听地址ipv4/ipv6
       protocol: rpc #应用层协议 rpc http
       timeout: 3000 #请求最长处理时间 单位 毫秒
-    - name: b
+    - name: http_service
       network: tcp #网络监听类型 tcp udp
       address: 0.0.0.0:8888 #服务监听地址ipv4/ipv6
       protocol: http #应用层协议 rpc http
@@ -71,8 +71,8 @@ default_log: #默认日志配置
 frame_log: #框架日志配置
     caller_skip: *caller
     core_config:
-        - <<: *console_console
-        - <<: *file_console
+        - <<: *console_json
+        - <<: *file_json
           writer_config:
               file_name: ../log/frame.log
               time_format: *time_format
@@ -82,8 +82,8 @@ frame_log: #框架日志配置
 run_log: #运行日志配置
     caller_skip: *caller
     core_config:
-        - <<: *console_console
-        - <<: *file_console
+        - <<: *console_json
+        - <<: *file_json
           writer_config:
               file_name: ../log/run.log
               time_format: *time_format
