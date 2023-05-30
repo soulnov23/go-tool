@@ -42,7 +42,10 @@
     },
     "[yaml]": {
         "editor.defaultFormatter": "redhat.vscode-yaml",
-        "editor.tabSize": 4
+        "editor.tabSize": 4,
+        "editor.indentSize": "tabSize",
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false
     },
     "[proto3]": {
         "editor.defaultFormatter": "xaver.clang-format"
