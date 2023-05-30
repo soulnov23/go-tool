@@ -50,8 +50,9 @@
     "[proto3]": {
         "editor.defaultFormatter": "xaver.clang-format"
     },
-    "clang-format.language.proto.style": "{BasedOnStyle: Google,IndentWidth: 4,ColumnLimit: 130}",
-    "shellformat.flag": "-i=4",
+    "[shellscript]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
     //workbench选项
     "workbench.colorTheme": "Default Dark+",
     "workbench.editor.enablePreview": false,
