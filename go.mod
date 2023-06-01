@@ -6,6 +6,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/strftime v1.0.6
+	github.com/panjf2000/ants/v2 v2.7.4
 	go.uber.org/automaxprocs v1.5.2
 	go.uber.org/zap v1.24.0
 	golang.org/x/sys v0.7.0

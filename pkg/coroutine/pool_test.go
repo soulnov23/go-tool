@@ -20,13 +20,13 @@ func TestStack(t *testing.T) {
 	panic("hello world")
 }
 
-func TestCoPool(t *testing.T) {
-	pool := New(t.Logf, 1)
+func TestPool(t *testing.T) {
+	pool, _ := NewPool(10)
 	for i := 0; i < 60; i++ {
-		fn := func(args ...any) {
-			t.Logf("key: %s, value: %d, runtime.NumGoroutine: %d", args[0], args[1], runtime.NumGoroutine())
+		fn := func() {
+			t.Logf("runtime.NumGoroutine: %d", runtime.NumGoroutine())
 		}
-		pool.Run(fn, "index", i)
+		pool.Submit(fn)
 	}
-	pool.Close()
+	pool.Release()
 }
