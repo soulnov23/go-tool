@@ -22,6 +22,7 @@
     "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
     "editor.maxTokenizationLineLength": 1000000000000000000000000000000000000,
     "editor.accessibilitySupport": "off",
+    "editor.guides.bracketPairs": true,
     "editor.gotoLocation.alternativeDefinitionCommand": "editor.action.revealDefinition",
     "editor.gotoLocation.alternativeDeclarationCommand": "editor.action.revealDeclaration",
     "editor.gotoLocation.alternativeImplementationCommand": "editor.action.goToImplementation",
@@ -66,7 +67,7 @@
     "workbench.colorTheme": "Default Dark+",
     "workbench.editor.enablePreview": false,
     "workbench.activityBar.visible": true,
-    "workbench.tree.renderIndentGuides": "none",
+    "workbench.tree.renderIndentGuides": "always",
     "workbench.view.alwaysShowHeaderActions": true,
     "workbench.startupEditor": "welcomePageInEmptyWorkbench",
     //C_Cpp选项
@@ -160,5 +161,16 @@
     },
     //plantuml渲染服务器
     "plantuml.server": "http://9.134.3.96:38080",
-    "plantuml.render": "PlantUMLServer"
+    "plantuml.render": "PlantUMLServer",
+    //yaml工具
+    "yaml-plus-json": {
+        "convertOnRename": true,
+        "yamlIndent": 4,
+        "fileExtensions": {
+            "yaml": ".yaml",
+            "json": ".json"
+        },
+        "keepOriginalFiles": "always",
+        "overwriteExistentFiles": "always"
+    }
 }
