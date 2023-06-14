@@ -6,10 +6,11 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/strftime v1.0.6
-	github.com/panjf2000/ants/v2 v2.7.4
+	github.com/panjf2000/ants/v2 v2.7.5
 	go.uber.org/automaxprocs v1.5.2
 	go.uber.org/zap v1.24.0
-	golang.org/x/sys v0.7.0
+	golang.org/x/sys v0.9.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -20,4 +21,5 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 )
