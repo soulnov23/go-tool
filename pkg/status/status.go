@@ -5,194 +5,203 @@ import (
 
 	"github.com/soulnov23/go-tool/pkg/json"
 	gcode "google.golang.org/genproto/googleapis/rpc/code"
-	gstatus "google.golang.org/genproto/googleapis/rpc/status"
 )
 
-const (
-	HTTP_CODE_RANGE = 1_000 * 1_000
-	RPC_CODE_RANGE  = 1_000
-	MSG_RANGE       = ": "
+var (
+	HTTPStatusCode = map[string]int{
+		"OK":                  http.StatusOK,
+		"INVALID_ARGUMENT":    http.StatusBadRequest,
+		"FAILED_PRECONDITION": http.StatusBadRequest,
+		"OUT_OF_RANGE":        http.StatusBadRequest,
+		"UNAUTHENTICATED":     http.StatusUnauthorized,
+		"PERMISSION_DENIED":   http.StatusForbidden,
+		"NOT_FOUND":           http.StatusNotFound,
+		"ABORTED":             http.StatusConflict,
+		"ALREADY_EXISTS":      http.StatusConflict,
+		"RESOURCE_EXHAUSTED":  http.StatusTooManyRequests,
+		"CANCELLED":           499,
+		"DATA_LOSS":           http.StatusInternalServerError,
+		"UNKNOWN":             http.StatusInternalServerError,
+		"INTERNAL":            http.StatusInternalServerError,
+		"UNIMPLEMENTED":       http.StatusNotImplemented,
+		"UNAVAILABLE":         http.StatusServiceUnavailable,
+		"DEADLINE_EXCEEDED":   http.StatusGatewayTimeout,
+	}
 )
 
-// Status.Code ${http_code}+${rcp_code}+${code}
 type Status struct {
-	Status *gstatus.Status `json:"status"`
+	Name string `json:"name"`
+	Code int32  `json:"code"`
+	Msg  string `json:"msg"`
 }
 
-func NewOk(code int32, message string) *Status {
+// 200 OK
+var New = func() *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusOK*HTTP_CODE_RANGE + int32(gcode.Code_OK)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusOK) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_OK)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_OK)],
+		Code: 0,
+		Msg:  "ok",
 	}
 }
 
-func NewCancelled(code int32, message string) *Status {
+// 400 Bad Request
+func NewInvalidArgument(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    499*HTTP_CODE_RANGE + int32(gcode.Code_CANCELLED)*RPC_CODE_RANGE + code,
-			Message: "Client Closed Request" + MSG_RANGE + gcode.Code_name[int32(gcode.Code_CANCELLED)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_INVALID_ARGUMENT)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewUnknown(code int32, message string) *Status {
+// 400 Bad Request
+func NewFailedPrecondition(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusInternalServerError*HTTP_CODE_RANGE + int32(gcode.Code_UNKNOWN)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusInternalServerError) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_UNKNOWN)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_FAILED_PRECONDITION)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewInvalidArgument(code int32, message string) *Status {
+// 400 Bad Request
+func NewOutOfRange(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusBadRequest*HTTP_CODE_RANGE + int32(gcode.Code_INVALID_ARGUMENT)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusBadRequest) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_INVALID_ARGUMENT)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_OUT_OF_RANGE)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewDeadlineExceeded(code int32, message string) *Status {
+// 401 Unauthorized
+func NewUnauthenticated(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusGatewayTimeout*HTTP_CODE_RANGE + int32(gcode.Code_DEADLINE_EXCEEDED)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusGatewayTimeout) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_DEADLINE_EXCEEDED)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_UNAUTHENTICATED)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewNotFound(code int32, message string) *Status {
+// 403 Forbidden
+func NewPermissionDenied(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusNotFound*HTTP_CODE_RANGE + int32(gcode.Code_NOT_FOUND)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusNotFound) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_NOT_FOUND)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_PERMISSION_DENIED)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewAlreadyExists(code int32, message string) *Status {
+// 404 Not Found
+func NewNotFound(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusConflict*HTTP_CODE_RANGE + int32(gcode.Code_ALREADY_EXISTS)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusConflict) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_ALREADY_EXISTS)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_NOT_FOUND)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewPermissionDenied(code int32, message string) *Status {
+// 409 Conflict
+func NewAborted(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusForbidden*HTTP_CODE_RANGE + int32(gcode.Code_PERMISSION_DENIED)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusForbidden) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_PERMISSION_DENIED)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_ABORTED)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewUnauthenticated(code int32, message string) *Status {
+// 409 Conflict
+func NewAlreadyExists(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusUnauthorized*HTTP_CODE_RANGE + int32(gcode.Code_UNAUTHENTICATED)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusUnauthorized) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_UNAUTHENTICATED)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_ALREADY_EXISTS)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewResourceExhausted(code int32, message string) *Status {
+// 429 Too Many Requests
+func NewResourceExhausted(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusTooManyRequests*HTTP_CODE_RANGE + int32(gcode.Code_RESOURCE_EXHAUSTED)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusTooManyRequests) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_RESOURCE_EXHAUSTED)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_RESOURCE_EXHAUSTED)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewFailedPrecondition(code int32, message string) *Status {
+// 499 Client Closed Request
+func NewCancelled(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusBadRequest*HTTP_CODE_RANGE + int32(gcode.Code_FAILED_PRECONDITION)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusBadRequest) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_FAILED_PRECONDITION)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_CANCELLED)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewAborted(code int32, message string) *Status {
+// 500 Internal Server Error
+func NewDataLoss(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusConflict*HTTP_CODE_RANGE + int32(gcode.Code_ABORTED)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusConflict) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_ABORTED)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_DATA_LOSS)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewOutOfRange(code int32, message string) *Status {
+// 500 Internal Server Error
+func NewUnknown(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusBadRequest*HTTP_CODE_RANGE + int32(gcode.Code_OUT_OF_RANGE)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusBadRequest) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_OUT_OF_RANGE)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_UNKNOWN)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewUnimplemented(code int32, message string) *Status {
+// 500 Internal Server Error
+func NewInternal(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusNotImplemented*HTTP_CODE_RANGE + int32(gcode.Code_UNIMPLEMENTED)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusNotImplemented) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_UNIMPLEMENTED)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_INTERNAL)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewInternal(code int32, message string) *Status {
+// 501 Not Implemented
+func NewUnimplemented(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusInternalServerError*HTTP_CODE_RANGE + int32(gcode.Code_INTERNAL)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusInternalServerError) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_INTERNAL)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_UNIMPLEMENTED)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewUnavailable(code int32, message string) *Status {
+// 503 Service Unavailable
+func NewUnavailable(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusServiceUnavailable*HTTP_CODE_RANGE + int32(gcode.Code_UNAVAILABLE)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusServiceUnavailable) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_UNAVAILABLE)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_UNAVAILABLE)],
+		Code: code,
+		Msg:  msg,
 	}
 }
 
-func NewDataLoss(code int32, message string) *Status {
+// 504 Gateway Timeout
+func NewDeadlineExceeded(code int32, msg string) *Status {
 	return &Status{
-		Status: &gstatus.Status{
-			Code:    http.StatusInternalServerError*HTTP_CODE_RANGE + int32(gcode.Code_DATA_LOSS)*RPC_CODE_RANGE + code,
-			Message: http.StatusText(http.StatusInternalServerError) + MSG_RANGE + gcode.Code_name[int32(gcode.Code_DATA_LOSS)] + MSG_RANGE + message,
-		},
+		Name: gcode.Code_name[int32(gcode.Code_DEADLINE_EXCEEDED)],
+		Code: code,
+		Msg:  msg,
 	}
+}
+
+func (s *Status) OK() bool {
+	if s == nil {
+		return true
+	}
+	return s.Code == 0
 }
 
 func (s *Status) Error() string {
-	return json.Stringify(s.Status)
+	return json.Stringify(s)
 }
 
-func (s *Status) HttpCode() int32 {
-	if s == nil || s.Status == nil {
+func (s *Status) HTTPCode() int {
+	if s == nil {
 		return http.StatusOK
 	}
-	return s.Status.Code / HTTP_CODE_RANGE
-}
-
-func (s *Status) RpcCode() int32 {
-	if s == nil || s.Status == nil {
-		return int32(gcode.Code_OK)
-	}
-	return (s.Status.Code / RPC_CODE_RANGE) % RPC_CODE_RANGE
-}
-
-func (s *Status) Code() int32 {
-	if s == nil || s.Status == nil {
-		return int32(gcode.Code_OK)
-	}
-	return s.Status.Code % RPC_CODE_RANGE
+	return HTTPStatusCode[s.Name]
 }
