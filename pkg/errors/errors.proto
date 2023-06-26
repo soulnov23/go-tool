@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package errors;
+
+option go_package = "./errors";
+
+message Error {
+    int32 code = 1;
+    string status = 2;
+    string name = 3;
+    string msg = 4;
+}
