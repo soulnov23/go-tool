@@ -138,6 +138,36 @@ func NewNotFound(name string, formatter string, args ...any) *Error {
 	}
 }
 
+// 405 Method Not Allowed
+func NewMethodNotAllowed(name string, formatter string, args ...any) *Error {
+	return &Error{
+		Code:   http.StatusMethodNotAllowed,
+		Status: http.StatusText(http.StatusMethodNotAllowed),
+		Name:   name,
+		Msg:    fmt.Sprintf(formatter, args...),
+	}
+}
+
+// 408 Request Timeout
+func NewRequestTimeout(name string, formatter string, args ...any) *Error {
+	return &Error{
+		Code:   http.StatusRequestTimeout,
+		Status: http.StatusText(http.StatusRequestTimeout),
+		Name:   name,
+		Msg:    fmt.Sprintf(formatter, args...),
+	}
+}
+
+// 409 Conflict
+func NewConflict(name string, formatter string, args ...any) *Error {
+	return &Error{
+		Code:   http.StatusConflict,
+		Status: http.StatusText(http.StatusConflict),
+		Name:   name,
+		Msg:    fmt.Sprintf(formatter, args...),
+	}
+}
+
 // 500 Internal Server Error
 func NewInternalServerError(name string, formatter string, args ...any) *Error {
 	return &Error{
