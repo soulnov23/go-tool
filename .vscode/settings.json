@@ -104,6 +104,7 @@
     },
     "files.defaultLanguage": "jsonc",
     "files.associations": {
+        "*.json*": "jsonc",
         "*.log.*": "jsonc"
     },
     //remote选项
