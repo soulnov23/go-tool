@@ -102,9 +102,9 @@
         "**/*.la": true,
         "**/.obj": true
     },
-    "files.defaultLanguage": "json",
+    "files.defaultLanguage": "jsonc",
     "files.associations": {
-        "*.log.*": "json"
+        "*.log.*": "jsonc"
     },
     //remote选项
     //"remote.SSH.showLoginTerminal": true,
@@ -122,6 +122,7 @@
     //terminal选项
     "terminal.integrated.fontSize": 22,
     "terminal.integrated.copyOnSelection": true,
+    "terminal.integrated.enableMultiLinePasteWarning": false,
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cursorStyle": "line",
     "terminal.integrated.scrollback": 5000,
