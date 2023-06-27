@@ -36,6 +36,24 @@ var New = func() *Error {
 	return &Error{}
 }
 
+func Parse(err string) *Error {
+	e := New()
+	if errr := json.UnmarshalFromString(err, e); errr != nil {
+		return nil
+	}
+	return e
+}
+
+func FromError(err error) *Error {
+	if err == nil {
+		return nil
+	}
+	if innerErr, ok := err.(*Error); ok && innerErr != nil {
+		return innerErr
+	}
+	return Parse(err.Error())
+}
+
 // 100 Continue
 func NewContinue() *Error {
 	return &Error{

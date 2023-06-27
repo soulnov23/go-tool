@@ -1,12 +1,10 @@
 syntax = "proto3";
 
-package errors;
-
-option go_package = "./errors";
+option go_package = "github.com/soulnov23/go-tool/errors";
 
 message Error {
-    int32 code = 1;
-    string status = 2;
-    string name = 3;
-    string msg = 4;
+    int32 code = 1;     // http status code
+    string status = 2;  // http status text
+    string name = 3;    // error name
+    string msg = 4;     // error msg
 }
