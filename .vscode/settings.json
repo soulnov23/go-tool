@@ -62,7 +62,7 @@
         "editor.insertSpaces": true,
         "editor.detectIndentation": false
     },
-    "clang-format.language.proto.style": "{BasedOnStyle: Google,IncludeBlocks: Regroup,TabWidth: 4,IndentWidth: 4,ColumnLimit: 130}",
+    "clang-format.language.proto.style": "{BasedOnStyle: Google,IncludeBlocks: Regroup,TabWidth: 4,IndentWidth: 4,ColumnLimit: 120}",
     //workbench选项
     "workbench.colorTheme": "Default Dark+",
     "workbench.editor.enablePreview": false,
@@ -130,6 +130,11 @@
     "terminal.integrated.wordSeparators": "`~!@#$%^&*()-=+[{]}\\\\|;:'\\\",.<>/?",
     //go选项
     "go.toolsManagement.autoUpdate": true,
+    "go.lintTool": "golangci-lint",
+    "go.testFlags": [
+        "-v",
+        "-count=1"
+    ],
     //xml选项
     "xmlTools.enableXmlTreeViewCursorSync": true,
     "xmlTools.enforcePrettySelfClosingTagOnFormat": true,
@@ -147,11 +152,6 @@
             "--proto_path=${workspaceFolder}/protocol",
         ]
     },
-    //go test打印详细输出，禁用cached
-    "go.testFlags": [
-        "-v",
-        "-count=1"
-    ],
     //显示子文件夹的git
     "git-graph.maxDepthOfRepoSearch": 3,
     "window.title": "${dirty}${separator}${rootName}",
