@@ -121,9 +121,7 @@ func New(c LogConfig) (Logger, error) {
 }
 
 func newConsoleCore(c CoreConfig) zapcore.Core {
-	level := zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level])
-	core := zapcore.NewCore(newEncoder(c), zapcore.Lock(os.Stdout), level)
-	return core
+	return zapcore.NewCore(newEncoder(c), zapcore.Lock(os.Stdout), zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level]))
 }
 
 func newFileCore(c CoreConfig) (zapcore.Core, error) {
@@ -139,10 +137,7 @@ func newFileCore(c CoreConfig) (zapcore.Core, error) {
 		return nil, errors.New("new roll writer: " + err.Error())
 	}
 	ws := zapcore.AddSync(writer)
-
-	level := zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level])
-	core := zapcore.NewCore(newEncoder(c), ws, level)
-	return core, nil
+	return zapcore.NewCore(newEncoder(c), ws, zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level])), nil
 }
 
 func newEncoder(c CoreConfig) zapcore.Encoder {
