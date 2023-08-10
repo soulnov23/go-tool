@@ -14,26 +14,24 @@ const (
 	ColorPurple = "\033[1;35m"
 	ColorWhite  = "\033[1;37m"
 	ColorReset  = "\033[m"
-
-	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 
 func Debug(formatter string, args ...any) {
-	fmt.Printf("%s%s DEBUG %s %s%s\n", ColorGreen, time.Now().Format(DefaultTimeFormat), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+	fmt.Printf("%s%s DEBUG %s %s%s\n", ColorGreen, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
 func Info(formatter string, args ...any) {
-	fmt.Printf("%s%s INFO %s %s%s\n", ColorWhite, time.Now().Format(DefaultTimeFormat), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+	fmt.Printf("%s%s INFO %s %s%s\n", ColorWhite, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
 func Warn(formatter string, args ...any) {
-	fmt.Printf("%s%s WARN %s %s%s\n", ColorYellow, time.Now().Format(DefaultTimeFormat), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+	fmt.Printf("%s%s WARN %s %s%s\n", ColorYellow, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
 func Error(formatter string, args ...any) {
-	fmt.Printf("%s%s ERROR %s %s%s\n", ColorRed, time.Now().Format(DefaultTimeFormat), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+	fmt.Printf("%s%s ERROR %s %s%s\n", ColorRed, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
 func Fatal(formatter string, args ...any) {
-	fmt.Printf("%s%s FATAL %s %s%s\n", ColorPurple, time.Now().Format(DefaultTimeFormat), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+	fmt.Printf("%s%s FATAL %s %s%s\n", ColorPurple, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
