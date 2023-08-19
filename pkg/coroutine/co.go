@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 )
 
 /*
@@ -25,7 +25,7 @@ func GoAndWait(fns ...func() error) error {
 		go func(fn func() error) {
 			defer func() {
 				if err := recover(); err != nil {
-					strErr := fmt.Sprintf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
+					strErr := fmt.Sprintf("[PANIC] %v\n%s", err, convert.BytesToString(debug.Stack()))
 					once.Do(func() {
 						fnsErr = errors.New(strErr)
 					})
@@ -49,7 +49,7 @@ func Go(printf func(formatter string, args ...any), fn func(args ...any), args .
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				printf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
+				printf("[PANIC] %v\n%s", err, convert.BytesToString(debug.Stack()))
 			}
 		}()
 		fn(args...)
@@ -62,7 +62,7 @@ func GoAndRetry(printf func(formatter string, args ...any), retryDelay int, fn f
 		defer func() {
 			// panic打印后退出协程
 			if err := recover(); err != nil {
-				printf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
+				printf("[PANIC] %v\n%s", err, convert.BytesToString(debug.Stack()))
 			}
 		}()
 		// 任务报错sleep后继续执行

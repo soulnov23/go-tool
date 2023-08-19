@@ -5,7 +5,7 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 )
 
 func TestStack(t *testing.T) {
@@ -13,8 +13,8 @@ func TestStack(t *testing.T) {
 		if err := recover(); err != nil {
 			buffer := make([]byte, 10*1024)
 			runtime.Stack(buffer, false)
-			t.Logf("[PANIC] %v\n%s", err, utils.Byte2String(buffer))
-			t.Logf("[PANIC] %v\n%s", err, utils.Byte2String(debug.Stack()))
+			t.Logf("[PANIC] %v\n%s", err, convert.BytesToString(buffer))
+			t.Logf("[PANIC] %v\n%s", err, convert.BytesToString(debug.Stack()))
 		}
 	}()
 	panic("hello world")

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/net"
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 	"go.uber.org/zap"
 )
 
@@ -45,5 +45,5 @@ func (svr *RPCServer) OnRead(conn *net.TcpConn) {
 
 	log.DebugFields("handle begin", zap.ByteString("request", buf))
 	log.DebugFields("handle end", zap.String("response", response))
-	conn.Write(utils.String2Byte(response))
+	conn.Write(convert.StringToBytes(response))
 }

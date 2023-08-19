@@ -6,7 +6,7 @@ import (
 	"github.com/soulnov23/go-tool/pkg/buffer"
 	"github.com/soulnov23/go-tool/pkg/cache"
 	"github.com/soulnov23/go-tool/pkg/log"
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 	"go.uber.org/zap"
 )
 
@@ -100,7 +100,7 @@ func (conn *TcpConn) Write(buf []byte) {
 			break
 		}
 	}
-	conn.log.DebugFields("write success", zap.String("buffer", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
+	conn.log.DebugFields("write success", zap.String("buffer", convert.BytesToString(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 }
 
 func (conn *TcpConn) handlerRead() {
@@ -130,7 +130,7 @@ func (conn *TcpConn) handlerRead() {
 			break
 		}
 	}
-	conn.log.DebugFields("read success", zap.String("buffer", utils.Byte2String(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
+	conn.log.DebugFields("read success", zap.String("buffer", convert.BytesToString(buf[:offset])), zap.Int("epoll_fd", conn.epollFD), zap.Int("client_fd", conn.fd))
 	conn.readBuffer.Write(buf[:offset])
 }
 

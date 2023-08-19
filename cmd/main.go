@@ -13,7 +13,7 @@ import (
 	"github.com/soulnov23/go-tool/internal"
 	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/net"
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
@@ -33,7 +33,7 @@ var (
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Printf("[PANIC] %v\n%s\n", err, utils.Byte2String(debug.Stack()))
+			fmt.Printf("[PANIC] %v\n%s\n", err, convert.BytesToString(debug.Stack()))
 		}
 	}()
 

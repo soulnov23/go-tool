@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/soulnov23/go-tool/pkg/log"
 	"github.com/soulnov23/go-tool/pkg/net"
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 	"go.uber.org/zap"
 )
 
@@ -24,12 +24,12 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	if err != nil {
 		return
 	}
-	index := strings.Index(utils.Byte2String(buf), "\r\n\r\n")
+	index := strings.Index(convert.BytesToString(buf), "\r\n\r\n")
 	if index == -1 {
 		svr.setBad(conn)
 		return
 	}
-	sliceTemp := strings.Split(utils.Byte2String(buf[:index]), "\r\n")
+	sliceTemp := strings.Split(convert.BytesToString(buf[:index]), "\r\n")
 	if len(sliceTemp) < 1 {
 		svr.FrameLog.ErrorFields("http protocol format invalid")
 		svr.setBad(conn)
@@ -71,7 +71,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 		}
 		// cookie
 		if headerSlice[0] == "Cookie" {
-			cookie = utils.String2Map(headerSlice[1], "; ", "=")
+			cookie = convert.StringToMap(headerSlice[1], "; ", "=")
 		} else {
 			header[headerSlice[0]] = headerSlice[1]
 		}
@@ -101,7 +101,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 			svr.FrameLog.DebugFields("http body not complete, continue")
 			return
 		}
-		body = utils.Byte2String(buf[index+4 : index+4+length])
+		body = convert.BytesToString(buf[index+4 : index+4+length])
 		conn.Skip(index + 4 + length)
 	}
 	svr.FrameLog.DebugFields("codec success",
@@ -161,9 +161,9 @@ func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, bo
 func (svr *HTTPServer) setOK(conn *net.TcpConn, response string) {
 	httpRsp := "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
 	httpRsp += "Content-Length: " + strconv.Itoa(len(response)) + "\r\n\r\n" + response
-	conn.Write(utils.String2Byte(httpRsp))
+	conn.Write(convert.StringToBytes(httpRsp))
 }
 
 func (svr *HTTPServer) setBad(conn *net.TcpConn) {
-	conn.Write(utils.String2Byte("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n"))
+	conn.Write(convert.StringToBytes("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n"))
 }

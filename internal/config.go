@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/soulnov23/go-tool/pkg/log"
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 )
 
 type AppConfig struct {
@@ -30,7 +30,7 @@ func GetAppConfig(path string) (*AppConfig, error) {
 	if err != nil {
 		return nil, errors.New("read config file " + path + ": " + err.Error())
 	}
-	buffer = utils.String2Byte(os.ExpandEnv(utils.Byte2String(buffer)))
+	buffer = convert.StringToBytes(os.ExpandEnv(convert.BytesToString(buffer)))
 	appConfig := &AppConfig{}
 	if err = yaml.Unmarshal(buffer, appConfig); err != nil {
 		return nil, errors.New("unmarshal " + path + ": " + err.Error())

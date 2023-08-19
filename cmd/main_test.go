@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/soulnov23/go-tool/pkg/utils"
+	convert "github.com/soulnov23/go-tool/pkg/strconv"
 )
 
 func TestConnect(t *testing.T) {
@@ -106,7 +106,7 @@ func TestRead(t *testing.T) {
 		t.Fatalf("net.DialTimeout: %s", err.Error())
 	}
 
-	buf := utils.String2Byte("hello world")
+	buf := convert.StringToBytes("hello world")
 	tcpConn.Write(buf)
 	httpConn.Write(buf)
 	tcpConn.Close()
@@ -128,7 +128,7 @@ func TestConcurrentRead(t *testing.T) {
 		t.Fatalf("net.DialTimeout: %s", err.Error())
 	}
 
-	buf := utils.String2Byte("hello world")
+	buf := convert.StringToBytes("hello world")
 
 	go func(ctx context.Context, tcpConn net.Conn, httpConn net.Conn) {
 		for {
