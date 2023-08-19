@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/soulnov23/go-tool/pkg/utils"
+	run "github.com/soulnov23/go-tool/pkg/runtime"
 )
 
 const (
@@ -16,22 +16,22 @@ const (
 	ColorReset  = "\033[m"
 )
 
-func Debug(formatter string, args ...any) {
-	fmt.Printf("%s%s DEBUG %s %s%s\n", ColorGreen, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+func Debugf(formatter string, args ...any) {
+	fmt.Printf("%s%s DEBUG %s %s%s\n", ColorGreen, time.Now().Format(time.DateTime), run.Caller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
-func Info(formatter string, args ...any) {
-	fmt.Printf("%s%s INFO %s %s%s\n", ColorWhite, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+func Infof(formatter string, args ...any) {
+	fmt.Printf("%s%s INFO %s %s%s\n", ColorWhite, time.Now().Format(time.DateTime), run.Caller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
-func Warn(formatter string, args ...any) {
-	fmt.Printf("%s%s WARN %s %s%s\n", ColorYellow, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+func Warnf(formatter string, args ...any) {
+	fmt.Printf("%s%s WARN %s %s%s\n", ColorYellow, time.Now().Format(time.DateTime), run.Caller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
-func Error(formatter string, args ...any) {
-	fmt.Printf("%s%s ERROR %s %s%s\n", ColorRed, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+func Errorf(formatter string, args ...any) {
+	fmt.Printf("%s%s ERROR %s %s%s\n", ColorRed, time.Now().Format(time.DateTime), run.Caller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
 
-func Fatal(formatter string, args ...any) {
-	fmt.Printf("%s%s FATAL %s %s%s\n", ColorPurple, time.Now().Format(time.DateTime), utils.GetCaller(2), fmt.Sprintf(formatter, args...), ColorReset)
+func Fatalf(formatter string, args ...any) {
+	fmt.Printf("%s%s FATAL %s %s%s\n", ColorPurple, time.Now().Format(time.DateTime), run.Caller(2), fmt.Sprintf(formatter, args...), ColorReset)
 }
