@@ -1,7 +1,6 @@
 #!/bin/bash
 
-ulimit -c unlimited
-export GOTRACEBACK=crash
+source init.sh
 
 killall -SIGINT go-tool
 nohup ./go-tool -conf ../conf/go_tool.yaml >/dev/null 2>&1 &
