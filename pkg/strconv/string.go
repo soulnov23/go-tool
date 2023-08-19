@@ -17,7 +17,7 @@ func StringToBytes(s string) []byte {
 	return unsafe.Slice(unsafe.StringData(s), len(s))
 }
 
-func String2Map(data string, fieldSep string, valueSep string) map[string]string {
+func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
 	recordMap := map[string]string{}
 	fieldSlice := strings.Split(data, fieldSep)
 	for _, kv := range fieldSlice {
