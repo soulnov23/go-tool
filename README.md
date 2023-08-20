@@ -4,6 +4,7 @@
     - [工程规范](#工程规范)
     - [编码规范](#编码规范)
   - [🚀 功能](#-功能)
+    - [debug](#debug)
   - [💡 流程](#-流程)
   - [🧰 安装](#-安装)
   - [⚙️ 设置](#️-设置)
@@ -27,6 +28,25 @@
 [https://github.com/golang/go/wiki/CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments)
 
 ## 🚀 功能
+
+### debug
+
+```shell
+curl -v 'http://127.0.0.1:6060/debug/pprof/profile?seconds=30' > profile.tar.gz
+curl -v 'http://127.0.0.1:6060/debug/pprof/heap?seconds=30' > head.tar.gz
+curl -v 'http://127.0.0.1:6060/debug/pprof/goroutine?seconds=30' > goroutine.tar.gz
+
+yum install -y graph
+go tool pprof -http 0.0.0.0:9999 profile.tar.gz
+go tool pprof -http 0.0.0.0:9999 head.tar.gz
+go tool pprof -http 0.0.0.0:9999 goroutine.tar.gz
+
+go tool pprof -http 0.0.0.0:9999 'http://127.0.0.1:6060/debug/pprof/profile?seconds=30'
+go tool pprof -http 0.0.0.0:9999 'http://127.0.0.1:6060/debug/pprof/heap?seconds=30'
+go tool pprof -http 0.0.0.0:9999 'http://127.0.0.1:6060/debug/pprof/goroutine?seconds=30'
+```
+
+
 ## 💡 流程
 ## 🧰 安装
 ## ⚙️ 设置

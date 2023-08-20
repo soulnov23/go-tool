@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -93,7 +93,7 @@ func main() {
 		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 		http.ListenAndServe("ip:port", mux)
 	*/
-	addr := "127.0.0.1:9999"
+	addr := "127.0.0.1:6060"
 	readTimeout := 0
 	writeTimeout := 0
 	idleTimeout := 0
@@ -109,9 +109,15 @@ func main() {
 	if appConfig.Server.Debug.IdleTimeout > 0 {
 		idleTimeout = appConfig.Server.Debug.IdleTimeout
 	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	debugServer := &http.Server{
 		Addr:         addr,
-		Handler:      http.DefaultServeMux,
+		Handler:      mux,
 		ReadTimeout:  time.Duration(readTimeout) * time.Millisecond,
 		WriteTimeout: time.Duration(writeTimeout) * time.Millisecond,
 		IdleTimeout:  time.Duration(idleTimeout) * time.Millisecond,

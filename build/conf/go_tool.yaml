@@ -1,9 +1,9 @@
 server: #服务端配置
     debug:
-        address: 0.0.0.0:9999
-        read_timeout: 3000
-        write_timeout: 3000
-        idle_timeout: 3000
+        address: 0.0.0.0:6060
+        read_timeout: 0
+        write_timeout: 0
+        idle_timeout: 0
     services:
         - name: rpc_service
           network: tcp #网络监听类型 tcp udp
