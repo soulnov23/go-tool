@@ -1,26 +1,33 @@
 server: #服务端配置
-    - name: rpc_service
-      network: tcp #网络监听类型 tcp udp
-      address: 0.0.0.0:6666 #服务监听地址ipv4/ipv6
-      protocol: rpc #应用层协议 rpc http
-      timeout: 3000 #请求最长处理时间 单位 毫秒
-    - name: http_service
-      network: tcp #网络监听类型 tcp udp
-      address: 0.0.0.0:8888 #服务监听地址ipv4/ipv6
-      protocol: http #应用层协议 rpc http
-      timeout: 3000 #请求最长处理时间 单位 毫秒
+    debug:
+        address: 0.0.0.0:9999
+        read_timeout: 3000
+        write_timeout: 3000
+        idle_timeout: 3000
+    services:
+        - name: rpc_service
+          network: tcp #网络监听类型 tcp udp
+          address: 0.0.0.0:6666 #服务监听地址ipv4/ipv6
+          protocol: rpc #应用层协议 rpc http
+          timeout: 3000 #请求最长处理时间 单位 毫秒
+        - name: http_service
+          network: tcp #网络监听类型 tcp udp
+          address: 0.0.0.0:8888 #服务监听地址ipv4/ipv6
+          protocol: http #应用层协议 rpc http
+          timeout: 3000 #请求最长处理时间 单位 毫秒
 
 client: #客户端调用的后端配置
-    - name: a
-      network: tcp
-      address: 0.0.0.0:6666
-      protocol: rpc
-      timeout: 3000
-    - name: b
-      network: tcp
-      address: 0.0.0.0:8888
-      protocol: rpc
-      timeout: 3000
+    services:
+        - name: a
+          network: tcp
+          address: 0.0.0.0:6666
+          protocol: rpc
+          timeout: 3000
+        - name: b
+          network: tcp
+          address: 0.0.0.0:8888
+          protocol: rpc
+          timeout: 3000
 
 default_log: #默认日志配置
     caller_skip: &caller 1 #控制log函数嵌套深度

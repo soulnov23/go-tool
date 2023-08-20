@@ -11,18 +11,35 @@ import (
 )
 
 type AppConfig struct {
-	Server   []*ServiceConfig `yaml:"server"`
-	Client   []*ServiceConfig `yaml:"client"`
-	FrameLog log.LogConfig    `yaml:"frame_log"`
-	RunLog   log.LogConfig    `yaml:"run_log"`
+	Server   ServerConfig  `yaml:"server"`
+	Client   ClientConfig  `yaml:"client"`
+	FrameLog log.LogConfig `yaml:"frame_log"`
+	RunLog   log.LogConfig `yaml:"run_log"`
+}
+
+type ServerConfig struct {
+	Debug    DebugConfig     `yaml:"debug"`
+	Services []ServiceConfig `yaml:"services"`
 }
 
 type ServiceConfig struct {
-	Name     string `yaml:"name"`
-	Network  string `yaml:"network"`
-	Address  string `yaml:"address"`
-	Protocol string `yaml:"protocol"`
-	Timeout  string `yaml:"timeout"`
+	Debug    DebugConfig `yaml:"debug"`
+	Name     string      `yaml:"name"`
+	Network  string      `yaml:"network"`
+	Address  string      `yaml:"address"`
+	Protocol string      `yaml:"protocol"`
+	Timeout  string      `yaml:"timeout"`
+}
+
+type DebugConfig struct {
+	Address      string `yaml:"address"`
+	ReadTimeout  int    `yaml:"read_timeout"`
+	WriteTimeout int    `yaml:"write_timeout"`
+	IdleTimeout  int    `yaml:"idle_timeout"`
+}
+
+type ClientConfig struct {
+	Services []ServiceConfig `yaml:"services"`
 }
 
 func GetAppConfig(path string) (*AppConfig, error) {

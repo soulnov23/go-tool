@@ -4,11 +4,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/debug"
 	"syscall"
+	"time"
 
 	"github.com/soulnov23/go-tool/internal"
 	"github.com/soulnov23/go-tool/pkg/log"
@@ -83,27 +86,63 @@ func main() {
 	maxprocs.Set(maxprocs.Logger(frameLog.Debugf))
 
 	frameLog.DebugFields("go-tool start...")
+
+	/*
+		创建mux自定义处理函数，避免与pprof的默认http.DefaultServeMux冲突
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
+		http.ListenAndServe("ip:port", mux)
+	*/
+	addr := "127.0.0.1:9999"
+	readTimeout := 0
+	writeTimeout := 0
+	idleTimeout := 0
+	if appConfig.Server.Debug.Address != "" {
+		addr = appConfig.Server.Debug.Address
+	}
+	if appConfig.Server.Debug.ReadTimeout > 0 {
+		readTimeout = appConfig.Server.Debug.ReadTimeout
+	}
+	if appConfig.Server.Debug.WriteTimeout > 0 {
+		writeTimeout = appConfig.Server.Debug.WriteTimeout
+	}
+	if appConfig.Server.Debug.IdleTimeout > 0 {
+		idleTimeout = appConfig.Server.Debug.IdleTimeout
+	}
+	debugServer := &http.Server{
+		Addr:         addr,
+		Handler:      http.DefaultServeMux,
+		ReadTimeout:  time.Duration(readTimeout) * time.Millisecond,
+		WriteTimeout: time.Duration(writeTimeout) * time.Millisecond,
+		IdleTimeout:  time.Duration(idleTimeout) * time.Millisecond,
+	}
+	go func() {
+		if err := debugServer.ListenAndServe(); err != nil {
+			frameLog.FatalFields("new debug", zap.Reflect("debug_server", debugServer), zap.Error(err))
+		}
+	}()
+
 	loopSize := runtime.NumCPU()
 	eventLoop, err := net.NewEventLoop(frameLog, net.WithLoopSize(loopSize))
 	if err != nil {
-		frameLog.ErrorFields("new event loop", zap.Error(err), zap.Int("loop_size", loopSize))
+		frameLog.FatalFields("new event loop", zap.Error(err), zap.Int("loop_size", loopSize))
 		return
 	}
-	for _, serverConfig := range appConfig.Server {
-		if serverConfig.Protocol == "rpc" {
-			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.RPCServer{FrameLog: frameLog, RunLog: runLog})
+	for _, serviceConfig := range appConfig.Server.Services {
+		if serviceConfig.Protocol == "rpc" {
+			err := eventLoop.Start(serviceConfig.Network, serviceConfig.Address, &internal.RPCServer{FrameLog: frameLog, RunLog: runLog})
 			if err != nil {
-				frameLog.ErrorFields("event loop start rpc", zap.Error(err))
+				frameLog.FatalFields("event loop start rpc", zap.Error(err))
 				return
 			}
-		} else if serverConfig.Protocol == "http" {
-			err := eventLoop.Start(serverConfig.Network, serverConfig.Address, &internal.HTTPServer{FrameLog: frameLog, RunLog: runLog})
+		} else if serviceConfig.Protocol == "http" {
+			err := eventLoop.Start(serviceConfig.Network, serviceConfig.Address, &internal.HTTPServer{FrameLog: frameLog, RunLog: runLog})
 			if err != nil {
-				frameLog.ErrorFields("event loop start http", zap.Error(err))
+				frameLog.FatalFields("event loop start http", zap.Error(err))
 				return
 			}
 		} else {
-			frameLog.ErrorFields("protocol not support", zap.String("protocol", serverConfig.Protocol))
+			frameLog.FatalFields("protocol not support", zap.String("protocol", serviceConfig.Protocol))
 			return
 		}
 	}
