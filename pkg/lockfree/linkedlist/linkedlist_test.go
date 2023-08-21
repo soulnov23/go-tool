@@ -1,4 +1,4 @@
-package queue
+package linkedlist
 
 import (
 	"context"
@@ -15,26 +15,26 @@ func TestQueue(t *testing.T) {
 	timeout := 3 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go func(ctx context.Context, queue *Queue) {
+	go func(ctx context.Context, queue *LinkedList) {
 		for {
 			select {
 			case <-ctx.Done():
 				write <- struct{}{}
 				return
 			default:
-				queue.PushBack("hello world")
+				queue.Enqueue("hello world")
 			}
 		}
 	}(ctx, queue)
 
-	go func(ctx context.Context, queue *Queue) {
+	go func(ctx context.Context, queue *LinkedList) {
 		for {
 			select {
 			case <-ctx.Done():
 				read <- struct{}{}
 				return
 			default:
-				temp := queue.PopFront()
+				temp := queue.Dequeue()
 				if temp == nil {
 					t.Log("empty")
 				}
@@ -42,14 +42,14 @@ func TestQueue(t *testing.T) {
 		}
 	}(ctx, queue)
 
-	go func(ctx context.Context, queue *Queue) {
+	go func(ctx context.Context, queue *LinkedList) {
 		for {
 			select {
 			case <-ctx.Done():
 				read <- struct{}{}
 				return
 			default:
-				temp := queue.PopFront()
+				temp := queue.Dequeue()
 				if temp == nil {
 					t.Log("empty")
 				} else {
@@ -59,14 +59,14 @@ func TestQueue(t *testing.T) {
 		}
 	}(ctx, queue)
 
-	go func(ctx context.Context, queue *Queue) {
+	go func(ctx context.Context, queue *LinkedList) {
 		for {
 			select {
 			case <-ctx.Done():
 				read <- struct{}{}
 				return
 			default:
-				temp := queue.PopFront()
+				temp := queue.Dequeue()
 				if temp == nil {
 					t.Log("empty")
 				} else {

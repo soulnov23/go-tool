@@ -1,7 +1,8 @@
-// Package queue 使用链表实现
-package queue
+// Package linkedlist 使用链表实现
+package linkedlist
 
 import (
+	"runtime"
 	"sync/atomic"
 	"unsafe"
 )
@@ -24,29 +25,29 @@ func cas(addr *unsafe.Pointer, old, new *node) bool {
 	return atomic.CompareAndSwapPointer(addr, unsafe.Pointer(old), unsafe.Pointer(new))
 }
 
-// Queue
-type Queue struct {
+// LinkedList
+type LinkedList struct {
 	head unsafe.Pointer
 	tail unsafe.Pointer
-	len  uint64
+	size uint64
 }
 
 // New 创建无锁队列
-func New() *Queue {
+func New() *LinkedList {
 	// 分配一个空节点dummy头指针head来解决队列中如果只有一个元素，head和tail都指向同一个节点的问题
 	p := &node{
 		value: nil,
 		next:  nil,
 	}
-	return &Queue{
+	return &LinkedList{
 		head: unsafe.Pointer(p),
 		tail: unsafe.Pointer(p),
-		len:  0,
+		size: 0,
 	}
 }
 
-// PushBack 入队列尾
-func (q *Queue) PushBack(value any) {
+// Enqueue 入队列尾
+func (list *LinkedList) Enqueue(value any) {
 	p := &node{
 		value: value,
 		next:  nil,
@@ -54,38 +55,39 @@ func (q *Queue) PushBack(value any) {
 	var tail, tailNext *node
 	for {
 		// 执行cas前先把上一刻的tail和tail.next保存
-		tail = load(&q.tail)
+		tail = load(&list.tail)
 		tailNext = load(&tail.next)
 		// 如果tail已经被其它线程移动了，重新开始
-		if tail != load(&q.tail) {
+		if tail != load(&list.tail) {
 			continue
 		}
 		// 如果tail.next不为nil，往下遍历到尾位置
 		if tailNext != nil {
-			cas(&q.tail, tail, tailNext)
+			cas(&list.tail, tail, tailNext)
 			continue
 		}
 		// 尝试把p连接到tail.next
 		if cas(&tail.next, tailNext, p) {
 			// 入列成功，尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
-			cas(&q.tail, tail, p)
-			atomic.AddUint64(&q.len, 1)
+			cas(&list.tail, tail, p)
+			atomic.AddUint64(&list.size, 1)
 			return
 		}
 		// 入列失败继续try
+		runtime.Gosched()
 	}
 }
 
-// PopFront 出队列头
-func (q *Queue) PopFront() any {
+// Dequeue 出队列头
+func (list *LinkedList) Dequeue() any {
 	var head, tail, headNext *node
 	for {
 		// 执行cas前先把上一刻的head，tail和head.next保存
-		head = load(&q.head)
-		tail = load(&q.tail)
+		head = load(&list.head)
+		tail = load(&list.tail)
 		headNext = load(&head.next)
 		// 如果head已经被其它线程移动了，重新开始
-		if head != load(&q.head) {
+		if head != load(&list.head) {
 			continue
 		}
 		// 因为引入了dummy节点，当队列中只有一个元素时，head!=tail，所以当队列中没有元素时，head==tail，分两种情况
@@ -96,21 +98,22 @@ func (q *Queue) PopFront() any {
 		// 2. 如果其它线程EnQueue做了一半导致head.next!=nil，但是tail还没有移到新位置
 		if head == tail && headNext != nil {
 			// 尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
-			cas(&q.tail, tail, headNext)
+			cas(&list.tail, tail, headNext)
 			continue
 		}
 		// 因为引入了dummy节点，所以每次操作的都是head.next的值
 		// 执行cas前先把head.next的值保存下来，避免cas刚执行完那一刻，其它线程也同时DeQueue把head移动了，那么cas后再取值可能就是head.next.next的值
 		value := headNext.value
-		if cas(&q.head, head, headNext) {
-			atomic.AddUint64(&q.len, ^uint64(0))
+		if cas(&list.head, head, headNext) {
+			atomic.AddUint64(&list.size, ^uint64(0))
 			return value
 		}
 		// 出列失败继续try
+		runtime.Gosched()
 	}
 }
 
-// Len 实际大小
-func (q *Queue) Len() uint64 {
-	return atomic.LoadUint64(&q.len)
+// Size 实际大小，链表没有容量限制，这里不需要Capacity方法
+func (list *LinkedList) Size() uint64 {
+	return atomic.LoadUint64(&list.size)
 }
