@@ -117,6 +117,7 @@
     "git.enableSmartCommit": true,
     "git.confirmSync": false,
     "git.fetchOnPull": true,
+    "git.openRepositoryInParentFolders": "always",
     //explorer选项
     "explorer.confirmDelete": false,
     "explorer.confirmDragAndDrop": false,
