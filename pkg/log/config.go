@@ -51,7 +51,7 @@ type FormatConfig struct {
 	FunctionKey string `yaml:"function_key"`
 	// MessageKey is the message key of log output, default as "msg".
 	MessageKey string `yaml:"message_key"`
-	// StackTraceKey is the stack trace key of log output, default as "stack".
+	// StackTraceKey is the stack trace key of log output, default as "", which means not to print stacktrace name.
 	StacktraceKey string `yaml:"stacktrace_key"`
 }
 
@@ -92,9 +92,9 @@ var JsonConfig = LogConfig{
 				LevelKey:      "level",
 				NameKey:       "name",
 				CallerKey:     "caller",
-				FunctionKey:   "func",
+				FunctionKey:   "",
 				MessageKey:    "msg",
-				StacktraceKey: "stack",
+				StacktraceKey: "",
 			},
 			Writer: logTypeConsole,
 		},
@@ -106,9 +106,9 @@ var JsonConfig = LogConfig{
 				LevelKey:      "level",
 				NameKey:       "name",
 				CallerKey:     "caller",
-				FunctionKey:   "func",
+				FunctionKey:   "",
 				MessageKey:    "msg",
-				StacktraceKey: "stack",
+				StacktraceKey: "",
 			},
 			Writer: logTypeFile,
 			WriteConfig: WriteConfig{

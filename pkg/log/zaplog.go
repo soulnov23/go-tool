@@ -146,9 +146,9 @@ func newEncoder(c CoreConfig) zapcore.Encoder {
 		LevelKey:      getLogEncoderKey("level", c.FormatConfig.LevelKey),
 		NameKey:       getLogEncoderKey("name", c.FormatConfig.NameKey),
 		CallerKey:     getLogEncoderKey("caller", c.FormatConfig.CallerKey),
-		FunctionKey:   getLogEncoderKey(zapcore.OmitKey, c.FormatConfig.FunctionKey),
+		FunctionKey:   c.FormatConfig.FunctionKey,
 		MessageKey:    getLogEncoderKey("msg", c.FormatConfig.MessageKey),
-		StacktraceKey: getLogEncoderKey("stack", c.FormatConfig.StacktraceKey),
+		StacktraceKey: c.FormatConfig.StacktraceKey,
 		LineEnding:    zapcore.DefaultLineEnding,
 		EncodeLevel:   zapcore.CapitalLevelEncoder,
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
