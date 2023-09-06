@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	convert "github.com/soulnov23/go-tool/pkg/strconv"
 )
 
@@ -87,4 +87,12 @@ func (res *Result) LastInsertId() (int64, error) {
 
 func (res *Result) RowsAffected() (int64, error) {
 	return res.Result.RowsAffected()
+}
+
+func DuplicateEntry(err error) bool {
+	mysqlErr, ok := err.(*mysql.MySQLError)
+	if ok && mysqlErr.Number == 1062 /*ER_DUP_ENTRY*/ {
+		return true
+	}
+	return false
 }
