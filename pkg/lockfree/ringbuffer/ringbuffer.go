@@ -1,6 +1,7 @@
 package ringbuffer
 
 import (
+	"errors"
 	"sync/atomic"
 	"unsafe"
 
@@ -67,7 +68,7 @@ func roundUpToPower2(v uint64) uint64 {
 	return v
 }
 
-func (ring *RingBuffer) Enqueue(value any) {
+func (ring *RingBuffer) Enqueue(value any) error {
 	for {
 		var size uint64
 		headPos := atomic.LoadUint64(&ring.head) & ring.mask
@@ -80,7 +81,7 @@ func (ring *RingBuffer) Enqueue(value any) {
 			size = tailPos + ring.capacity - headPos + 1
 		}
 		if size >= ring.capacity {
-			continue
+			return errors.New("queue is full")
 		}
 		// 如果tail已经被其它线程移动了，重新开始
 		if tail != atomic.LoadUint64(&ring.tail) {
@@ -104,6 +105,7 @@ func (ring *RingBuffer) Enqueue(value any) {
 		}
 		break
 	}
+	return nil
 }
 
 func (ring *RingBuffer) Dequeue() any {
@@ -119,7 +121,7 @@ func (ring *RingBuffer) Dequeue() any {
 			size = tailPos + ring.capacity - headPos + 1
 		}
 		if size < 1 {
-			continue
+			return nil
 		}
 		// 如果head已经被其它线程移动了，重新开始
 		if head != atomic.LoadUint64(&ring.head) {
@@ -158,5 +160,5 @@ func (ring *RingBuffer) Size() uint64 {
 
 // Capacity 最大容量
 func (ring *RingBuffer) Capacity() uint64 {
-	return atomic.LoadUint64(&ring.capacity)
+	return ring.capacity
 }

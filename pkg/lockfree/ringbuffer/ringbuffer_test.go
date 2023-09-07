@@ -32,15 +32,9 @@ func TestRoundUpToPower2(t *testing.T) {
 }
 
 func TestRingBuffer(t *testing.T) {
-	jsonLog, err := log.New(log.JsonConfig)
-	if err != nil {
-		t.Logf("new log: %s", err.Error())
-		return
-	}
-
 	queue := New(4)
 
-	timeout := 20 * time.Second
+	timeout := 3 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
 	enWait := &sync.WaitGroup{}
@@ -53,9 +47,15 @@ func TestRingBuffer(t *testing.T) {
 				case <-ctx.Done():
 					return
 				default:
-					queue.Enqueue("123")
-					queue.Enqueue("456")
-					queue.Enqueue("789")
+					if queue.Enqueue("123") != nil {
+						log.Debug("queue is full")
+					}
+					if queue.Enqueue("456") != nil {
+						log.Debug("queue is full")
+					}
+					if queue.Enqueue("789") != nil {
+						log.Debug("queue is full")
+					}
 				}
 			}
 		}(ctx, queue)
@@ -69,15 +69,25 @@ func TestRingBuffer(t *testing.T) {
 			for {
 				select {
 				case <-ctx.Done():
-					break
+					return
 				default:
 					value := queue.Dequeue()
-					t.Log(value)
+					if value == nil {
+						log.Debug("queue is empty")
+					}
+					value = queue.Dequeue()
+					if value == nil {
+						log.Debug("queue is empty")
+					}
+					value = queue.Dequeue()
+					if value == nil {
+						log.Debug("queue is empty")
+					}
 					var data []string
 					for _, node := range queue.nodes {
 						data = append(data, convert.AnyToString(node.value))
 					}
-					jsonLog.DebugFields("debug", zap.Uint64("capacity", queue.capacity), zap.Uint64("size", queue.Size()),
+					log.DebugFields("debug", zap.Uint64("capacity", queue.capacity), zap.Uint64("size", queue.Size()),
 						zap.Uint64("head", atomic.LoadUint64(&queue.head)), zap.Uint64("tail", atomic.LoadUint64(&queue.tail)),
 						zap.Reflect("nodes", data))
 				}
