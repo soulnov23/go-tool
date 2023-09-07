@@ -1,4 +1,4 @@
-package log
+package writer
 
 import (
 	"compress/gzip"
@@ -48,8 +48,8 @@ type rollWriter struct {
 	closeCh    chan *os.File
 }
 
-// NewRollWriter creates a new rollWriter.
-func NewRollWriter(filePath string, opt ...Option) (*rollWriter, error) {
+// New creates a new rollWriter.
+func New(filePath string, opt ...Option) (*rollWriter, error) {
 	opts := &Options{
 		MaxSize:    0,     // default no rolling by file size
 		MaxAge:     0,     // default no scavenging on expired logs

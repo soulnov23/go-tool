@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/soulnov23/go-tool/pkg/log/writer"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -125,14 +126,14 @@ func newConsoleCore(c CoreConfig) zapcore.Core {
 }
 
 func newFileCore(c CoreConfig) (zapcore.Core, error) {
-	opts := []Option{
-		WithMaxSize(c.WriteConfig.MaxSize),
-		WithMaxBackups(c.WriteConfig.MaxBackups),
-		WithMaxAge(c.WriteConfig.MaxAge),
-		WithCompress(c.WriteConfig.Compress),
-		WithRotationTime(c.WriteConfig.TimeFormat),
+	opts := []writer.Option{
+		writer.WithMaxSize(c.WriteConfig.MaxSize),
+		writer.WithMaxBackups(c.WriteConfig.MaxBackups),
+		writer.WithMaxAge(c.WriteConfig.MaxAge),
+		writer.WithCompress(c.WriteConfig.Compress),
+		writer.WithRotationTime(c.WriteConfig.TimeFormat),
 	}
-	writer, err := NewRollWriter(c.WriteConfig.FileName, opts...)
+	writer, err := writer.New(c.WriteConfig.FileName, opts...)
 	if err != nil {
 		return nil, errors.New("new roll writer: " + err.Error())
 	}

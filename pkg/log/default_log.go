@@ -8,7 +8,48 @@ var DefaultLogger Logger
 
 func init() {
 	var err error
-	if DefaultLogger, err = New(ConsoleConfig); err != nil {
+	config := LogConfig{
+		CallerSkip: 2,
+		CoreConfig: []CoreConfig{
+			{
+				Level:     "debug",
+				Formatter: "json",
+				FormatConfig: FormatConfig{
+					TimeKey:       "time",
+					LevelKey:      "level",
+					NameKey:       "name",
+					CallerKey:     "caller",
+					FunctionKey:   "",
+					MessageKey:    "msg",
+					StacktraceKey: "",
+				},
+				Writer: logTypeConsole,
+			},
+			{
+				Level:     "debug",
+				Formatter: "json",
+				FormatConfig: FormatConfig{
+					TimeKey:       "time",
+					LevelKey:      "level",
+					NameKey:       "name",
+					CallerKey:     "caller",
+					FunctionKey:   "",
+					MessageKey:    "msg",
+					StacktraceKey: "",
+				},
+				Writer: logTypeFile,
+				WriteConfig: WriteConfig{
+					FileName:   "run.log",
+					TimeFormat: ".%Y-%m-%d",
+					MaxSize:    1,
+					MaxBackups: 0,
+					MaxAge:     7,
+					Compress:   false,
+				},
+			},
+		},
+	}
+	if DefaultLogger, err = New(config); err != nil {
 		panic("init default log: " + err.Error())
 	}
 }

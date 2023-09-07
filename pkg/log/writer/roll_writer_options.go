@@ -1,4 +1,4 @@
-package log
+package writer
 
 // Options is the rollWriter call options.
 type Options struct {
