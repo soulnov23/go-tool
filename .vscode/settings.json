@@ -70,6 +70,8 @@
     "workbench.tree.renderIndentGuides": "always",
     "workbench.view.alwaysShowHeaderActions": true,
     "workbench.startupEditor": "welcomePageInEmptyWorkbench",
+    "workbench.layoutControl.enabled": false,
+    "workbench.editorLargeFileConfirmation": 1024,
     //C_Cpp选项
     //"C_Cpp.default.cppStandard": "c++20",
     //"C_Cpp.default.cStandard": "c18",
@@ -159,7 +161,6 @@
     "window.title": "${dirty}${separator}${rootName}",
     "window.titleBarStyle": "custom",
     "window.commandCenter": false,
-    "workbench.layoutControl.enabled": false,
     //excalidraw导出图片质量
     "excalidraw.image": {
         "exportScale": 3,
