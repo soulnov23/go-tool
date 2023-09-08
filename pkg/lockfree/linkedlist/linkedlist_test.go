@@ -28,7 +28,8 @@ func TestQueue(t *testing.T) {
 					log.DebugFields("ctx done")
 					return
 				default:
-					queue.Enqueue("Enqueue")
+					queue.Enqueue("linkedlist")
+					//log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
 				}
 			}
 		}(ctx, queue)
