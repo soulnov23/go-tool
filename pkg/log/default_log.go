@@ -41,9 +41,9 @@ func init() {
 				WriteConfig: WriteConfig{
 					FileName:   "run.log",
 					TimeFormat: ".%Y-%m-%d",
-					MaxSize:    1,
+					MaxSize:    128,
 					MaxBackups: 0,
-					MaxAge:     7,
+					MaxAge:     0,
 					Compress:   false,
 				},
 			},
