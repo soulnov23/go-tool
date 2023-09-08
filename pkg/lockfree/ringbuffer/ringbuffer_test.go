@@ -3,13 +3,11 @@ package ringbuffer
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 	"unsafe"
 
 	"github.com/soulnov23/go-tool/pkg/log"
-	convert "github.com/soulnov23/go-tool/pkg/strconv"
 	"go.uber.org/zap"
 )
 
@@ -34,62 +32,44 @@ func TestRoundUpToPower2(t *testing.T) {
 func TestRingBuffer(t *testing.T) {
 	queue := New(4)
 
-	timeout := 3 * time.Second
+	timeout := 10 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
 	enWait := &sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 8; i++ {
 		enWait.Add(1)
 		go func(ctx context.Context, queue *RingBuffer) {
 			defer enWait.Done()
 			for {
 				select {
 				case <-ctx.Done():
+					log.DebugFields("ctx done")
 					return
 				default:
-					if queue.Enqueue("123") != nil {
-						log.Debug("queue is full")
+					if queue.Enqueue("ringbuffer") != nil {
+						log.DebugFields("full", zap.Uint64("size", queue.Size()))
 					}
-					if queue.Enqueue("456") != nil {
-						log.Debug("queue is full")
-					}
-					if queue.Enqueue("789") != nil {
-						log.Debug("queue is full")
-					}
+					//log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
 				}
 			}
 		}(ctx, queue)
 	}
 
 	deWait := &sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 8; i++ {
 		deWait.Add(1)
 		go func(ctx context.Context, queue *RingBuffer) {
 			defer deWait.Done()
 			for {
 				select {
 				case <-ctx.Done():
+					log.DebugFields("ctx done")
 					return
 				default:
-					value := queue.Dequeue()
-					if value == nil {
-						log.Debug("queue is empty")
+					if queue.Dequeue() == nil {
+						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
-					value = queue.Dequeue()
-					if value == nil {
-						log.Debug("queue is empty")
-					}
-					value = queue.Dequeue()
-					if value == nil {
-						log.Debug("queue is empty")
-					}
-					var data []string
-					for _, node := range queue.nodes {
-						data = append(data, convert.AnyToString(node.value))
-					}
-					log.DebugFields("debug", zap.Uint64("capacity", queue.capacity), zap.Uint64("size", queue.Size()),
-						zap.Uint64("head", atomic.LoadUint64(&queue.head)), zap.Uint64("tail", atomic.LoadUint64(&queue.tail)),
-						zap.Reflect("nodes", data))
+					//log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
 				}
 			}
 		}(ctx, queue)

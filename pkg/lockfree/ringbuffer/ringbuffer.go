@@ -70,17 +70,9 @@ func roundUpToPower2(v uint64) uint64 {
 
 func (ring *RingBuffer) Enqueue(value any) error {
 	for {
-		var size uint64
 		headPos := atomic.LoadUint64(&ring.head) & ring.mask
 		tail := atomic.LoadUint64(&ring.tail)
-		tailPos := tail & ring.mask
-		if tailPos >= headPos {
-			size = tailPos - headPos + 1
-		} else {
-			// tail已经循环一圈过来了
-			size = tailPos + ring.capacity - headPos + 1
-		}
-		if size >= ring.capacity {
+		if (tail+1)&ring.mask == headPos {
 			return errors.New("queue is full")
 		}
 		// 如果tail已经被其它线程移动了，重新开始
@@ -100,27 +92,17 @@ func (ring *RingBuffer) Enqueue(value any) error {
 			if enSeq == deSeq {
 				node.value = value
 				atomic.AddUint64(&node.enSeq, ring.capacity)
-				break
+				return nil
 			}
 		}
-		break
 	}
-	return nil
 }
 
 func (ring *RingBuffer) Dequeue() any {
 	for {
-		var size uint64
-		head := atomic.LoadUint64(&ring.head)
-		headPos := head & ring.mask
 		tailPos := atomic.LoadUint64(&ring.tail) & ring.mask
-		if tailPos >= headPos {
-			size = tailPos - headPos + 1
-		} else {
-			// tail已经循环一圈过来了
-			size = tailPos + ring.capacity - headPos + 1
-		}
-		if size < 1 {
+		head := atomic.LoadUint64(&ring.head)
+		if head&ring.mask == tailPos {
 			return nil
 		}
 		// 如果head已经被其它线程移动了，重新开始
@@ -150,7 +132,9 @@ func (ring *RingBuffer) Dequeue() any {
 func (ring *RingBuffer) Size() uint64 {
 	headPos := atomic.LoadUint64(&ring.head) & ring.mask
 	tailPos := atomic.LoadUint64(&ring.tail) & ring.mask
-	if tailPos >= headPos {
+	if tailPos == headPos {
+		return 0
+	} else if tailPos >= headPos {
 		return tailPos - headPos + 1
 	} else {
 		// tail已经循环一圈过来了
