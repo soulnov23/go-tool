@@ -2,85 +2,70 @@ package linkedlist
 
 import (
 	"context"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/soulnov23/go-tool/pkg/log"
+	"go.uber.org/zap"
 )
 
 func TestQueue(t *testing.T) {
 	queue := New()
 
-	write := make(chan struct{})
-	read := make(chan struct{})
-
-	timeout := 3 * time.Second
+	timeout := 10 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go func(ctx context.Context, queue *LinkedList) {
-		for {
-			select {
-			case <-ctx.Done():
-				write <- struct{}{}
-				return
-			default:
-				queue.Enqueue("hello world")
-			}
-		}
-	}(ctx, queue)
-
-	go func(ctx context.Context, queue *LinkedList) {
-		for {
-			select {
-			case <-ctx.Done():
-				read <- struct{}{}
-				return
-			default:
-				temp := queue.Dequeue()
-				if temp == nil {
-					t.Log("empty")
+	enWait := &sync.WaitGroup{}
+	for i := 0; i < 8; i++ {
+		enWait.Add(1)
+		go func(ctx context.Context, queue *LinkedList) {
+			defer enWait.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					log.DebugFields("ctx done")
+					return
+				default:
+					queue.Enqueue("Enqueue")
 				}
 			}
-		}
-	}(ctx, queue)
+		}(ctx, queue)
+	}
 
-	go func(ctx context.Context, queue *LinkedList) {
-		for {
-			select {
-			case <-ctx.Done():
-				read <- struct{}{}
-				return
-			default:
-				temp := queue.Dequeue()
-				if temp == nil {
-					t.Log("empty")
-				} else {
-					t.Log(temp)
+	deWait := &sync.WaitGroup{}
+	for i := 0; i < 8; i++ {
+		deWait.Add(1)
+		go func(ctx context.Context, queue *LinkedList) {
+			defer deWait.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					log.DebugFields("ctx done")
+					return
+				default:
+					if queue.Dequeue() == nil {
+						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
+					}
+					//log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
 				}
 			}
-		}
-	}(ctx, queue)
-
-	go func(ctx context.Context, queue *LinkedList) {
-		for {
-			select {
-			case <-ctx.Done():
-				read <- struct{}{}
-				return
-			default:
-				temp := queue.Dequeue()
-				if temp == nil {
-					t.Log("empty")
-				} else {
-					t.Log(temp)
-				}
-			}
-		}
-	}(ctx, queue)
+		}(ctx, queue)
+	}
 
 	time.Sleep(timeout)
 
 	cancel()
+	enWait.Wait()
+	deWait.Wait()
+}
 
-	<-write
-	<-read
-	<-read
+func TestAddUint64(t *testing.T) {
+	var value uint64
+	log.Debug(value)
+	atomic.AddUint64(&value, ^uint64(0))
+	log.Debug(value)
+	atomic.AddUint64(&value, uint64(1))
+	log.Debug(value)
 }
