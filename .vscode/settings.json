@@ -136,7 +136,8 @@
     "go.lintTool": "golangci-lint",
     "go.testFlags": [
         "-v",
-        "-count=1"
+        "-count=1",
+        //"-timeout=3s"
     ],
     //xml选项
     "xmlTools.enableXmlTreeViewCursorSync": true,
