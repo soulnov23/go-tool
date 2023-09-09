@@ -30,7 +30,7 @@ func TestRoundUpToPower2(t *testing.T) {
 }
 
 func TestRingBuffer(t *testing.T) {
-	queue := New(4)
+	queue := New(512)
 
 	timeout := 10 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
@@ -49,7 +49,7 @@ func TestRingBuffer(t *testing.T) {
 					if queue.Enqueue("ringbuffer") != nil {
 						log.DebugFields("full", zap.Uint64("size", queue.Size()))
 					}
-					//log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
+					log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
 				}
 			}
 		}(ctx, queue)
@@ -69,7 +69,7 @@ func TestRingBuffer(t *testing.T) {
 					if queue.Dequeue() == nil {
 						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
-					//log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
+					log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
 				}
 			}
 		}(ctx, queue)

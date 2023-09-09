@@ -13,23 +13,31 @@ const (
 )
 
 type node struct {
+	/*----------------CacheLine----------------*/
 	enSeq uint64
 	_     [cacheLinePadSize - 8]byte
+	/*----------------CacheLine----------------*/
 	deSeq uint64
 	_     [cacheLinePadSize - 8]byte
+	/*----------------CacheLine----------------*/
 	value any
 }
 
 // 为了获得高性能，使用伪共享填充在多线程环境下确保read和write不共享相同的缓存行
 type RingBuffer struct {
+	/*----------------CacheLine----------------*/
 	capacity uint64
+	size     uint64
 	mask     uint64
-	_        [cacheLinePadSize - 16]byte
-	head     uint64
-	_        [cacheLinePadSize - 8]byte
-	tail     uint64
-	_        [cacheLinePadSize - 8]byte
-	nodes    []*node
+	_        [cacheLinePadSize - 24]byte
+	/*----------------CacheLine----------------*/
+	head uint64
+	_    [cacheLinePadSize - 8]byte
+	/*----------------CacheLine----------------*/
+	tail uint64
+	_    [cacheLinePadSize - 8]byte
+	/*----------------CacheLine----------------*/
+	nodes []*node
 }
 
 func New(capacity uint64) *RingBuffer {
@@ -70,9 +78,9 @@ func roundUpToPower2(v uint64) uint64 {
 
 func (ring *RingBuffer) Enqueue(value any) error {
 	for {
-		headPos := atomic.LoadUint64(&ring.head) & ring.mask
+		head := atomic.LoadUint64(&ring.head)
 		tail := atomic.LoadUint64(&ring.tail)
-		if (tail+1)&ring.mask == headPos {
+		if tail-head == ring.capacity {
 			return errors.New("queue is full")
 		}
 		// 如果tail已经被其它线程移动了，重新开始
@@ -85,13 +93,14 @@ func (ring *RingBuffer) Enqueue(value any) error {
 		}
 		// 抢到位置后，就没有数据竞争了
 		node := ring.nodes[tail&ring.mask]
-		enSeq := atomic.LoadUint64(&node.enSeq)
-		deSeq := atomic.LoadUint64(&node.deSeq)
 		for {
 			// 当Dequeue更新ring.head后，还没有更新node.deSeq，这里需要判断是否已经被读取，避免被覆盖
+			enSeq := atomic.LoadUint64(&node.enSeq)
+			deSeq := atomic.LoadUint64(&node.deSeq)
 			if enSeq == deSeq {
 				node.value = value
 				atomic.AddUint64(&node.enSeq, ring.capacity)
+				atomic.AddUint64(&ring.size, uint64(1))
 				return nil
 			}
 		}
@@ -100,9 +109,9 @@ func (ring *RingBuffer) Enqueue(value any) error {
 
 func (ring *RingBuffer) Dequeue() any {
 	for {
-		tailPos := atomic.LoadUint64(&ring.tail) & ring.mask
 		head := atomic.LoadUint64(&ring.head)
-		if head&ring.mask == tailPos {
+		tail := atomic.LoadUint64(&ring.tail)
+		if tail-head == 0 {
 			return nil
 		}
 		// 如果head已经被其它线程移动了，重新开始
@@ -115,13 +124,14 @@ func (ring *RingBuffer) Dequeue() any {
 		}
 		// 抢到位置后，就没有数据竞争了
 		node := ring.nodes[head&ring.mask]
-		enSeq := atomic.LoadUint64(&node.enSeq)
-		deSeq := atomic.LoadUint64(&node.deSeq)
 		for {
 			// 当Enqueue更新ring.tail后，还没有更新node.enSeq，这里需要判断是否已经被写入，避免取旧值
+			enSeq := atomic.LoadUint64(&node.enSeq)
+			deSeq := atomic.LoadUint64(&node.deSeq)
 			if enSeq == deSeq+ring.capacity {
 				value := node.value
 				atomic.AddUint64(&node.deSeq, ring.capacity)
+				atomic.AddUint64(&ring.size, ^uint64(0))
 				return value
 			}
 		}
@@ -130,16 +140,7 @@ func (ring *RingBuffer) Dequeue() any {
 
 // Size 实际大小
 func (ring *RingBuffer) Size() uint64 {
-	headPos := atomic.LoadUint64(&ring.head) & ring.mask
-	tailPos := atomic.LoadUint64(&ring.tail) & ring.mask
-	if tailPos == headPos {
-		return 0
-	} else if tailPos >= headPos {
-		return tailPos - headPos + 1
-	} else {
-		// tail已经循环一圈过来了
-		return tailPos + ring.capacity - headPos + 1
-	}
+	return atomic.LoadUint64(&ring.size)
 }
 
 // Capacity 最大容量
