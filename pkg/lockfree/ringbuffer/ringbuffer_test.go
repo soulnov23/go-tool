@@ -3,6 +3,7 @@ package ringbuffer
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 	"unsafe"
@@ -36,6 +37,7 @@ func TestRingBuffer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	enWait := &sync.WaitGroup{}
+	var enCount uint64
 	for i := 0; i < 8; i++ {
 		enWait.Add(1)
 		go func(ctx context.Context, queue *RingBuffer) {
@@ -50,12 +52,14 @@ func TestRingBuffer(t *testing.T) {
 						log.DebugFields("full", zap.Uint64("size", queue.Size()))
 					}
 					log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
+					atomic.AddUint64(&enCount, uint64(1))
 				}
 			}
 		}(ctx, queue)
 	}
 
 	deWait := &sync.WaitGroup{}
+	var deCount uint64
 	for i := 0; i < 8; i++ {
 		deWait.Add(1)
 		go func(ctx context.Context, queue *RingBuffer) {
@@ -70,6 +74,7 @@ func TestRingBuffer(t *testing.T) {
 						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
 					log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
+					atomic.AddUint64(&deCount, uint64(1))
 				}
 			}
 		}(ctx, queue)
@@ -80,4 +85,6 @@ func TestRingBuffer(t *testing.T) {
 	cancel()
 	enWait.Wait()
 	deWait.Wait()
+
+	log.DebugFields("", zap.Uint64("enCount", enCount), zap.Uint64("deCount", deCount))
 }
