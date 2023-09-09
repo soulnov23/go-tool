@@ -29,7 +29,7 @@ func TestQueue(t *testing.T) {
 					return
 				default:
 					queue.Enqueue("linkedlist")
-					//log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
+					log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
 				}
 			}
 		}(ctx, queue)
@@ -49,7 +49,7 @@ func TestQueue(t *testing.T) {
 					if queue.Dequeue() == nil {
 						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
-					//log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
+					log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
 				}
 			}
 		}(ctx, queue)
