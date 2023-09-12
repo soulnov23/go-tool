@@ -5,7 +5,6 @@ import (
 	"database/sql"
 
 	"github.com/go-sql-driver/mysql"
-	convert "github.com/soulnov23/go-tool/pkg/strconv"
 )
 
 type DB struct {
@@ -37,8 +36,8 @@ func New(ctx context.Context, dsn string, opts ...Option) (*DB, error) {
 	return &DB{DB: db}, nil
 }
 
-func (impl *DB) Query(ctx context.Context, sql string) ([]map[string]string, error) {
-	var result []map[string]string
+func (impl *DB) QueryResult(ctx context.Context, sql string) ([]map[string]any, error) {
+	var result []map[string]any
 	rows, err := impl.DB.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, err
@@ -49,19 +48,19 @@ func (impl *DB) Query(ctx context.Context, sql string) ([]map[string]string, err
 		return nil, err
 	}
 	columnLen := len(columns)
-	var dest []interface{}
+	var dest []any
 	// 不能用make初始化，要赋值指针
 	for i := 0; i < columnLen; i++ {
-		var destInterface interface{}
+		var destInterface any
 		dest = append(dest, &destInterface)
 	}
 	for rows.Next() {
 		if err := rows.Scan(dest...); err != nil {
 			return nil, err
 		}
-		temp := make(map[string]string)
+		temp := make(map[string]any)
 		for index, column := range columns {
-			temp[column] = convert.AnyToString(dest[index])
+			temp[column] = dest[index]
 		}
 		result = append(result, temp)
 	}
