@@ -182,5 +182,7 @@
         "keepOriginalFiles": "always",
         "overwriteExistentFiles": "always"
     },
-    "diffEditor.ignoreTrimWhitespace": false
+    //diffEditor
+    "diffEditor.ignoreTrimWhitespace": false,
+    "diffEditor.maxComputationTime": 0
 }
