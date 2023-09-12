@@ -12,13 +12,13 @@ type DB struct {
 	*sql.DB
 }
 
-type Result struct {
-	sql.Result
-}
-
-func New(dsn string, opts ...Option) (*DB, error) {
+func New(ctx context.Context, dsn string, opts ...Option) (*DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
+		return nil, err
+	}
+	// sql.Open无法检测连接是否有效，需要Ping一下
+	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
 	defaultOpts := &Options{
@@ -69,24 +69,6 @@ func (impl *DB) Query(ctx context.Context, sql string) ([]map[string]string, err
 		return nil, err
 	}
 	return result, nil
-}
-
-func (impl *DB) Exec(ctx context.Context, sql string) (*Result, error) {
-	result, err := impl.DB.ExecContext(ctx, sql)
-	if err != nil {
-		return nil, err
-	}
-	return &Result{
-		Result: result,
-	}, nil
-}
-
-func (res *Result) LastInsertId() (int64, error) {
-	return res.Result.LastInsertId()
-}
-
-func (res *Result) RowsAffected() (int64, error) {
-	return res.Result.RowsAffected()
 }
 
 func DuplicateEntry(err error) bool {
