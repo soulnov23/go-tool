@@ -22,6 +22,10 @@
         "strings": "on"
     },
     "editor.suggest.localityBonus": true,
+    "editor.tabSize": 4,
+    "editor.indentSize": "tabSize",
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
     //"editor.defaultFormatter": "ms-vscode.cpptools",
     //"editor.formatOnPaste": true,
     "editor.formatOnSave": true,
@@ -37,37 +41,25 @@
     "editor.gotoLocation.alternativeTypeDefinitionCommand": "editor.action.goToTypeDefinition",
     //format选项
     "[go]": {
-        "editor.defaultFormatter": "golang.go",
+        "editor.defaultFormatter": "golang.go"
     },
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"
     },
     "[json]": {
-        "editor.defaultFormatter": "vscode.json-language-features",
-        "editor.tabSize": 4,
-        "editor.indentSize": "tabSize",
-        "editor.insertSpaces": true,
-        "editor.detectIndentation": false
+        "editor.defaultFormatter": "vscode.json-language-features"
     },
     "[xml]": {
         "editor.defaultFormatter": "DotJoshJohnson.xml"
     },
     "[yaml]": {
-        "editor.defaultFormatter": "redhat.vscode-yaml",
-        "editor.tabSize": 4,
-        "editor.indentSize": "tabSize",
-        "editor.insertSpaces": true,
-        "editor.detectIndentation": false
+        "editor.defaultFormatter": "redhat.vscode-yaml"
     },
     "[shellscript]": {
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
     "[proto3]": {
-        "editor.defaultFormatter": "xaver.clang-format",
-        "editor.tabSize": 4,
-        "editor.indentSize": "tabSize",
-        "editor.insertSpaces": true,
-        "editor.detectIndentation": false
+        "editor.defaultFormatter": "xaver.clang-format"
     },
     "clang-format.language.proto.style": "{BasedOnStyle: Google,IncludeBlocks: Regroup,TabWidth: 4,IndentWidth: 4,ColumnLimit: 120}",
     //workbench选项
