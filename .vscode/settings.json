@@ -191,5 +191,5 @@
     },
     //diffEditor
     "diffEditor.ignoreTrimWhitespace": false,
-    "diffEditor.maxComputationTime": 0,
+    "diffEditor.maxComputationTime": 0
 }
