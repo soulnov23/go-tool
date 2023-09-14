@@ -15,6 +15,13 @@
     "editor.suggest.insertMode": "replace",
     "editor.suggest.shareSuggestSelections": true,
     "editor.suggestSelection": "recentlyUsedByPrefix",
+    "editor.suggest.preview": true,
+    "editor.suggest.showStatusBar": true,
+    "editor.quickSuggestions": {
+        "comments": "on",
+        "strings": "on"
+    },
+    "editor.suggest.localityBonus": true,
     //"editor.defaultFormatter": "ms-vscode.cpptools",
     //"editor.formatOnPaste": true,
     "editor.formatOnSave": true,
@@ -184,5 +191,5 @@
     },
     //diffEditor
     "diffEditor.ignoreTrimWhitespace": false,
-    "diffEditor.maxComputationTime": 0
+    "diffEditor.maxComputationTime": 0,
 }
