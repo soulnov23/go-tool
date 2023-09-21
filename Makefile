@@ -29,9 +29,12 @@ escape:
 	go build ${ESCAPE} -o temp ${SRC}
 	rm -rf temp
 
+test:
+	go test -v -count 1 -timeout 1s ./...
+
 clean:
 	rm -rf ${BIN}
 
-.PHONY: all debug release escape clean
+.PHONY: all debug release escape test clean
 
 .DEFAULT_GOAL: all
