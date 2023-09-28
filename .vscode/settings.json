@@ -119,6 +119,13 @@
     "git.confirmSync": false,
     "git.fetchOnPull": true,
     "git.openRepositoryInParentFolders": "always",
+    "git.autorefresh": true,
+    "git.branchPrefix": "feature/",
+    "git.defaultBranchName": "master",
+    "git.repositoryScanMaxDepth": -1,
+    "git.statusLimit": 0,
+    "git.supportCancellation": true,
+    "git.verboseCommit": true,
     //explorer选项
     "explorer.confirmDelete": false,
     "explorer.confirmDragAndDrop": false,
