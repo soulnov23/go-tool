@@ -3,19 +3,9 @@ package strconv
 import (
 	"fmt"
 	"strings"
-	"unsafe"
 
 	"github.com/soulnov23/go-tool/pkg/json"
 )
-
-// https://github.com/golang/go/issues/53003
-func BytesToString(b []byte) string {
-	return unsafe.String(&b[0], len(b))
-}
-
-func StringToBytes(s string) []byte {
-	return unsafe.Slice(unsafe.StringData(s), len(s))
-}
 
 func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
 	recordMap := map[string]string{}
