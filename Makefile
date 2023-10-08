@@ -1,6 +1,7 @@
 SRC	 := ./cmd
 BIN  := ./build/bin/go-tool
 
+PRINT := -v -x #-v编译包时打印包的名称 -x打印命令
 #使用go tool compile查看-gcflags传递给编译器的参数
 DEBUG 	:= -gcflags "all=-N -l" #-N禁用优化 -l禁用内联
 #使用go tool link查看-ldflags传递给链接器的参数
@@ -17,13 +18,13 @@ VERSION := -ldflags "-X 'main.goVersion=$(shell go version)' \
 CGO := CGO_ENABLED=0
 
 all:
-	${CGO} go build ${VERSION} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} ${VERSION} -o ${BIN} ${SRC}
 
 debug:
-	${CGO} go build ${VERSION} ${DEBUG} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} ${VERSION} ${DEBUG} -o ${BIN} ${SRC}
 
 release:
-	${CGO} go build ${VERSION} ${RELEASE} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} ${VERSION} ${RELEASE} -o ${BIN} ${SRC}
 
 escape:
 	go build ${ESCAPE} -o temp ${SRC}
