@@ -30,9 +30,6 @@ escape:
 	go build ${ESCAPE} -o temp ${SRC}
 	rm -rf temp
 
-vet:
-	go vet ./...
-
 test:
 	go test -v -count 1 -race -timeout 1s ./...
 
