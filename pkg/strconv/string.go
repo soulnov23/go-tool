@@ -2,6 +2,7 @@ package strconv
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/soulnov23/go-tool/pkg/json"
@@ -21,12 +22,27 @@ func StringToMap(data string, fieldSep string, valueSep string) map[string]strin
 	return recordMap
 }
 
-func MapToString(recordMap map[string]string) string {
-	var builder strings.Builder
-	for key, value := range recordMap {
-		builder.WriteString(key + "=" + value + "&")
+func MapToString(recordMap map[string]string, sorted bool) string {
+	size := len(recordMap)
+	if size == 0 {
+		return ""
 	}
-	builder.Len()
+
+	var builder strings.Builder
+	if sorted {
+		keys := make([]string, 0, size)
+		for key := range recordMap {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			builder.WriteString(key + "=" + recordMap[key] + "&")
+		}
+	} else {
+		for key, value := range recordMap {
+			builder.WriteString(key + "=" + value + "&")
+		}
+	}
 	return builder.String()[0 : builder.Len()-1]
 }
 
