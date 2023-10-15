@@ -22,6 +22,7 @@
         "strings": "on"
     },
     "editor.suggest.localityBonus": true,
+    "editor.quickSuggestionsDelay": 0,
     "editor.tabSize": 4,
     "editor.indentSize": "tabSize",
     "editor.insertSpaces": true,
@@ -30,7 +31,7 @@
     //"editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     //"editor.formatOnType": true,
-    "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
+    "editor.wordSeparators": " `~!@#$%^&*()-=+[{]}\\\\|;:'\\\",.<>/?",
     "editor.maxTokenizationLineLength": 1000000000000000000000000000000000000,
     "editor.accessibilitySupport": "off",
     "editor.guides.bracketPairs": true,
@@ -106,7 +107,8 @@
     "files.defaultLanguage": "jsonc",
     "files.associations": {
         "*.json*": "jsonc",
-        "*.log.*": "jsonc"
+        "*.log.*": "jsonc",
+        "*.tterm*": "jsonc"
     },
     //remote选项
     //"remote.SSH.showLoginTerminal": true,
@@ -136,7 +138,7 @@
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cursorStyle": "line",
     "terminal.integrated.scrollback": 5000,
-    "terminal.integrated.wordSeparators": "`~!@#$%^&*()-=+[{]}\\\\|;:'\\\",.<>/?",
+    "terminal.integrated.wordSeparators": " `~!@#$%^&*()-=+[{]}\\\\|;:'\\\",.<>/?",
     //go选项
     "go.toolsManagement.autoUpdate": true,
     "go.lintTool": "golangci-lint",
