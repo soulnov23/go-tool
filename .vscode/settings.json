@@ -54,7 +54,8 @@
         "editor.defaultFormatter": "DotJoshJohnson.xml"
     },
     "[yaml]": {
-        "editor.defaultFormatter": "redhat.vscode-yaml"
+        "editor.defaultFormatter": "redhat.vscode-yaml",
+        "editor.tabSize": 4
     },
     "[shellscript]": {
         "editor.defaultFormatter": "foxundermoon.shell-format"
