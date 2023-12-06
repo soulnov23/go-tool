@@ -24,7 +24,7 @@ func SetSocketReUsePort(fd int) error {
 	return syscall.SetsockoptInt(fd, syscall.SOL_SOCKET, unix.SO_REUSEPORT, flags)
 }
 
-func SetSocketTcpNodelay(fd int) error {
+func SetSocketTCPNodelay(fd int) error {
 	var flags int = 1
 	return syscall.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.TCP_NODELAY, flags)
 }

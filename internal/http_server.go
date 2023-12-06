@@ -17,7 +17,7 @@ type HTTPServer struct {
 	RunLog   log.Logger
 }
 
-func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
+func (svr *HTTPServer) OnRequest(conn *net.TCPConnection) {
 	bufferLen := conn.ReadBufferLen()
 	buf, err := conn.Peek(int(bufferLen))
 	// read buffer没数据了
@@ -127,7 +127,7 @@ func (svr *HTTPServer) OnRead(conn *net.TcpConn) {
 	svr.setOK(conn, response)
 }
 
-func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, body string, header, cookie map[string]string, log log.Logger) (string, error) {
+func (svr *HTTPServer) handle(conn *net.TCPConnection, version, method, url, query, body string, header, cookie map[string]string, log log.Logger) (string, error) {
 	var request string
 	if method == "GET" {
 		request = query
@@ -158,12 +158,12 @@ func (svr *HTTPServer) handle(conn *net.TcpConn, version, method, url, query, bo
 	return response, nil
 }
 
-func (svr *HTTPServer) setOK(conn *net.TcpConn, response string) {
+func (svr *HTTPServer) setOK(conn *net.TCPConnection, response string) {
 	httpRsp := "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
 	httpRsp += "Content-Length: " + strconv.Itoa(len(response)) + "\r\n\r\n" + response
 	conn.Write(convert.StringToBytes(httpRsp))
 }
 
-func (svr *HTTPServer) setBad(conn *net.TcpConn) {
+func (svr *HTTPServer) setBad(conn *net.TCPConnection) {
 	conn.Write(convert.StringToBytes("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n"))
 }

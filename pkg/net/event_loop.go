@@ -8,14 +8,14 @@ import (
 )
 
 type EventLoop struct {
-	log    log.Logger
+	log.Logger
 	opts   *Options
 	epolls []*Epoll
 }
 
 func NewEventLoop(log log.Logger, opts ...Option) (*EventLoop, error) {
 	eventLoop := &EventLoop{
-		log: log,
+		Logger: log,
 		opts: &Options{
 			loopSize:  runtime.NumCPU(),
 			eventSize: 10 * 1024,
@@ -52,7 +52,7 @@ func (loop *EventLoop) Wait() {
 		go func(epoll *Epoll) {
 			err := epoll.Wait()
 			if err != nil {
-				loop.log.ErrorFields("event loop wait", zap.Error(err))
+				loop.Logger.ErrorFields("event loop wait", zap.Error(err))
 			}
 		}(epoll)
 	}

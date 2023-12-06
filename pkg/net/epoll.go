@@ -83,13 +83,13 @@ func Control(epollFD int, fd int, event int) error {
 }
 
 type Epoll struct {
-	log        log.Logger
+	log.Logger
 	epollFD    int
 	eventFD    int
 	listens    map[int]string
 	operators  map[int]Operator
 	events     []syscall.EpollEvent
-	tcpConns   map[int]*TcpConn
+	tcpConns   map[int]*TCPConnection
 	triggerBuf []byte
 	trigger    uint32
 	close      chan struct{}
@@ -115,74 +115,74 @@ func NewEpoll(log log.Logger, eventSize int) (*Epoll, error) {
 	}
 	log.DebugFields("new epoll success", zap.Int("epoll_fd", epollFD), zap.Int("event_fd", eventFD))
 	return &Epoll{
-		log:        log,
+		Logger:     log,
 		epollFD:    epollFD,
 		eventFD:    eventFD,
 		listens:    make(map[int]string),
 		operators:  make(map[int]Operator),
 		events:     make([]syscall.EpollEvent, eventSize),
-		tcpConns:   make(map[int]*TcpConn),
+		tcpConns:   make(map[int]*TCPConnection),
 		triggerBuf: make([]byte, 8),
 		close:      make(chan struct{}, 1),
 	}, nil
 }
 
-func (ep *Epoll) Listen(network string, address string, backlog int, operator Operator) error {
+func (epoll *Epoll) Listen(network string, address string, backlog int, operator Operator) error {
 	listenFD, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, syscall.IPPROTO_TCP)
 	if err != nil {
-		ep.log.ErrorFields("new listen fd", zap.Error(err))
+		epoll.Logger.ErrorFields("new listen fd", zap.Error(err))
 		return errors.New("new listen fd: " + err.Error())
 	}
 	SetSocketCloseExec(listenFD)
 	if err := SetSocketNonBlock(listenFD); err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("set listen fd non-blocking", zap.Error(err), zap.Int("listen_fd", listenFD))
+		epoll.Logger.ErrorFields("set listen fd non-blocking", zap.Error(err), zap.Int("listen_fd", listenFD))
 		return errors.New("set listen fd non-blocking: " + err.Error())
 	}
 	if err := SetSocketReuseaddr(listenFD); err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("set listen fd reuse address", zap.Error(err), zap.Int("listen_fd", listenFD))
+		epoll.Logger.ErrorFields("set listen fd reuse address", zap.Error(err), zap.Int("listen_fd", listenFD))
 		return errors.New("set listen fd reuse address: " + err.Error())
 	}
 	if err := SetSocketReUsePort(listenFD); err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("set listen fd reuse port", zap.Error(err), zap.Int("listen_fd", listenFD))
+		epoll.Logger.ErrorFields("set listen fd reuse port", zap.Error(err), zap.Int("listen_fd", listenFD))
 		return errors.New("set listen fd reuse port: " + err.Error())
 	}
 	sa, err := GetSocketAddr(network, address)
 	if err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("get listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address))
+		epoll.Logger.ErrorFields("get listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address))
 		return errors.New("get listen fd bind address: " + err.Error())
 	}
 	if err := syscall.Bind(listenFD, sa); err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("set listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address), zap.Reflect("sockaddr", sa))
+		epoll.Logger.ErrorFields("set listen fd bind address", zap.Error(err), zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address), zap.Reflect("sockaddr", sa))
 		return errors.New("set listen fd bind address: " + err.Error())
 	}
 	if err := syscall.Listen(listenFD, backlog); err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("set listen fd backlog", zap.Error(err), zap.Int("listen_fd", listenFD), zap.Int("backlog", backlog))
+		epoll.Logger.ErrorFields("set listen fd backlog", zap.Error(err), zap.Int("listen_fd", listenFD), zap.Int("backlog", backlog))
 		return errors.New("set listen fd backlog: " + err.Error())
 	}
-	if err := Control(ep.epollFD, listenFD, Readable); err != nil {
+	if err := Control(epoll.epollFD, listenFD, Readable); err != nil {
 		syscall.Close(listenFD)
-		ep.log.ErrorFields("epoll control listen fd", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("listen_fd", listenFD))
+		epoll.Logger.ErrorFields("epoll control listen fd", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("listen_fd", listenFD))
 		return errors.New("epoll control listen fd: " + err.Error())
 	}
-	ep.listens[listenFD] = address
-	ep.operators[listenFD] = operator
-	ep.log.DebugFields("listen success", zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address))
+	epoll.listens[listenFD] = address
+	epoll.operators[listenFD] = operator
+	epoll.Logger.DebugFields("listen success", zap.Int("listen_fd", listenFD), zap.String("network", network), zap.String("address", address))
 	return nil
 }
 
-func (ep *Epoll) Wait() error {
+func (epoll *Epoll) Wait() error {
 	// 先epoll_wait阻塞等待
 	msec := -1
 	for {
-		n, err := syscall.EpollWait(ep.epollFD, ep.events, msec)
+		n, err := syscall.EpollWait(epoll.epollFD, epoll.events, msec)
 		if err != nil && err != syscall.EINTR {
-			ep.log.ErrorFields("epoll wait", zap.Error(err), zap.Int("epoll_fd", ep.epollFD))
+			epoll.Logger.ErrorFields("epoll wait", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD))
 			return errors.New("epoll wait: " + err.Error())
 		}
 		// 轮询没有事件发生，直接阻塞协程，然后主动切换协程
@@ -192,48 +192,48 @@ func (ep *Epoll) Wait() error {
 			continue
 		}
 		msec = 0
-		if ep.handler(n) {
-			ep.close <- struct{}{}
+		if epoll.handler(n) {
+			epoll.close <- struct{}{}
 			return nil
 		}
 	}
 }
 
-func (ep *Epoll) handler(eventSize int) bool {
+func (epoll *Epoll) handler(eventSize int) bool {
 	for i := 0; i < eventSize; i++ {
-		fd := int(ep.events[i].Fd)
-		evt := ep.events[i].Events
-		ep.log.DebugFields("wake epoll wait", zap.Int("epoll_fd", ep.epollFD), zap.String("epoll_event", EventString(evt)), zap.Int("client_fd", fd))
+		fd := int(epoll.events[i].Fd)
+		evt := epoll.events[i].Events
+		epoll.Logger.DebugFields("wake epoll wait", zap.Int("epoll_fd", epoll.epollFD), zap.String("epoll_event", EventString(evt)), zap.Int("client_fd", fd))
 
 		// 通过write evfd触发
-		if fd == ep.eventFD {
-			if ep.handlerEventFD() {
+		if fd == epoll.eventFD {
+			if epoll.handlerEventFD() {
 				return true
 			}
 			continue
 		}
 
-		conn, ok := ep.tcpConns[fd]
+		conn, ok := epoll.tcpConns[fd]
 		if evt&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0 {
 			if !ok {
 				continue
 			}
-			ep.log.DebugFields("close client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
-			DeleteTcpConn(conn)
-			delete(ep.tcpConns, fd)
+			epoll.Logger.DebugFields("close client", zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
+			DeleteTCPConn(conn)
+			delete(epoll.tcpConns, fd)
 			continue
 		}
 
 		if evt&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0 {
-			if _, ok := ep.listens[fd]; ok {
-				ep.handlerAccept(fd)
+			if _, ok := epoll.listens[fd]; ok {
+				epoll.handlerAccept(fd)
 				continue
 			}
 			if !ok {
 				continue
 			}
 			conn.handlerRead()
-			conn.operator.OnRead(conn)
+			conn.Operator.OnRequest(conn)
 		}
 
 		if evt&syscall.EPOLLOUT != 0 {
@@ -247,17 +247,17 @@ func (ep *Epoll) handler(eventSize int) bool {
 	return false
 }
 
-func (ep *Epoll) handlerEventFD() bool {
+func (epoll *Epoll) handlerEventFD() bool {
 	offset := 0
 	for {
-		n, err := syscall.Read(ep.eventFD, ep.triggerBuf)
+		n, err := syscall.Read(epoll.eventFD, epoll.triggerBuf)
 		if err != nil {
 			if err == syscall.EAGAIN {
 				break
 			} else if err == syscall.EINTR {
 				continue
 			} else {
-				ep.log.ErrorFields("read event fd", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("event_fd", ep.eventFD))
+				epoll.Logger.ErrorFields("read event fd", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("event_fd", epoll.eventFD))
 				break
 			}
 		}
@@ -266,30 +266,30 @@ func (ep *Epoll) handlerEventFD() bool {
 			break
 		}
 	}
-	atomic.StoreUint32(&ep.trigger, 0)
+	atomic.StoreUint32(&epoll.trigger, 0)
 	// 主动触发循环优雅退出
-	if ep.triggerBuf[0] > 0 {
-		ep.log.DebugFields("exit gracefully")
-		for fd, conn := range ep.tcpConns {
-			ep.log.DebugFields("close client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
-			DeleteTcpConn(conn)
-			delete(ep.tcpConns, fd)
+	if epoll.triggerBuf[0] > 0 {
+		epoll.Logger.DebugFields("exit gracefully")
+		for fd, conn := range epoll.tcpConns {
+			epoll.Logger.DebugFields("close client", zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", conn.remoteAddr), zap.String("local_address", conn.localAddr))
+			DeleteTCPConn(conn)
+			delete(epoll.tcpConns, fd)
 		}
-		for fd := range ep.listens {
-			Control(ep.epollFD, fd, Detach)
+		for fd := range epoll.listens {
+			Control(epoll.epollFD, fd, Detach)
 			syscall.Close(fd)
-			delete(ep.listens, fd)
+			delete(epoll.listens, fd)
 		}
-		syscall.Close(ep.eventFD)
-		syscall.Close(ep.epollFD)
+		syscall.Close(epoll.eventFD)
+		syscall.Close(epoll.epollFD)
 		return true
 	}
 	// 主动触发循环执行异步任务
-	ep.log.DebugFields("trigger")
+	epoll.Logger.DebugFields("trigger")
 	return false
 }
 
-func (ep *Epoll) handlerAccept(fd int) {
+func (epoll *Epoll) handlerAccept(fd int) {
 	for {
 		connFD, addr, err := syscall.Accept4(fd, syscall.SOCK_CLOEXEC)
 		if err != nil {
@@ -298,56 +298,56 @@ func (ep *Epoll) handlerAccept(fd int) {
 			} else if err == syscall.EINTR {
 				continue
 			} else {
-				ep.log.ErrorFields("accept client", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd))
+				epoll.Logger.ErrorFields("accept client", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd))
 				continue
 			}
 		}
 		ip, err := GetSocketIP(addr)
 		if err != nil {
-			ep.log.ErrorFields("get client remote ip", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd))
+			epoll.Logger.ErrorFields("get client remote ip", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd))
 			continue
 		}
-		local := ep.listens[fd]
-		ep.log.DebugFields("accept client", zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", ip), zap.String("local_address", local))
+		local := epoll.listens[fd]
+		epoll.Logger.DebugFields("accept client", zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", ip), zap.String("local_address", local))
 		SetSocketCloseExec(connFD)
 		if err := SetSocketNonBlock(connFD); err != nil {
 			syscall.Close(connFD)
-			ep.log.ErrorFields("set client fd non-blocking", zap.Error(err), zap.Int("client_fd", fd))
+			epoll.Logger.ErrorFields("set client fd non-blocking", zap.Error(err), zap.Int("client_fd", fd))
 			continue
 		}
-		if err := SetSocketTcpNodelay(connFD); err != nil {
+		if err := SetSocketTCPNodelay(connFD); err != nil {
 			syscall.Close(connFD)
-			ep.log.ErrorFields("set client fd tcp no delay", zap.Error(err), zap.Int("client_fd", fd))
+			epoll.Logger.ErrorFields("set client fd tcp no delay", zap.Error(err), zap.Int("client_fd", fd))
 			continue
 		}
-		if err := Control(ep.epollFD, connFD, Readable); err != nil {
+		if err := Control(epoll.epollFD, connFD, Readable); err != nil {
 			syscall.Close(connFD)
-			ep.log.ErrorFields("epoll control client fd", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("client_fd", fd), zap.String("epoll_event", EventString(Readable)))
+			epoll.Logger.ErrorFields("epoll control client fd", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("epoll_event", EventString(Readable)))
 			continue
 		}
-		operator := ep.operators[fd]
-		tcpConn := NewTcpConn(ep.log, ep.epollFD, connFD, local, ip, operator)
-		ep.tcpConns[connFD] = tcpConn
+		operator := epoll.operators[fd]
+		tcpConn := NewTCPConn(epoll.Logger, epoll.epollFD, connFD, local, ip, operator)
+		epoll.tcpConns[connFD] = tcpConn
 	}
 }
 
-func (ep *Epoll) Trigger() error {
+func (epoll *Epoll) Trigger() error {
 	// 防止重复主动触发
-	if atomic.AddUint32(&ep.trigger, 1) > 1 {
+	if atomic.AddUint32(&epoll.trigger, 1) > 1 {
 		return nil
 	}
-	if _, err := syscall.Write(ep.eventFD, []byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
-		ep.log.ErrorFields("write event fd trigger", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("event_fd", ep.eventFD))
+	if _, err := syscall.Write(epoll.eventFD, []byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+		epoll.Logger.ErrorFields("write event fd trigger", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("event_fd", epoll.eventFD))
 		return errors.New("write event fd trigger: " + err.Error())
 	}
 	return nil
 }
 
-func (ep *Epoll) Close() error {
-	if _, err := syscall.Write(ep.eventFD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
-		ep.log.ErrorFields("write event fd close", zap.Error(err), zap.Int("epoll_fd", ep.epollFD), zap.Int("event_fd", ep.eventFD))
+func (epoll *Epoll) Close() error {
+	if _, err := syscall.Write(epoll.eventFD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+		epoll.Logger.ErrorFields("write event fd close", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("event_fd", epoll.eventFD))
 		return errors.New("write event fd close: " + err.Error())
 	}
-	<-ep.close
+	<-epoll.close
 	return nil
 }

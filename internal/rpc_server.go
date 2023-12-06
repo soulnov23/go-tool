@@ -15,7 +15,7 @@ type RPCServer struct {
 	RunLog   log.Logger
 }
 
-func (svr *RPCServer) OnRead(conn *net.TcpConn) {
+func (svr *RPCServer) OnRequest(conn *net.TCPConnection) {
 	bufferLen := conn.ReadBufferLen()
 	buf, err := conn.Read(int(bufferLen))
 	// read buffer没数据了
