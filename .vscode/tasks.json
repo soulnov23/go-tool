@@ -8,7 +8,7 @@
             "type": "shell",
             "command": [
                 "cd ${workspaceFolder} &&",
-                "go mod tidy && make clean && make all &&",
+                "go mod tidy && make clean && make debug &&",
                 "cd ${workspaceFolder}/build/bin && ./nohup.sh"
             ],
             "group": {
