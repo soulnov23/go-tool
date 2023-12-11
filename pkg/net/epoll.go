@@ -232,8 +232,11 @@ func (epoll *Epoll) handler(eventSize int) bool {
 			if !ok {
 				continue
 			}
-			conn.handlerRead()
-			conn.Operator.OnRequest(conn)
+			// NumCPU核数listen处理accept，如果OnRequest内有IO阻塞，会影响到accept处理
+			go func() {
+				conn.handlerRead()
+				conn.Operator.OnRequest(conn)
+			}()
 		}
 
 		if evt&syscall.EPOLLOUT != 0 {
