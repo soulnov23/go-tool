@@ -67,7 +67,6 @@
     //workbench选项
     "workbench.colorTheme": "Default Dark+",
     "workbench.editor.enablePreview": false,
-    "workbench.activityBar.visible": true,
     "workbench.tree.renderIndentGuides": "always",
     "workbench.view.alwaysShowHeaderActions": true,
     "workbench.startupEditor": "welcomePageInEmptyWorkbench",
