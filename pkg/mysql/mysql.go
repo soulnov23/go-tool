@@ -77,3 +77,33 @@ func DuplicateEntry(err error) bool {
 	}
 	return false
 }
+
+func Escape(value string) string {
+	var dest []rune
+	var escape rune
+	for _, character := range value {
+		escape = 0
+		switch character {
+		case 0: /* Must be escaped for 'mysql' */
+			escape = '0'
+		case '\n': /* Must be escaped for logs */
+			escape = 'n'
+		case '\r':
+			escape = 'r'
+		case '\\':
+			escape = '\\'
+		case '\'':
+			escape = '\''
+		case '"': /* Better safe than sorry */
+			escape = '"'
+		case '\032': /* This gives problems on Win32 */
+			escape = 'Z'
+		}
+		if escape != 0 {
+			dest = append(dest, '\\', escape)
+		} else {
+			dest = append(dest, character)
+		}
+	}
+	return string(dest)
+}
