@@ -45,7 +45,7 @@ test:
 #go env GOCACHE
 #go env GOMODCACHE
 clean:
-	go clean ${PRINT} -i -cache -testcache -modcache -fuzzcache
+    #go clean ${PRINT} -i -cache -testcache -modcache -fuzzcache
 	rm -rf ${BIN}
 
 .PHONY: all debug release escape test clean
