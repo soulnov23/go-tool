@@ -54,6 +54,25 @@ func FromError(err error) *Error {
 	return Parse(err.Error())
 }
 
+func Equal(err1 error, err2 error) bool {
+	verr1, ok1 := err1.(*Error)
+	verr2, ok2 := err2.(*Error)
+
+	if ok1 != ok2 {
+		return false
+	}
+
+	if !ok1 {
+		return err1 == err2
+	}
+
+	if verr1.Code != verr2.Code {
+		return false
+	}
+
+	return true
+}
+
 // 100 Continue
 func NewContinue() *Error {
 	return &Error{
