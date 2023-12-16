@@ -1,4 +1,4 @@
-package net
+package utils
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-func GetSocketAddr(network string, address string) (syscall.Sockaddr, error) {
+func ResolveSockaddr(network string, address string) (syscall.Sockaddr, error) {
 	tcpAddr, err := net.ResolveTCPAddr(network, address)
 	if err != nil {
 		return nil, errors.New("net.ResolveTCPAddr: " + err.Error())
@@ -38,7 +38,7 @@ func GetSocketAddr(network string, address string) (syscall.Sockaddr, error) {
 	}
 }
 
-func GetSocketIP(addr syscall.Sockaddr) (string, error) {
+func ResolveSockaddrIP(addr syscall.Sockaddr) (string, error) {
 	if sa4, ok := addr.(*syscall.SockaddrInet4); ok {
 		return netip.AddrFrom4(sa4.Addr).String() + ":" + strconv.Itoa(sa4.Port), nil
 	} else if sa6, ok := addr.(*syscall.SockaddrInet6); ok {
