@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	convert "github.com/soulnov23/go-tool/pkg/strconv"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 func TestBuffer(t *testing.T) {
@@ -17,7 +17,7 @@ func TestBuffer(t *testing.T) {
 	timeout := 3 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
-	buf := convert.StringToBytes("hello world")
+	buf := utils.StringToBytes("hello world")
 
 	go func(ctx context.Context, lkBuffer *Buffer) {
 		for {
@@ -43,7 +43,7 @@ func TestBuffer(t *testing.T) {
 					t.Logf("Buffer.Peek: %v", err)
 				} else {
 					lkBuffer.Skip(len(res))
-					t.Logf("buf: %s", convert.BytesToString(res))
+					t.Logf("buf: %s", utils.BytesToString(res))
 				}
 				lkBuffer.GC()
 			}
@@ -61,7 +61,7 @@ func TestBuffer(t *testing.T) {
 				if err != nil {
 					t.Logf("Buffer.Read: %v", err)
 				} else {
-					t.Logf("buf: %s", convert.BytesToString(res))
+					t.Logf("buf: %s", utils.BytesToString(res))
 				}
 				lkBuffer.GC()
 			}
