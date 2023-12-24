@@ -27,12 +27,10 @@ func New(opts ...Option) *ProfileProfiler {
 	return pprof
 }
 
-/*
-创建mux自定义处理函数，避免与pprof的默认http.DefaultServeMux冲突
-mux := http.NewServeMux()
-mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
-http.ListenAndServe("ip:port", mux)
-*/
+// 创建mux自定义处理函数，避免与pprof的默认http.DefaultServeMux冲突
+// mux := http.NewServeMux()
+// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
+// http.ListenAndServe("ip:port", mux)
 func (pp *ProfileProfiler) Serve() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
