@@ -1,9 +1,11 @@
 package coroutine
 
 import (
+	"runtime/debug"
 	"sync"
 
 	"github.com/panjf2000/ants/v2"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 type Pool struct {
@@ -11,8 +13,10 @@ type Pool struct {
 	wg *sync.WaitGroup
 }
 
-func NewPool(size int) (*Pool, error) {
-	pool, err := ants.NewPool(size)
+func NewPool(poolSize int, taskSize int, printf func(formatter string, args ...any)) (*Pool, error) {
+	pool, err := ants.NewPool(poolSize, ants.WithMaxBlockingTasks(taskSize), ants.WithPanicHandler(func(err any) {
+		printf("[PANIC] %v\n%s", err, utils.BytesToString(debug.Stack()))
+	}))
 	if err != nil {
 		return nil, err
 	}

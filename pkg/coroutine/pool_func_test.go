@@ -6,7 +6,7 @@ import (
 )
 
 func TestPoolFunc(t *testing.T) {
-	pool, _ := NewPoolFunc(10, func(arg any) {
+	pool, _ := NewPoolFunc(10, 10000, t.Errorf, func(arg any) {
 		t.Logf("index: %d", arg)
 		t.Logf("runtime.NumGoroutine: %d", runtime.NumGoroutine())
 	})
