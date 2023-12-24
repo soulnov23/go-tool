@@ -8,40 +8,40 @@ var DefaultLogger Logger
 
 func init() {
 	var err error
-	config := LogConfig{
+	config := &LogConfig{
 		CallerSkip: 2,
-		CoreConfig: []CoreConfig{
+		CoreConfig: []*CoreConfig{
 			{
 				Level:     "debug",
 				Formatter: "json",
-				FormatConfig: FormatConfig{
+				FormatConfig: &FormatConfig{
 					TimeKey:       "time",
 					LevelKey:      "level",
 					NameKey:       "name",
 					CallerKey:     "caller",
 					FunctionKey:   "",
 					MessageKey:    "msg",
-					StacktraceKey: "",
+					StacktraceKey: "stack",
 				},
 				Writer: logTypeConsole,
 			},
 			{
 				Level:     "debug",
 				Formatter: "json",
-				FormatConfig: FormatConfig{
+				FormatConfig: &FormatConfig{
 					TimeKey:       "time",
 					LevelKey:      "level",
 					NameKey:       "name",
 					CallerKey:     "caller",
 					FunctionKey:   "",
 					MessageKey:    "msg",
-					StacktraceKey: "",
+					StacktraceKey: "stack",
 				},
 				Writer: logTypeFile,
-				WriteConfig: WriteConfig{
+				WriteConfig: &WriteConfig{
 					FileName:   "run.log",
 					TimeFormat: ".%Y-%m-%d",
-					MaxSize:    128,
+					MaxSize:    1,
 					MaxBackups: 0,
 					MaxAge:     0,
 					Compress:   false,

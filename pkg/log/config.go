@@ -3,8 +3,8 @@ package log
 // LogConfig is the output config, includes console, file and remote.
 type LogConfig struct {
 	// CallerSkip controls the nesting depth of log function.
-	CallerSkip int          `yaml:"caller_skip"`
-	CoreConfig []CoreConfig `yaml:"core_config"`
+	CallerSkip int           `yaml:"caller_skip"`
+	CoreConfig []*CoreConfig `yaml:"core_config"`
 }
 
 // CoreConfig is console, file output config.
@@ -14,11 +14,11 @@ type CoreConfig struct {
 
 	// Formatter is the format of log, such as console or json.
 	Formatter    string
-	FormatConfig FormatConfig `yaml:"formatter_config"`
+	FormatConfig *FormatConfig `yaml:"formatter_config"`
 
 	// Writer is the output of log, such as console or file.
 	Writer      string
-	WriteConfig WriteConfig `yaml:"writer_config"`
+	WriteConfig *WriteConfig `yaml:"writer_config"`
 }
 
 // WriteConfig is the local file config.

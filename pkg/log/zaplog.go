@@ -100,7 +100,7 @@ var zapCoreLevelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
-func New(c LogConfig) (Logger, error) {
+func New(c *LogConfig) (Logger, error) {
 	var cores []zapcore.Core
 	for _, cfg := range c.CoreConfig {
 		if cfg.Writer == logTypeConsole {
@@ -117,15 +117,15 @@ func New(c LogConfig) (Logger, error) {
 		}
 	}
 	return &ZapLogger{
-		l: zap.New(zapcore.NewTee(cores...), zap.AddCaller(), zap.AddCallerSkip(c.CallerSkip), zap.AddStacktrace(zapcore.ErrorLevel)),
+		l: zap.New(zapcore.NewTee(cores...), zap.AddCaller(), zap.AddCallerSkip(c.CallerSkip), zap.AddStacktrace(zapcore.FatalLevel)),
 	}, nil
 }
 
-func newConsoleCore(c CoreConfig) zapcore.Core {
+func newConsoleCore(c *CoreConfig) zapcore.Core {
 	return zapcore.NewCore(newEncoder(c), zapcore.Lock(os.Stdout), zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level]))
 }
 
-func newFileCore(c CoreConfig) (zapcore.Core, error) {
+func newFileCore(c *CoreConfig) (zapcore.Core, error) {
 	opts := []writer.Option{
 		writer.WithMaxSize(c.WriteConfig.MaxSize),
 		writer.WithMaxBackups(c.WriteConfig.MaxBackups),
@@ -141,7 +141,7 @@ func newFileCore(c CoreConfig) (zapcore.Core, error) {
 	return zapcore.NewCore(newEncoder(c), ws, zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level])), nil
 }
 
-func newEncoder(c CoreConfig) zapcore.Encoder {
+func newEncoder(c *CoreConfig) zapcore.Encoder {
 	cfg := zapcore.EncoderConfig{
 		TimeKey:       getLogEncoderKey("time", c.FormatConfig.TimeKey),
 		LevelKey:      getLogEncoderKey("level", c.FormatConfig.LevelKey),
