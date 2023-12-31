@@ -225,11 +225,41 @@ func NewNotImplemented(name string, formatter string, args ...any) *Error {
 	}
 }
 
+// 502 Bad Gateway
+func NewBadGateway(name string, formatter string, args ...any) *Error {
+	return &Error{
+		Code:   http.StatusBadGateway,
+		Status: http.StatusText(http.StatusBadGateway),
+		Name:   name,
+		Msg:    fmt.Sprintf(formatter, args...),
+	}
+}
+
 // 503 Service Unavailable
 func NewServiceUnavailable(name string, formatter string, args ...any) *Error {
 	return &Error{
 		Code:   http.StatusServiceUnavailable,
 		Status: http.StatusText(http.StatusServiceUnavailable),
+		Name:   name,
+		Msg:    fmt.Sprintf(formatter, args...),
+	}
+}
+
+// 504 Gateway Timeout
+func NewGatewayTimeout(name string, formatter string, args ...any) *Error {
+	return &Error{
+		Code:   http.StatusGatewayTimeout,
+		Status: http.StatusText(http.StatusGatewayTimeout),
+		Name:   name,
+		Msg:    fmt.Sprintf(formatter, args...),
+	}
+}
+
+// 504 HTTP Version Not Supported
+func NewHTTPVersionNotSupported(name string, formatter string, args ...any) *Error {
+	return &Error{
+		Code:   http.StatusHTTPVersionNotSupported,
+		Status: http.StatusText(http.StatusHTTPVersionNotSupported),
 		Name:   name,
 		Msg:    fmt.Sprintf(formatter, args...),
 	}
