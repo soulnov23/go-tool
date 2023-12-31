@@ -1,4 +1,4 @@
-SRC	:= ./cmd
+SRC	:= ./
 BIN := ./build/bin/go-tool
 
 #-v编译包时打印包的名称
@@ -48,6 +48,12 @@ clean:
     #go clean ${PRINT} -i -cache -testcache -modcache -fuzzcache
 	rm -rf ${BIN}
 
-.PHONY: all debug release escape test clean
+chmod:
+    #(644)rw-r--r--
+	chmod -R 644 ./
+    #(755)rwxr-xr-x
+	chmod +x ./build/bin/* ./scripts/*
+
+.PHONY: all debug release escape test clean chmod
 
 .DEFAULT_GOAL: all
