@@ -100,7 +100,7 @@ var zapCoreLevelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
-func New(c *LogConfig) (Logger, error) {
+func New(c *Config) (Logger, error) {
 	var cores []zapcore.Core
 	for _, cfg := range c.CoreConfig {
 		if cfg.Writer == logTypeConsole {

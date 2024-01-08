@@ -4,11 +4,11 @@ import (
 	"go.uber.org/zap"
 )
 
-var DefaultLogger Logger
+var defaultLogger Logger
 
 func init() {
 	var err error
-	config := &LogConfig{
+	config := &Config{
 		CallerSkip: 2,
 		CoreConfig: []*CoreConfig{
 			{
@@ -49,75 +49,75 @@ func init() {
 			},
 		},
 	}
-	if DefaultLogger, err = New(config); err != nil {
+	if defaultLogger, err = New(config); err != nil {
 		panic("init default log: " + err.Error())
 	}
 }
 
 func With(fields ...zap.Field) Logger {
-	return DefaultLogger.With(fields...)
+	return defaultLogger.With(fields...)
 }
 
 func Debug(args ...any) {
-	DefaultLogger.Debug(args...)
+	defaultLogger.Debug(args...)
 }
 
 func Debugf(formatter string, args ...any) {
-	DefaultLogger.Debugf(formatter, args...)
+	defaultLogger.Debugf(formatter, args...)
 }
 
 func DebugFields(msg string, fields ...zap.Field) {
-	DefaultLogger.DebugFields(msg, fields...)
+	defaultLogger.DebugFields(msg, fields...)
 }
 
 func Info(args ...any) {
-	DefaultLogger.Info(args...)
+	defaultLogger.Info(args...)
 }
 
 func Infof(formatter string, args ...any) {
-	DefaultLogger.Infof(formatter, args...)
+	defaultLogger.Infof(formatter, args...)
 }
 
 func InfoFields(msg string, fields ...zap.Field) {
-	DefaultLogger.InfoFields(msg, fields...)
+	defaultLogger.InfoFields(msg, fields...)
 }
 
 func Warn(args ...any) {
-	DefaultLogger.Warn(args...)
+	defaultLogger.Warn(args...)
 }
 
 func Warnf(formatter string, args ...any) {
-	DefaultLogger.Warnf(formatter, args...)
+	defaultLogger.Warnf(formatter, args...)
 }
 
 func WarnFields(msg string, fields ...zap.Field) {
-	DefaultLogger.WarnFields(msg, fields...)
+	defaultLogger.WarnFields(msg, fields...)
 }
 
 func Error(args ...any) {
-	DefaultLogger.Error(args...)
+	defaultLogger.Error(args...)
 }
 
 func Errorf(formatter string, args ...any) {
-	DefaultLogger.Errorf(formatter, args...)
+	defaultLogger.Errorf(formatter, args...)
 }
 
 func ErrorFields(msg string, fields ...zap.Field) {
-	DefaultLogger.ErrorFields(msg, fields...)
+	defaultLogger.ErrorFields(msg, fields...)
 }
 
 func Fatal(args ...any) {
-	DefaultLogger.Fatal(args...)
+	defaultLogger.Fatal(args...)
 }
 
 func Fatalf(formatter string, args ...any) {
-	DefaultLogger.Fatalf(formatter, args...)
+	defaultLogger.Fatalf(formatter, args...)
 }
 
 func FatalFields(msg string, fields ...zap.Field) {
-	DefaultLogger.FatalFields(msg, fields...)
+	defaultLogger.FatalFields(msg, fields...)
 }
 
 func Sync() error {
-	return DefaultLogger.Sync()
+	return defaultLogger.Sync()
 }

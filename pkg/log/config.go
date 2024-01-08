@@ -1,7 +1,7 @@
 package log
 
-// LogConfig is the output config, includes console, file and remote.
-type LogConfig struct {
+// Config is the output config, includes console, file and remote.
+type Config struct {
 	// CallerSkip controls the nesting depth of log function.
 	CallerSkip int           `yaml:"caller_skip"`
 	CoreConfig []*CoreConfig `yaml:"core_config"`
