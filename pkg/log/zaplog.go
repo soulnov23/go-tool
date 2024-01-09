@@ -103,6 +103,15 @@ var zapCoreLevelMap = map[string]zapcore.Level{
 func New(c *Config) (Logger, error) {
 	var cores []zapcore.Core
 	for _, cfg := range c.CoreConfig {
+		if cfg == nil {
+			return nil, errors.New("core config is nil")
+		}
+		if cfg.Formatter == "json" && cfg.FormatConfig == nil {
+			return nil, errors.New("format config is nil")
+		}
+		if cfg.Writer == logTypeFile && cfg.WriteConfig == nil {
+			return nil, errors.New("write config is nil")
+		}
 		if cfg.Writer == logTypeConsole {
 			core := newConsoleCore(cfg)
 			cores = append(cores, core)
@@ -113,7 +122,7 @@ func New(c *Config) (Logger, error) {
 			}
 			cores = append(cores, core)
 		} else {
-			return nil, errors.New("writer type " + cfg.Writer + " not support")
+			return nil, fmt.Errorf("writer type[%s] not support", cfg.Writer)
 		}
 	}
 	return &ZapLogger{
@@ -143,18 +152,16 @@ func newFileCore(c *CoreConfig) (zapcore.Core, error) {
 
 func newEncoder(c *CoreConfig) zapcore.Encoder {
 	cfg := zapcore.EncoderConfig{
-		TimeKey:       getLogEncoderKey("time", c.FormatConfig.TimeKey),
-		LevelKey:      getLogEncoderKey("level", c.FormatConfig.LevelKey),
-		NameKey:       getLogEncoderKey("name", c.FormatConfig.NameKey),
-		CallerKey:     getLogEncoderKey("caller", c.FormatConfig.CallerKey),
-		FunctionKey:   c.FormatConfig.FunctionKey,
-		MessageKey:    getLogEncoderKey("msg", c.FormatConfig.MessageKey),
-		StacktraceKey: c.FormatConfig.StacktraceKey,
-		LineEnding:    zapcore.DefaultLineEnding,
-		EncodeLevel:   zapcore.CapitalLevelEncoder,
-		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendByteString(defaultTimeFormat(t))
-		},
+		TimeKey:          getLogEncoderKey("time", c.FormatConfig.TimeKey),
+		LevelKey:         getLogEncoderKey("level", c.FormatConfig.LevelKey),
+		NameKey:          getLogEncoderKey("name", c.FormatConfig.NameKey),
+		CallerKey:        getLogEncoderKey("caller", c.FormatConfig.CallerKey),
+		FunctionKey:      c.FormatConfig.FunctionKey,
+		MessageKey:       getLogEncoderKey("msg", c.FormatConfig.MessageKey),
+		StacktraceKey:    getLogEncoderKey("stack", c.FormatConfig.StacktraceKey),
+		LineEnding:       zapcore.DefaultLineEnding,
+		EncodeLevel:      zapcore.LowercaseLevelEncoder,
+		EncodeTime:       zapcore.TimeEncoderOfLayout(time.DateTime + ".000"),
 		EncodeDuration:   zapcore.StringDurationEncoder,
 		EncodeCaller:     zapcore.ShortCallerEncoder,
 		ConsoleSeparator: " ",
@@ -174,38 +181,4 @@ func getLogEncoderKey(defKey, key string) string {
 		return defKey
 	}
 	return key
-}
-
-// defaultTimeFormat returns the default time formatter.
-func defaultTimeFormat(t time.Time) []byte {
-	t = t.Local()
-	year, month, day := t.Date()
-	hour, minute, second := t.Clock()
-	micros := t.Nanosecond() / 1000
-
-	buf := make([]byte, 23)
-	buf[0] = byte((year/1000)%10) + '0'
-	buf[1] = byte((year/100)%10) + '0'
-	buf[2] = byte((year/10)%10) + '0'
-	buf[3] = byte(year%10) + '0'
-	buf[4] = '-'
-	buf[5] = byte((month)/10) + '0'
-	buf[6] = byte((month)%10) + '0'
-	buf[7] = '-'
-	buf[8] = byte((day)/10) + '0'
-	buf[9] = byte((day)%10) + '0'
-	buf[10] = ' '
-	buf[11] = byte((hour)/10) + '0'
-	buf[12] = byte((hour)%10) + '0'
-	buf[13] = ':'
-	buf[14] = byte((minute)/10) + '0'
-	buf[15] = byte((minute)%10) + '0'
-	buf[16] = ':'
-	buf[17] = byte((second)/10) + '0'
-	buf[18] = byte((second)%10) + '0'
-	buf[19] = '.'
-	buf[20] = byte((micros/100000)%10) + '0'
-	buf[21] = byte((micros/10000)%10) + '0'
-	buf[22] = byte((micros/1000)%10) + '0'
-	return buf
 }
