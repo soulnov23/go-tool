@@ -141,6 +141,7 @@
     "terminal.integrated.wordSeparators": " `~!@#$%^&*()-=+[{]}\\\\|;:'\\\",.<>/?",
     //go选项
     "go.toolsManagement.autoUpdate": true,
+    "go.toolsManagement.checkForUpdates": "proxy",
     "go.lintTool": "golangci-lint",
     "go.testFlags": [
         "-v",
