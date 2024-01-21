@@ -5,7 +5,12 @@ import (
 	"net/http/pprof"
 )
 
-const defaultAddress = "0.0.0.0:6060"
+const (
+	defaultAddress      = "0.0.0.0:6060"
+	defaultReadTimeout  = 0 // not limited
+	defaultWriteTimeout = 0 // not limited
+	defaultIdleTimeout  = 0 // not limited
+)
 
 // "Profile"是指性能分析数据，"Profiler"是指生成和处理这些数据的工具
 type ProfileProfiler struct {
@@ -16,9 +21,9 @@ func New(opts ...Option) *ProfileProfiler {
 	pprof := &ProfileProfiler{
 		opts: &Options{
 			Address:      defaultAddress,
-			ReadTimeout:  0, // not limited
-			WriteTimeout: 0, // not limited
-			IdleTimeout:  0, // not limited
+			ReadTimeout:  defaultReadTimeout,
+			WriteTimeout: defaultWriteTimeout,
+			IdleTimeout:  defaultIdleTimeout,
 		},
 	}
 	for _, opt := range opts {
