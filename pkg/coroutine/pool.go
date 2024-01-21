@@ -34,7 +34,7 @@ func (pool *Pool) Submit(task func()) error {
 	})
 }
 
-func (pool *Pool) Release() {
+func (pool *Pool) Wait() {
 	pool.wg.Wait()
 	pool.Pool.Release()
 }

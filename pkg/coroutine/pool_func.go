@@ -35,7 +35,7 @@ func (pool *PoolFunc) Invoke(arg any) error {
 	return pool.PoolWithFunc.Invoke(arg)
 }
 
-func (pool *PoolFunc) Release() {
+func (pool *PoolFunc) Wait() {
 	pool.wg.Wait()
 	pool.PoolWithFunc.Release()
 }

@@ -28,5 +28,5 @@ func TestPool(t *testing.T) {
 		}
 		pool.Submit(fn)
 	}
-	pool.Release()
+	pool.Wait()
 }

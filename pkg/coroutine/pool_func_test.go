@@ -13,5 +13,5 @@ func TestPoolFunc(t *testing.T) {
 	for i := 0; i < 60; i++ {
 		pool.Invoke(i)
 	}
-	pool.Release()
+	pool.Wait()
 }
