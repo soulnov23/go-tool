@@ -40,55 +40,25 @@ func ResolveSockaddr(network string, address string) (syscall.Sockaddr, error) {
 		if err != nil {
 			return nil, fmt.Errorf("net.ResolveTCPAddr: %v", err)
 		}
-		sa4 := &syscall.SockaddrInet4{
-			Port: addr.Port,
-		}
-		copy(sa4.Addr[:], addr.IP.To4())
-		return sa4, nil
+		return AddrToSockaddrInet4(addr)
 	case "tcp6":
 		addr, err := net.ResolveTCPAddr(network, address)
 		if err != nil {
 			return nil, fmt.Errorf("net.ResolveTCPAddr: %v", err)
 		}
-		sa6 := &syscall.SockaddrInet6{
-			Port: addr.Port,
-		}
-		copy(sa6.Addr[:], addr.IP.To16())
-		if addr.Zone != "" {
-			intf, err := net.InterfaceByName(addr.Zone)
-			if err != nil {
-				return nil, fmt.Errorf("net.InterfaceByName: %v", err)
-			}
-			sa6.ZoneId = uint32(intf.Index)
-		}
-		return sa6, nil
+		return AddrToSockaddrInet6(addr)
 	case "udp", "udp4":
 		addr, err := net.ResolveUDPAddr(network, address)
 		if err != nil {
 			return nil, fmt.Errorf("net.ResolveUDPAddr: %v", err)
 		}
-		sa4 := &syscall.SockaddrInet4{
-			Port: addr.Port,
-		}
-		copy(sa4.Addr[:], addr.IP.To4())
-		return sa4, nil
+		return AddrToSockaddrInet4(addr)
 	case "udp6":
 		addr, err := net.ResolveUDPAddr(network, address)
 		if err != nil {
 			return nil, fmt.Errorf("net.ResolveUDPAddr: %v", err)
 		}
-		sa6 := &syscall.SockaddrInet6{
-			Port: addr.Port,
-		}
-		copy(sa6.Addr[:], addr.IP.To16())
-		if addr.Zone != "" {
-			intf, err := net.InterfaceByName(addr.Zone)
-			if err != nil {
-				return nil, fmt.Errorf("net.InterfaceByName: %v", err)
-			}
-			sa6.ZoneId = uint32(intf.Index)
-		}
-		return sa6, nil
+		return AddrToSockaddrInet6(addr)
 	case "unix", "unixgram", "unixpacket":
 		addr, err := net.ResolveUnixAddr(network, address)
 		if err != nil {
@@ -103,18 +73,74 @@ func ResolveSockaddr(network string, address string) (syscall.Sockaddr, error) {
 		if err != nil {
 			return nil, fmt.Errorf("net.ResolveIPAddr: %v", err)
 		}
-		sa4 := &syscall.SockaddrInet4{}
-		copy(sa4.Addr[:], addr.IP.To4())
-		return sa4, nil
+		return AddrToSockaddrInet4(addr)
 	case "ip6":
 		addr, err := net.ResolveIPAddr(network, address)
 		if err != nil {
 			return nil, fmt.Errorf("net.ResolveIPAddr: %v", err)
 		}
+		return AddrToSockaddrInet6(addr)
+	default:
+		return nil, errors.New("network not support")
+	}
+}
+
+func AddrToSockaddrInet4(addr net.Addr) (syscall.Sockaddr, error) {
+	switch a := addr.(type) {
+	case *net.TCPAddr:
+		sa4 := &syscall.SockaddrInet4{
+			Port: a.Port,
+		}
+		copy(sa4.Addr[:], a.IP.To4())
+		return sa4, nil
+	case *net.UDPAddr:
+		sa4 := &syscall.SockaddrInet4{
+			Port: a.Port,
+		}
+		copy(sa4.Addr[:], a.IP.To4())
+		return sa4, nil
+	case *net.IPAddr:
+		sa4 := &syscall.SockaddrInet4{}
+		copy(sa4.Addr[:], a.IP.To4())
+		return sa4, nil
+	default:
+		return nil, errors.New("addr not support")
+	}
+}
+
+func AddrToSockaddrInet6(addr net.Addr) (syscall.Sockaddr, error) {
+	switch a := addr.(type) {
+	case *net.TCPAddr:
+		sa6 := &syscall.SockaddrInet6{
+			Port: a.Port,
+		}
+		copy(sa6.Addr[:], a.IP.To16())
+		if a.Zone != "" {
+			intf, err := net.InterfaceByName(a.Zone)
+			if err != nil {
+				return nil, fmt.Errorf("net.InterfaceByName: %v", err)
+			}
+			sa6.ZoneId = uint32(intf.Index)
+		}
+		return sa6, nil
+	case *net.UDPAddr:
+		sa6 := &syscall.SockaddrInet6{
+			Port: a.Port,
+		}
+		copy(sa6.Addr[:], a.IP.To16())
+		if a.Zone != "" {
+			intf, err := net.InterfaceByName(a.Zone)
+			if err != nil {
+				return nil, fmt.Errorf("net.InterfaceByName: %v", err)
+			}
+			sa6.ZoneId = uint32(intf.Index)
+		}
+		return sa6, nil
+	case *net.IPAddr:
 		sa6 := &syscall.SockaddrInet6{}
-		copy(sa6.Addr[:], addr.IP.To16())
-		if addr.Zone != "" {
-			intf, err := net.InterfaceByName(addr.Zone)
+		copy(sa6.Addr[:], a.IP.To16())
+		if a.Zone != "" {
+			intf, err := net.InterfaceByName(a.Zone)
 			if err != nil {
 				return nil, fmt.Errorf("net.InterfaceByName: %v", err)
 			}
@@ -122,7 +148,7 @@ func ResolveSockaddr(network string, address string) (syscall.Sockaddr, error) {
 		}
 		return sa6, nil
 	default:
-		return nil, errors.New("network not support")
+		return nil, errors.New("addr not support")
 	}
 }
 
