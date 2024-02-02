@@ -79,7 +79,7 @@
     "C_Cpp.exclusionPolicy": "checkFilesAndFolders",
     "C_Cpp.autoAddFileAssociations": false,
     "C_Cpp.workspaceSymbols": "All",
-    "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+    "C_Cpp.default.intelliSenseMode": "linux-clang-x64",
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseMemoryLimit": 10240,
     "C_Cpp.intelliSenseCachePath": "${workspaceFolder}/.vscode",
@@ -134,7 +134,7 @@
     //terminal选项
     "terminal.integrated.fontSize": 22,
     "terminal.integrated.copyOnSelection": true,
-    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cursorStyle": "line",
     "terminal.integrated.scrollback": 5000,

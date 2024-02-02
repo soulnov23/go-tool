@@ -6,7 +6,8 @@
                 "/usr/include/**",
                 "/usr/local/include/**",
                 "${workspaceFolder}/**"
-            ]
+            ],
+            "compilerPath": "/usr/bin/clang"
         }
     ],
     "version": 4
