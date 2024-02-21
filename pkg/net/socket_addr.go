@@ -13,19 +13,19 @@ func ResolveAddr(network string, address string) (net.Addr, error) {
 	switch network {
 	case "tcp", "tcp4", "tcp6":
 		if addr, err = net.ResolveTCPAddr(network, address); err != nil {
-			return nil, fmt.Errorf("net.ResolveTCPAddr: ", err)
+			return nil, fmt.Errorf("net.ResolveTCPAddr: %v", err)
 		}
 	case "udp", "udp4", "udp6":
 		if addr, err = net.ResolveUDPAddr(network, address); err != nil {
-			return nil, fmt.Errorf("net.ResolveUDPAddr: ", err)
+			return nil, fmt.Errorf("net.ResolveUDPAddr: %v", err)
 		}
 	case "unix", "unixgram", "unixpacket":
 		if addr, err = net.ResolveUnixAddr(network, address); err != nil {
-			return nil, fmt.Errorf("net.ResolveUnixAddr: ", err)
+			return nil, fmt.Errorf("net.ResolveUnixAddr: %v", err)
 		}
 	case "ip", "ip4", "ip6":
 		if addr, err = net.ResolveIPAddr(network, address); err != nil {
-			return nil, fmt.Errorf("net.ResolveIPAddr: ", err)
+			return nil, fmt.Errorf("net.ResolveIPAddr: %v", err)
 		}
 	default:
 		return nil, errors.New("network not support")
