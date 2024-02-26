@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/soulnov23/go-tool/pkg/log"
-	"go.uber.org/zap"
 )
 
 type FactoryA struct {
@@ -29,21 +27,21 @@ func TestJSONRawMessage(t *testing.T) {
 	}`
 	dataValue := &Data{}
 	if err := UnmarshalFromString(data, dataValue); err != nil {
-		log.ErrorFields("", zap.Error(err))
+		t.Error(err)
 		return
 	}
-	log.DebugFields("", zap.Reflect("data", dataValue))
+	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		Unmarshal(dataValue.Factory, factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	case "b":
 		factoryValue := &FactoryB{}
 		Unmarshal(dataValue.Factory, factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	default:
-		log.Error("unknown factory type")
+		t.Error("unknown factory type")
 	}
 
 	data = `{
@@ -53,21 +51,21 @@ func TestJSONRawMessage(t *testing.T) {
 		}
 	}`
 	if err := UnmarshalFromString(data, dataValue); err != nil {
-		log.ErrorFields("", zap.Error(err))
+		t.Error(err)
 		return
 	}
-	log.DebugFields("", zap.Reflect("data", dataValue))
+	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		Unmarshal(dataValue.Factory, factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	case "b":
 		factoryValue := &FactoryB{}
 		Unmarshal(dataValue.Factory, factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	default:
-		log.Error("unknown factory type")
+		t.Error("unknown factory type")
 	}
 }
 
@@ -84,21 +82,21 @@ func TestJSONAny(t *testing.T) {
 	}`
 	dataValue := &Data{}
 	if err := UnmarshalFromString(data, dataValue); err != nil {
-		log.ErrorFields("", zap.Error(err))
+		t.Error(err)
 		return
 	}
-	log.DebugFields("", zap.Reflect("data", dataValue))
+	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		dataValue.Factory.ToVal(factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	case "b":
 		factoryValue := &FactoryB{}
 		dataValue.Factory.ToVal(factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	default:
-		log.Error("unknown factory type")
+		t.Error("unknown factory type")
 	}
 
 	data = `{
@@ -108,20 +106,32 @@ func TestJSONAny(t *testing.T) {
 		}
 	}`
 	if err := UnmarshalFromString(data, dataValue); err != nil {
-		log.ErrorFields("", zap.Error(err))
+		t.Error(err)
 		return
 	}
-	log.DebugFields("", zap.Reflect("data", dataValue))
+	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		dataValue.Factory.ToVal(factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	case "b":
 		factoryValue := &FactoryB{}
 		dataValue.Factory.ToVal(factoryValue)
-		log.DebugFields("", zap.Reflect("factory", factoryValue))
+		t.Log(Stringify(factoryValue))
 	default:
-		log.Error("unknown factory type")
+		t.Error("unknown factory type")
 	}
+}
+
+func TestFlatten(t *testing.T) {
+	data := map[string]any{
+		"a": "123456",
+		"b": "123456",
+		"c": map[string]any{
+			"a": "123456",
+			"b": "123456",
+		},
+	}
+	t.Log(Stringify(Flatten(data)))
 }
