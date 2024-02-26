@@ -85,11 +85,7 @@ func AnyToString(row any) string {
 	case []byte:
 		return string(v)
 	case *struct{}:
-		result, err := json.Marshal(*v)
-		if err != nil {
-			return ""
-		}
-		return string(result)
+		return json.Stringify(*v)
 	case *any:
 		return AnyToString(*v)
 	case any:
