@@ -49,6 +49,18 @@ func Socket(network string) (int, error) {
 			return 0, fmt.Errorf("syscall.Socket network[%s]: %v", network, err)
 		}
 		return fd, nil
+	case "ip", "ip4":
+		fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_IP)
+		if err != nil {
+			return 0, fmt.Errorf("syscall.Socket network[%s]: %v", network, err)
+		}
+		return fd, nil
+	case "ip6":
+		fd, err := syscall.Socket(syscall.AF_INET6, syscall.SOCK_RAW, syscall.IPPROTO_IPV6)
+		if err != nil {
+			return 0, fmt.Errorf("syscall.Socket network[%s]: %v", network, err)
+		}
+		return fd, nil
 	default:
 		return 0, fmt.Errorf("network[%s] not support", network)
 	}
