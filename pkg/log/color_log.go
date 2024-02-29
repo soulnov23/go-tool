@@ -22,20 +22,40 @@ var (
 	callers sync.Map
 )
 
+func ColorDebug(args ...any) {
+	fmt.Printf("%s%s DEBUG %s %s%s\n", colorGreen, time.Now().Format(time.DateTime), caller(2), fmt.Sprint(args...), colorReset)
+}
+
 func ColorDebugf(formatter string, args ...any) {
 	fmt.Printf("%s%s DEBUG %s %s%s\n", colorGreen, time.Now().Format(time.DateTime), caller(2), fmt.Sprintf(formatter, args...), colorReset)
+}
+
+func ColorInfo(args ...any) {
+	fmt.Printf("%s%s INFO %s %s%s\n", colorWhite, time.Now().Format(time.DateTime), caller(2), fmt.Sprint(args...), colorReset)
 }
 
 func ColorInfof(formatter string, args ...any) {
 	fmt.Printf("%s%s INFO %s %s%s\n", colorWhite, time.Now().Format(time.DateTime), caller(2), fmt.Sprintf(formatter, args...), colorReset)
 }
 
+func ColorWarn(args ...any) {
+	fmt.Printf("%s%s WARN %s %s%s\n", colorYellow, time.Now().Format(time.DateTime), caller(2), fmt.Sprint(args...), colorReset)
+}
+
 func ColorWarnf(formatter string, args ...any) {
 	fmt.Printf("%s%s WARN %s %s%s\n", colorYellow, time.Now().Format(time.DateTime), caller(2), fmt.Sprintf(formatter, args...), colorReset)
 }
 
+func ColorError(args ...any) {
+	fmt.Printf("%s%s ERROR %s %s%s\n", colorRed, time.Now().Format(time.DateTime), caller(2), fmt.Sprint(args...), colorReset)
+}
+
 func ColorErrorf(formatter string, args ...any) {
 	fmt.Printf("%s%s ERROR %s %s%s\n", colorRed, time.Now().Format(time.DateTime), caller(2), fmt.Sprintf(formatter, args...), colorReset)
+}
+
+func ColorFatal(args ...any) {
+	fmt.Printf("%s%s FATAL %s %s%s\n", colorPurple, time.Now().Format(time.DateTime), caller(2), fmt.Sprint(args...), colorReset)
 }
 
 func ColorFatalf(formatter string, args ...any) {
