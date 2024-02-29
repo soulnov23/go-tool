@@ -123,15 +123,3 @@ func TestJSONAny(t *testing.T) {
 		t.Error("unknown factory type")
 	}
 }
-
-func TestFlatten(t *testing.T) {
-	data := map[string]any{
-		"a": "123456",
-		"b": "123456",
-		"c": map[string]any{
-			"a": "123456",
-			"b": "123456",
-		},
-	}
-	t.Log(Stringify(Flatten(data)))
-}

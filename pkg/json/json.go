@@ -54,33 +54,3 @@ func Stringify(value any) string {
 	}
 	return data
 }
-
-type item struct {
-	prefixKey string
-	value     map[string]any
-}
-
-func Flatten(object map[string]any) map[string]any {
-	result := map[string]any{}
-	stack := []item{{"", object}}
-
-	for len(stack) > 0 {
-		var tmp item
-		tmp, stack = stack[len(stack)-1], stack[:len(stack)-1]
-
-		for key, value := range tmp.value {
-			flattenKey := key
-			if tmp.prefixKey != "" {
-				flattenKey = tmp.prefixKey + "_" + key
-			}
-			switch v := value.(type) {
-			case map[string]any:
-				stack = append(stack, item{flattenKey, v})
-			default:
-				result[flattenKey] = value
-			}
-		}
-	}
-
-	return result
-}

@@ -101,3 +101,32 @@ func AnyToString(row any) string {
 		return fmt.Sprintf("%v", v)
 	}
 }
+
+type item struct {
+	prefixKey string
+	value     map[string]any
+}
+
+func FlattenMap(recordMap map[string]any) map[string]any {
+	result := map[string]any{}
+	var stack Stack
+	stack.Push(&item{"", recordMap})
+
+	for i := stack.Pop(); i != nil; i = stack.Pop() {
+		current := i.(*item)
+		for key, value := range current.value {
+			flattenKey := key
+			if current.prefixKey != "" {
+				flattenKey = current.prefixKey + "_" + key
+			}
+			switch v := value.(type) {
+			case map[string]any:
+				stack.Push(&item{flattenKey, v})
+			default:
+				result[flattenKey] = value
+			}
+		}
+	}
+
+	return result
+}
