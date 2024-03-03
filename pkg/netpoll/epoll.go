@@ -21,17 +21,16 @@ type FDOperator struct {
 	OnWrite func()
 	OnHup   func()
 
-	// poll is the registered location of the file descriptor.
-	epoll *Epoll
+	// Epoll is the registered location of the file descriptor.
+	Epoll *Epoll
 }
 
 type Epoll struct {
 	fd         int
 	operator   *FDOperator
-	listens    map[int]string
 	events     []EpollEvent
 	triggerBuf []byte
-	trigger    uint32
+	trigger    atomic.Uint32
 	close      chan struct{}
 	log.Logger
 }
@@ -43,7 +42,6 @@ func NewEpoll(eventSize int, log log.Logger) (*Epoll, error) {
 	}
 	epoll := &Epoll{
 		fd:         fd,
-		listens:    make(map[int]string),
 		events:     make([]EpollEvent, eventSize),
 		triggerBuf: make([]byte, 8),
 		close:      make(chan struct{}, 1),
@@ -56,7 +54,7 @@ func NewEpoll(eventSize int, log log.Logger) (*Epoll, error) {
 	}
 	operator := &FDOperator{
 		FD:    eventFD,
-		epoll: epoll,
+		Epoll: epoll,
 	}
 	if err := epoll.Control(operator, Readable); err != nil {
 		syscall.Close(eventFD)
@@ -116,7 +114,7 @@ func (epoll *Epoll) Wait() error {
 			syscall.Close(epoll.operator.FD)
 			syscall.Close(epoll.fd)
 			epoll.close <- struct{}{}
-			atomic.StoreUint32(&epoll.trigger, 0)
+			epoll.trigger.Store(0)
 			epoll.InfoFields("exit gracefully")
 			return nil
 		}
@@ -203,12 +201,11 @@ func (epoll *Epoll) handleAccept(fd int) {
 
 func (epoll *Epoll) Close() error {
 	// 防止重复主动触发
-	if atomic.AddUint32(&epoll.trigger, 1) > 1 {
+	if epoll.trigger.Add(1) > 1 {
 		return nil
 	}
 	if _, err := syscall.Write(epoll.operator.FD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
-		epoll.Logger.ErrorFields("write event fd close", zap.Error(err), zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
-		return fmt.Errorf("write event fd close: " + err.Error())
+		return fmt.Errorf("epoll_fd[%d] write event_fd[%d]: %v", epoll.fd, epoll.operator.FD, err)
 	}
 	<-epoll.close
 	return nil
