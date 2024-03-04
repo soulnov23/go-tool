@@ -1,15 +1,14 @@
 package netpoll
 
 import (
-	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
 )
 
 const (
-	ReadFlags  = syscall.EPOLLIN | syscall.EPOLLRDHUP | syscall.EPOLLHUP | syscall.EPOLLERR | syscall.EPOLLPRI
-	WriteFlags = unix.EPOLLET | syscall.EPOLLOUT | syscall.EPOLLHUP | syscall.EPOLLERR
+	ReadFlags  = unix.EPOLLIN | unix.EPOLLRDHUP | unix.EPOLLHUP | unix.EPOLLERR | unix.EPOLLPRI
+	WriteFlags = unix.EPOLLET | unix.EPOLLOUT | unix.EPOLLHUP | unix.EPOLLERR
 )
 
 const (
@@ -27,22 +26,22 @@ func EventString(event uint32) string {
 	if event&unix.EPOLLET != 0 {
 		eventString += "EPOLLET"
 	}
-	if event&syscall.EPOLLIN != 0 {
+	if event&unix.EPOLLIN != 0 {
 		eventString += "|EPOLLIN"
 	}
-	if event&syscall.EPOLLPRI != 0 {
+	if event&unix.EPOLLPRI != 0 {
 		eventString += "|EPOLLPRI"
 	}
-	if event&syscall.EPOLLOUT != 0 {
+	if event&unix.EPOLLOUT != 0 {
 		eventString += "|EPOLLOUT"
 	}
-	if event&syscall.EPOLLHUP != 0 {
+	if event&unix.EPOLLHUP != 0 {
 		eventString += "|EPOLLHUP"
 	}
-	if event&syscall.EPOLLRDHUP != 0 {
+	if event&unix.EPOLLRDHUP != 0 {
 		eventString += "|EPOLLRDHUP"
 	}
-	if event&syscall.EPOLLERR != 0 {
+	if event&unix.EPOLLERR != 0 {
 		eventString += "|EPOLLERR"
 	}
 	return eventString
@@ -50,8 +49,8 @@ func EventString(event uint32) string {
 
 func EpollCtl(epfd int, op int, fd int, event *EpollEvent) error {
 	var err error
-	_, _, err = syscall.RawSyscall6(syscall.SYS_EPOLL_CTL, uintptr(epfd), uintptr(op), uintptr(fd), uintptr(unsafe.Pointer(event)), 0, 0)
-	if err == syscall.Errno(0) {
+	_, _, err = unix.RawSyscall6(unix.SYS_EPOLL_CTL, uintptr(epfd), uintptr(op), uintptr(fd), uintptr(unsafe.Pointer(event)), 0, 0)
+	if err == unix.Errno(0) {
 		err = nil
 	}
 	return err
@@ -62,11 +61,11 @@ func EpollWait(epfd int, events []EpollEvent, msec int) (int, error) {
 	var r uintptr
 	var err error
 	if msec == 0 {
-		r, _, err = syscall.RawSyscall6(syscall.SYS_EPOLL_PWAIT, uintptr(epfd), uintptr(p), uintptr(len(events)), 0, 0, 0)
+		r, _, err = unix.RawSyscall6(unix.SYS_EPOLL_PWAIT, uintptr(epfd), uintptr(p), uintptr(len(events)), 0, 0, 0)
 	} else {
-		r, _, err = syscall.Syscall6(syscall.SYS_EPOLL_PWAIT, uintptr(epfd), uintptr(p), uintptr(len(events)), uintptr(msec), 0, 0)
+		r, _, err = unix.Syscall6(unix.SYS_EPOLL_PWAIT, uintptr(epfd), uintptr(p), uintptr(len(events)), uintptr(msec), 0, 0)
 	}
-	if err == syscall.Errno(0) {
+	if err == unix.Errno(0) {
 		err = nil
 	}
 	return int(r), err

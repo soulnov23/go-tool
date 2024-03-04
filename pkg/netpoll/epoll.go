@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime"
 	"sync/atomic"
-	"syscall"
 	"unsafe"
 
 	"github.com/soulnov23/go-tool/pkg/log"
@@ -36,9 +35,9 @@ type Epoll struct {
 }
 
 func NewEpoll(eventSize int, log log.Logger) (*Epoll, error) {
-	fd, err := syscall.EpollCreate1(syscall.EPOLL_CLOEXEC)
+	fd, err := unix.EpollCreate1(unix.EPOLL_CLOEXEC)
 	if err != nil {
-		return nil, fmt.Errorf("syscall.EpollCreate1: %v", err)
+		return nil, fmt.Errorf("unix.EpollCreate1: %v", err)
 	}
 	epoll := &Epoll{
 		fd:         fd,
@@ -49,7 +48,7 @@ func NewEpoll(eventSize int, log log.Logger) (*Epoll, error) {
 	}
 	eventFD, err := unix.Eventfd(0, unix.EFD_NONBLOCK|unix.EFD_CLOEXEC)
 	if err != nil {
-		syscall.Close(fd)
+		unix.Close(fd)
 		return nil, fmt.Errorf("unix.Eventfd: %v", err)
 	}
 	operator := &FDOperator{
@@ -57,8 +56,8 @@ func NewEpoll(eventSize int, log log.Logger) (*Epoll, error) {
 		Epoll: epoll,
 	}
 	if err := epoll.Control(operator, Readable); err != nil {
-		syscall.Close(eventFD)
-		syscall.Close(fd)
+		unix.Close(eventFD)
+		unix.Close(fd)
 		return nil, fmt.Errorf("epoll_fd[%d] epoll.Control event_fd[%d]: %v", fd, eventFD, err)
 	}
 	epoll.operator = operator
@@ -72,24 +71,24 @@ func (epoll *Epoll) Control(operator *FDOperator, event int) error {
 	switch event {
 	case Readable:
 		epollEvent.Events = ReadFlags
-		return EpollCtl(epoll.fd, syscall.EPOLL_CTL_ADD, operator.FD, epollEvent)
+		return EpollCtl(epoll.fd, unix.EPOLL_CTL_ADD, operator.FD, epollEvent)
 	case ModReadable:
 		epollEvent.Events = ReadFlags
-		return EpollCtl(epoll.fd, syscall.EPOLL_CTL_MOD, operator.FD, epollEvent)
+		return EpollCtl(epoll.fd, unix.EPOLL_CTL_MOD, operator.FD, epollEvent)
 	case Writable:
 		epollEvent.Events = WriteFlags
-		return EpollCtl(epoll.fd, syscall.EPOLL_CTL_ADD, operator.FD, epollEvent)
+		return EpollCtl(epoll.fd, unix.EPOLL_CTL_ADD, operator.FD, epollEvent)
 	case ModWritable:
 		epollEvent.Events = WriteFlags
-		return EpollCtl(epoll.fd, syscall.EPOLL_CTL_MOD, operator.FD, epollEvent)
+		return EpollCtl(epoll.fd, unix.EPOLL_CTL_MOD, operator.FD, epollEvent)
 	case ReadWritable:
 		epollEvent.Events = ReadFlags | WriteFlags
-		return EpollCtl(epoll.fd, syscall.EPOLL_CTL_ADD, operator.FD, epollEvent)
+		return EpollCtl(epoll.fd, unix.EPOLL_CTL_ADD, operator.FD, epollEvent)
 	case ModReadWritable:
 		epollEvent.Events = ReadFlags | WriteFlags
-		return EpollCtl(epoll.fd, syscall.EPOLL_CTL_MOD, operator.FD, epollEvent)
+		return EpollCtl(epoll.fd, unix.EPOLL_CTL_MOD, operator.FD, epollEvent)
 	case Detach:
-		return EpollCtl(epoll.fd, syscall.EPOLL_CTL_DEL, operator.FD, nil)
+		return EpollCtl(epoll.fd, unix.EPOLL_CTL_DEL, operator.FD, nil)
 	default:
 		return fmt.Errorf("event[%d] not support", event)
 	}
@@ -100,8 +99,8 @@ func (epoll *Epoll) Wait() error {
 	msec := -1
 	for {
 		n, err := EpollWait(epoll.fd, epoll.events, msec)
-		if err != nil && err != syscall.EINTR {
-			return fmt.Errorf("syscall.EpollWait: %v", err)
+		if err != nil && err != unix.EINTR {
+			return fmt.Errorf("unix.EpollWait: %v", err)
 		}
 		// 轮询没有事件发生，直接阻塞协程，然后主动切换协程
 		if n <= 0 {
@@ -112,8 +111,8 @@ func (epoll *Epoll) Wait() error {
 		msec = 0
 		if epoll.handle(n) {
 			epoll.Control(epoll.operator, Detach)
-			syscall.Close(epoll.operator.FD)
-			syscall.Close(epoll.fd)
+			unix.Close(epoll.operator.FD)
+			unix.Close(epoll.fd)
 			epoll.close <- struct{}{}
 			epoll.trigger.Store(0)
 			epoll.InfoFields("exit gracefully", zap.Int("epoll_fd", epoll.fd))
@@ -131,24 +130,24 @@ func (epoll *Epoll) handle(eventSize int) bool {
 
 		// 通过write event fd主动触发循环优雅退出
 		if operator.FD == epoll.operator.FD {
-			syscall.Read(epoll.operator.FD, epoll.triggerBuf)
+			unix.Read(epoll.operator.FD, epoll.triggerBuf)
 			if epoll.triggerBuf[0] > 0 {
 				exit = true
 			}
 			continue
 		}
 
-		if event.Events&(syscall.EPOLLRDHUP|syscall.EPOLLHUP|syscall.EPOLLERR) != 0 {
+		if event.Events&(unix.EPOLLRDHUP|unix.EPOLLHUP|unix.EPOLLERR) != 0 {
 			operator.OnHup()
 			epoll.Control(operator, Detach)
 			continue
 		}
 
-		if event.Events&(syscall.EPOLLIN|syscall.EPOLLPRI) != 0 {
+		if event.Events&(unix.EPOLLIN|unix.EPOLLPRI) != 0 {
 			operator.OnRead()
 		}
 
-		if event.Events&syscall.EPOLLOUT != 0 {
+		if event.Events&unix.EPOLLOUT != 0 {
 			operator.OnWrite()
 		}
 	}
@@ -159,11 +158,11 @@ func (epoll *Epoll) handle(eventSize int) bool {
 /*
 func (epoll *Epoll) handleAccept(fd int) {
 	for {
-		connFD, addr, err := syscall.Accept4(fd, syscall.SOCK_CLOEXEC)
+		connFD, addr, err := unix.Accept4(fd, unix.SOCK_CLOEXEC)
 		if err != nil {
-			if err == syscall.EAGAIN {
+			if err == unix.EAGAIN {
 				break
-			} else if err == syscall.EINTR {
+			} else if err == unix.EINTR {
 				continue
 			} else {
 				epoll.Logger.ErrorFields("accept client", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd))
@@ -179,17 +178,17 @@ func (epoll *Epoll) handleAccept(fd int) {
 		epoll.Logger.DebugFields("accept client", zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", ip), zap.String("local_address", local))
 		utils.SetSocketCloseExec(connFD)
 		if err := utils.SetSocketNonBlock(connFD); err != nil {
-			syscall.Close(connFD)
+			unix.Close(connFD)
 			epoll.Logger.ErrorFields("set client fd non-blocking", zap.Error(err), zap.Int("client_fd", fd))
 			continue
 		}
 		if err := utils.SetSocketTCPNodelay(connFD); err != nil {
-			syscall.Close(connFD)
+			unix.Close(connFD)
 			epoll.Logger.ErrorFields("set client fd tcp no delay", zap.Error(err), zap.Int("client_fd", fd))
 			continue
 		}
 		if err := Control(epoll.epollFD, connFD, Readable); err != nil {
-			syscall.Close(connFD)
+			unix.Close(connFD)
 			epoll.Logger.ErrorFields("epoll control client fd", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("epoll_event", EventString(Readable)))
 			continue
 		}
@@ -205,7 +204,7 @@ func (epoll *Epoll) Close() error {
 	if epoll.trigger.Add(1) > 1 {
 		return nil
 	}
-	if _, err := syscall.Write(epoll.operator.FD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+	if _, err := unix.Write(epoll.operator.FD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
 		return fmt.Errorf("epoll_fd[%d] write event_fd[%d]: %v", epoll.fd, epoll.operator.FD, err)
 	}
 	<-epoll.close
