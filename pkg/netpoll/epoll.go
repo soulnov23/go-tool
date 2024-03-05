@@ -61,7 +61,6 @@ func NewEpoll(eventSize int, log log.Logger) (*Epoll, error) {
 		return nil, fmt.Errorf("epoll_fd[%d] epoll.Control event_fd[%d]: %v", fd, eventFD, err)
 	}
 	epoll.operator = operator
-	epoll.InfoFields("new epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("client_fd", operator.FD))
 	return epoll, nil
 }
 
@@ -95,6 +94,7 @@ func (epoll *Epoll) Control(operator *FDOperator, event int) error {
 }
 
 func (epoll *Epoll) Wait() error {
+	epoll.InfoFields("wait epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
 	// 先epoll_wait阻塞等待
 	msec := -1
 	for {
