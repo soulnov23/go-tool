@@ -21,7 +21,7 @@ func SetSocketReUsePort(fd int) error {
 }
 
 func SetSocketTCPNodelay(fd int) error {
-	return unix.SetsockoptInt(fd, unix.SOL_SOCKET, unix.TCP_NODELAY, 1)
+	return unix.SetsockoptInt(fd, unix.IPPROTO_TCP, unix.TCP_NODELAY, 1)
 }
 
 // cnt保活探测次数
