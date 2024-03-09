@@ -16,9 +16,9 @@ function golang() {
     mkdir -p tmp
     cd tmp
     FILE=go$1.src.tar.gz
-    wget https://go.dev/dl/${FILE}
+    wget https://github.com/golang/go/archive/refs/tags/${FILE}
     tar -zvxf ${FILE}
-    cd go/src
+    cd go-go$1/src
     ./make.bash
     cd -
     mv ${FILE} go/
