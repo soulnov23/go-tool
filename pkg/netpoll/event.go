@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	ReadFlags  = unix.EPOLLIN | unix.EPOLLRDHUP | unix.EPOLLHUP | unix.EPOLLERR | unix.EPOLLPRI
-	WriteFlags = unix.EPOLLET | unix.EPOLLOUT | unix.EPOLLHUP | unix.EPOLLERR
+	ReadFlags  = unix.EPOLLIN | unix.EPOLLRDHUP | unix.EPOLLHUP | unix.EPOLLERR
+	WriteFlags = unix.EPOLLOUT | unix.EPOLLHUP | unix.EPOLLERR
 )
 
 const (
@@ -22,26 +22,19 @@ const (
 )
 
 func EventString(event uint32) string {
-	eventString := "EPOLLET"
-	if event&unix.EPOLLET != 0 {
+	var eventString string
+	switch {
+	case event&unix.EPOLLET != 0:
 		eventString += "EPOLLET"
-	}
-	if event&unix.EPOLLIN != 0 {
+	case event&unix.EPOLLIN != 0:
 		eventString += "|EPOLLIN"
-	}
-	if event&unix.EPOLLPRI != 0 {
-		eventString += "|EPOLLPRI"
-	}
-	if event&unix.EPOLLOUT != 0 {
+	case event&unix.EPOLLOUT != 0:
 		eventString += "|EPOLLOUT"
-	}
-	if event&unix.EPOLLHUP != 0 {
+	case event&unix.EPOLLHUP != 0:
 		eventString += "|EPOLLHUP"
-	}
-	if event&unix.EPOLLRDHUP != 0 {
+	case event&unix.EPOLLRDHUP != 0:
 		eventString += "|EPOLLRDHUP"
-	}
-	if event&unix.EPOLLERR != 0 {
+	case event&unix.EPOLLERR != 0:
 		eventString += "|EPOLLERR"
 	}
 	return eventString

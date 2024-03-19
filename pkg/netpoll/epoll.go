@@ -1,6 +1,7 @@
 package netpoll
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 	"sync/atomic"
@@ -16,12 +17,14 @@ type FDOperator struct {
 	FD int
 
 	// Desc provides three callbacks for fd's reading, writing or hanging events.
-	OnRead  func()
-	OnWrite func()
-	OnHup   func()
+	OnRead  func(*FDOperator)
+	OnWrite func(*FDOperator)
+	OnHup   func(*FDOperator)
 
 	// Epoll is the registered location of the file descriptor.
 	Epoll *Epoll
+
+	Data any
 }
 
 type Epoll struct {
@@ -65,6 +68,9 @@ func NewEpoll(eventSize int, log log.Logger) (*Epoll, error) {
 }
 
 func (epoll *Epoll) Control(operator *FDOperator, event int) error {
+	if operator == nil {
+		return errors.New("operator is nil")
+	}
 	epollEvent := &EpollEvent{}
 	*(**FDOperator)(unsafe.Pointer(&epollEvent.Data)) = operator
 	switch event {
@@ -138,66 +144,28 @@ func (epoll *Epoll) handle(eventSize int) bool {
 		}
 
 		if event.Events&(unix.EPOLLRDHUP|unix.EPOLLHUP|unix.EPOLLERR) != 0 {
-			operator.OnHup()
-			epoll.Control(operator, Detach)
-			continue
+			if operator != nil && operator.OnHup != nil {
+				operator.OnHup(operator)
+				epoll.Control(operator, Detach)
+				continue
+			}
 		}
 
-		if event.Events&(unix.EPOLLIN|unix.EPOLLPRI) != 0 {
-			operator.OnRead()
+		if event.Events&(unix.EPOLLIN) != 0 {
+			if operator != nil && operator.OnRead != nil {
+				operator.OnRead(operator)
+			}
 		}
 
 		if event.Events&unix.EPOLLOUT != 0 {
-			operator.OnWrite()
+			if operator != nil && operator.OnWrite != nil {
+				operator.OnWrite(operator)
+			}
 		}
 	}
 	// 是否退出循环：否
 	return exit
 }
-
-/*
-func (epoll *Epoll) handleAccept(fd int) {
-	for {
-		connFD, addr, err := unix.Accept4(fd, unix.SOCK_CLOEXEC)
-		if err != nil {
-			if err == unix.EAGAIN {
-				break
-			} else if err == unix.EINTR {
-				continue
-			} else {
-				epoll.Logger.ErrorFields("accept client", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd))
-				continue
-			}
-		}
-		ip, err := utils.ResolveSockaddrIP(addr)
-		if err != nil {
-			epoll.Logger.ErrorFields("get client remote ip", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd))
-			continue
-		}
-		local := epoll.listens[fd]
-		epoll.Logger.DebugFields("accept client", zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("remote_address", ip), zap.String("local_address", local))
-		utils.SetSocketCloseExec(connFD)
-		if err := utils.SetSocketNonBlock(connFD); err != nil {
-			unix.Close(connFD)
-			epoll.Logger.ErrorFields("set client fd non-blocking", zap.Error(err), zap.Int("client_fd", fd))
-			continue
-		}
-		if err := utils.SetSocketTCPNodelay(connFD); err != nil {
-			unix.Close(connFD)
-			epoll.Logger.ErrorFields("set client fd tcp no delay", zap.Error(err), zap.Int("client_fd", fd))
-			continue
-		}
-		if err := Control(epoll.epollFD, connFD, Readable); err != nil {
-			unix.Close(connFD)
-			epoll.Logger.ErrorFields("epoll control client fd", zap.Error(err), zap.Int("epoll_fd", epoll.epollFD), zap.Int("client_fd", fd), zap.String("epoll_event", EventString(Readable)))
-			continue
-		}
-		operator := epoll.operators[fd]
-		tcpConn := NewTCPConn(epoll.Logger, epoll.epollFD, connFD, local, ip, operator)
-		epoll.tcpConns[connFD] = tcpConn
-	}
-}
-*/
 
 func (epoll *Epoll) Close() error {
 	// 防止重复主动触发
