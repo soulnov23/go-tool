@@ -159,7 +159,7 @@ func SockaddrToAddr(network string, sockaddr unix.Sockaddr) (net.Addr, error) {
 	case *unix.SockaddrInet6:
 		return SockaddrInet6ToAddr(network, sa)
 	case *unix.SockaddrUnix:
-		return &net.UnixAddr{Name: sa.Name}, nil
+		return &net.UnixAddr{Name: sa.Name, Net: network}, nil
 	default:
 		return nil, errors.New("sockaddr not support")
 	}
