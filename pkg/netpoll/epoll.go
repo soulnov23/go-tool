@@ -122,7 +122,7 @@ func (epoll *Epoll) Wait() error {
 			unix.Close(epoll.FD)
 			epoll.close <- struct{}{}
 			epoll.trigger.Store(0)
-			epoll.InfoFields("exit gracefully", zap.Int("epoll_fd", epoll.FD))
+			epoll.InfoFields("exit gracefully", zap.Int("epoll_fd", epoll.FD), zap.Int("event_fd", epoll.operator.FD))
 			return nil
 		}
 	}
