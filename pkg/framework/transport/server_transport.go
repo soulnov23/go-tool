@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-
-	"github.com/soulnov23/go-tool/pkg/log"
 )
 
-type serverTransportFunc func(network, address, protocol string, log log.Logger, opts ...ServerTransportOption) (ServerTransport, error)
+type serverTransportFunc func(network, address, protocol string, opts ...ServerTransportOption) (ServerTransport, error)
 
 var (
 	serverTransportFuncs = map[string]serverTransportFunc{}
@@ -35,10 +33,10 @@ func RegisterServerTransportFunc(network string, fn serverTransportFunc) error {
 	return nil
 }
 
-func NewServerTransport(network, address, protocol string, log log.Logger, opts ...ServerTransportOption) (ServerTransport, error) {
+func NewServerTransport(network, address, protocol string, opts ...ServerTransportOption) (ServerTransport, error) {
 	fn, ok := serverTransportFuncs[network]
 	if !ok {
 		return nil, fmt.Errorf("network[%s] not support", network)
 	}
-	return fn(network, address, protocol, log, opts...)
+	return fn(network, address, protocol, opts...)
 }
