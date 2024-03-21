@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"sync"
 
-	"errors"
-
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,18 +18,17 @@ type Plugin interface {
 	Setup(node *yaml.Node) error
 }
 
-func Register(name string, plugin Plugin) error {
+func Register(name string, plugin Plugin) {
 	value := reflect.ValueOf(plugin)
 	if plugin == nil || value.Kind() == reflect.Pointer && value.IsNil() {
-		return errors.New("register nil plugin")
+		panic("register nil plugin")
 	}
 	if name == "" {
-		return errors.New("register empty name of plugin")
+		panic("register empty name of plugin")
 	}
 	mutex.Lock()
 	defer mutex.Unlock()
 	plugins[name] = plugin
-	return nil
 }
 
 type Config map[string]*yaml.Node

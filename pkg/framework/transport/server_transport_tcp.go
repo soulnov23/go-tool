@@ -95,6 +95,10 @@ func (t *serverTransportTCP) ListenAndServe(ctx context.Context) error {
 		return fmt.Errorf("epoll_fd[%d] epoll.Control listen_fd[%d]: %v", t.epoll.FD, listenFD, err)
 	}
 	log.InfoFields("listen success", zap.Int("epoll_fd", t.epoll.FD), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address))
+	if err := t.epoll.Wait(); err != nil {
+		log.ErrorFields("epoll.Wait", zap.Int("epoll_fd", t.epoll.FD), zap.Int("listen_fd", listenFD), zap.Error(err))
+		return fmt.Errorf("epoll.Wait: %v", err)
+	}
 	return nil
 }
 

@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -19,18 +18,17 @@ type ServerTransport interface {
 	ListenAndServe(ctx context.Context) error
 }
 
-func RegisterServerTransportFunc(network string, fn serverTransportFunc) error {
+func RegisterServerTransportFunc(network string, fn serverTransportFunc) {
 	value := reflect.ValueOf(fn)
 	if fn == nil || value.Kind() == reflect.Pointer && value.IsNil() {
-		return errors.New("register nil server transport")
+		panic("register nil server transport")
 	}
 	if network == "" {
-		return errors.New("register empty network of server transport")
+		panic("register empty network of server transport")
 	}
 	sMutex.Lock()
 	defer sMutex.Unlock()
 	serverTransportFuncs[network] = fn
-	return nil
 }
 
 func NewServerTransport(network, address, protocol string, opts ...ServerTransportOption) (ServerTransport, error) {

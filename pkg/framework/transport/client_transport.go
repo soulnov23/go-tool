@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"errors"
 	"reflect"
 	"sync"
 )
@@ -17,18 +16,17 @@ type ClientTransport interface {
 }
 
 // RegisterClientTransport register a ClientTransport.
-func RegisterClientTransport(network string, t ClientTransport) error {
+func RegisterClientTransport(network string, t ClientTransport) {
 	tv := reflect.ValueOf(t)
 	if t == nil || tv.Kind() == reflect.Pointer && tv.IsNil() {
-		return errors.New("register nil client transport")
+		panic("register nil client transport")
 	}
 	if network == "" {
-		return errors.New("register empty network of client transport")
+		panic("register empty network of client transport")
 	}
 	muxCltTrans.Lock()
 	cltTrans[network] = t
 	muxCltTrans.Unlock()
-	return nil
 }
 
 // GetClientTransport gets the ClientTransport.
