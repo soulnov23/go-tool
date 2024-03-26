@@ -1,12 +1,11 @@
 package transport
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
 )
 
-type serverTransportFunc func(address, network, protocol string, opts ...ServerTransportOption) (ServerTransport, error)
+type serverTransportFunc func(address, network, protocol string, opts ...ServerTransportOption) ServerTransport
 
 var (
 	serverTransportFuncs = map[string]serverTransportFunc{}
@@ -31,10 +30,10 @@ func RegisterServerTransportFunc(network string, fn serverTransportFunc) {
 	serverTransportFuncs[network] = fn
 }
 
-func NewServerTransport(address, network, protocol string, opts ...ServerTransportOption) (ServerTransport, error) {
+func NewServerTransport(address, network, protocol string, opts ...ServerTransportOption) ServerTransport {
 	fn, ok := serverTransportFuncs[network]
 	if !ok {
-		return nil, fmt.Errorf("network[%s] not support", network)
+		return nil
 	}
 	return fn(address, network, protocol, opts...)
 }

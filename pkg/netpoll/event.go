@@ -24,8 +24,6 @@ const (
 func EventString(event uint32) string {
 	var eventString string
 	switch {
-	case event&unix.EPOLLET != 0:
-		eventString += "EPOLLET"
 	case event&unix.EPOLLIN != 0:
 		eventString += "|EPOLLIN"
 	case event&unix.EPOLLOUT != 0:
@@ -37,7 +35,7 @@ func EventString(event uint32) string {
 	case event&unix.EPOLLERR != 0:
 		eventString += "|EPOLLERR"
 	}
-	return eventString
+	return eventString[1:]
 }
 
 func EpollCtl(epfd int, op int, fd int, event *EpollEvent) error {

@@ -2,6 +2,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/soulnov23/go-tool/pkg/framework/transport"
@@ -21,21 +22,15 @@ type service struct {
 	handlers map[string]Handler // rpc_name => Handler
 }
 
-func newService(name, address, network, protocol string, timeout time.Duration) (*service, error) {
-	serverTransport, err := transport.NewServerTransport(address, network, protocol)
-	if err != nil {
-		return nil, err
+func newService(name, address, network, protocol string, timeout time.Duration) *service {
+	return &service{
+		name:     name,
+		address:  address,
+		network:  network,
+		protocol: protocol,
+		timeout:  timeout,
+		handlers: make(map[string]Handler),
 	}
-	s := &service{
-		name:            name,
-		address:         address,
-		network:         network,
-		protocol:        protocol,
-		timeout:         timeout,
-		serverTransport: serverTransport,
-		handlers:        make(map[string]Handler),
-	}
-	return s, nil
 }
 
 func (s *service) register(rpcName string, handler Handler) error {
@@ -44,6 +39,10 @@ func (s *service) register(rpcName string, handler Handler) error {
 }
 
 func (s *service) serve() error {
+	s.serverTransport = transport.NewServerTransport(s.address, s.network, s.protocol)
+	if s.serverTransport == nil {
+		return fmt.Errorf("network[%s] not support", s.network)
+	}
 	return s.serverTransport.ListenAndServe()
 }
 

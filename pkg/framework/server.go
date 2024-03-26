@@ -31,7 +31,7 @@ type Server struct {
 func New(configPath string) *Server {
 	config, err := loadConfig(configPath)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("loadConfig: %v", err))
 	}
 
 	if config.Server == nil {
@@ -42,7 +42,7 @@ func New(configPath string) *Server {
 		panic("server is empty")
 	}
 	if err := config.Plugins.Setup(); err != nil {
-		panic(err.Error())
+		panic(fmt.Sprintf("config.Plugins.Setup: %v", err))
 	}
 
 	server := &Server{
@@ -62,11 +62,7 @@ func New(configPath string) *Server {
 	}
 
 	for _, serviceConfig := range config.Server.Services {
-		s, err := newService(serviceConfig.Name, serviceConfig.Address, serviceConfig.Network, serviceConfig.Protocol, time.Duration(serviceConfig.Timeout)*time.Millisecond)
-		if err != nil {
-			panic(err.Error())
-		}
-		server.services[serviceConfig.Name] = s
+		server.services[serviceConfig.Name] = newService(serviceConfig.Name, serviceConfig.Address, serviceConfig.Network, serviceConfig.Protocol, time.Duration(serviceConfig.Timeout)*time.Millisecond)
 	}
 
 	return server
@@ -94,14 +90,14 @@ func (s *Server) Register(serviceName string, rpcName string, handler Handler) e
 }
 
 func (s *Server) Serve() error {
-	defer log.Sync()
+	defer log.DefaultLogger.Sync()
 
-	utils.UpdateGOMAXPROCS(log.Infof, s.updateGOMAXPROCSInterval)
+	utils.UpdateGOMAXPROCS(log.DefaultLogger.Infof, s.updateGOMAXPROCSInterval)
 
 	if s.ProfileProfiler != nil {
 		go func() {
 			if err := s.ProfileProfiler.Serve(); err != nil {
-				log.FatalFields("pprof Serve failed", zap.Reflect("pprof_server", s.ProfileProfiler), zap.Error(err))
+				log.DefaultLogger.FatalFields("pprof Serve failed", zap.Reflect("pprof_server", s.ProfileProfiler), zap.Error(err))
 			}
 		}()
 	}
@@ -109,7 +105,7 @@ func (s *Server) Serve() error {
 	for name, service := range s.services {
 		go func() {
 			if err := service.serve(); err != nil {
-				log.FatalFields("service serve", zap.String("service_name", name))
+				log.DefaultLogger.FatalFields("service serve", zap.String("service_name", name), zap.Error(err))
 			}
 		}()
 	}
@@ -122,11 +118,11 @@ func (s *Server) Serve() error {
 	signal.Notify(signalTrigger, DefaultTriggerSIG...)
 	select {
 	case sig := <-signalClose:
-		log.InfoFields("signal close", zap.String("sig", sig.String()))
+		log.DefaultLogger.InfoFields("signal close", zap.String("sig", sig.String()))
 	case sig := <-signalHotRestart:
-		log.InfoFields("signal hot restart", zap.String("sig", sig.String()))
+		log.DefaultLogger.InfoFields("signal hot restart", zap.String("sig", sig.String()))
 	case sig := <-signalTrigger:
-		log.InfoFields("signal trigger", zap.String("sig", sig.String()))
+		log.DefaultLogger.InfoFields("signal trigger", zap.String("sig", sig.String()))
 	}
 	return nil
 }

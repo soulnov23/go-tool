@@ -15,7 +15,7 @@ var (
 
 type Plugin interface {
 	Name() string
-	Setup(node *yaml.Node) error
+	Setup(node yaml.Node) error
 }
 
 func Register(name string, plugin Plugin) {
@@ -31,7 +31,7 @@ func Register(name string, plugin Plugin) {
 	plugins[name] = plugin
 }
 
-type Config map[string]*yaml.Node
+type Config map[string]yaml.Node
 
 func (c Config) Setup() error {
 	for name, cfg := range c {

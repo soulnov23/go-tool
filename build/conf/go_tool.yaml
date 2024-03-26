@@ -5,7 +5,7 @@ pprof:
     idle_timeout: 0
 
 server: #服务端配置
-    update_gomaxprocs_interval: 3000
+    update_gomaxprocs_interval: 3600000
     max_close_wait_time: 3000
     services:
         - name: rpc_service
@@ -36,7 +36,7 @@ default_log: #默认日志配置
               level_key: level
               name_key: name
               caller_key: caller
-              function_key: func
+              function_key: #func
               message_key: msg
               stacktrace_key: stack
           writer: console #标准输出日志
@@ -59,7 +59,7 @@ default_log: #默认日志配置
               level_key: level
               name_key: name
               caller_key: caller
-              function_key: func
+              function_key: #func
               message_key: msg
               stacktrace_key: stack
           writer: file #本地文件日志

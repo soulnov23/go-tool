@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/soulnov23/go-tool/pkg/log"
 	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
 )
@@ -34,10 +33,10 @@ type Epoll struct {
 	triggerBuf []byte
 	trigger    atomic.Uint32
 	close      chan struct{}
-	log        log.Logger
+	info       func(msg string, fields ...zap.Field)
 }
 
-func NewEpoll(log log.Logger) (*Epoll, error) {
+func NewEpoll(info func(msg string, fields ...zap.Field)) (*Epoll, error) {
 	fd, err := unix.EpollCreate1(unix.EPOLL_CLOEXEC)
 	if err != nil {
 		return nil, fmt.Errorf("unix.EpollCreate1: %v", err)
@@ -47,7 +46,7 @@ func NewEpoll(log log.Logger) (*Epoll, error) {
 		events:     make([]EpollEvent, 128), //https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go#L114
 		triggerBuf: make([]byte, 8),
 		close:      make(chan struct{}, 1),
-		log:        log,
+		info:       info,
 	}
 	eventFD, err := unix.Eventfd(0, unix.EFD_NONBLOCK|unix.EFD_CLOEXEC)
 	if err != nil {
@@ -64,7 +63,7 @@ func NewEpoll(log log.Logger) (*Epoll, error) {
 		return nil, fmt.Errorf("epoll_fd[%d] epoll.Control event_fd[%d]: %v", fd, eventFD, err)
 	}
 	epoll.operator = operator
-	epoll.log.InfoFields("new epoll", zap.Int("epoll_fd", fd), zap.Int("event_fd", eventFD))
+	epoll.info("new epoll", zap.Int("epoll_fd", fd), zap.Int("event_fd", eventFD))
 	return epoll, nil
 }
 
@@ -105,7 +104,7 @@ func (epoll *Epoll) Control(operator *FDOperator, event int) error {
 }
 
 func (epoll *Epoll) Wait() error {
-	epoll.log.InfoFields("wait epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
+	epoll.info("wait epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
 	// 先epoll_wait阻塞等待
 	msec := -1
 	for {
@@ -126,7 +125,7 @@ func (epoll *Epoll) Wait() error {
 			unix.Close(epoll.fd)
 			epoll.close <- struct{}{}
 			epoll.trigger.Store(0)
-			epoll.log.InfoFields("exit gracefully", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
+			epoll.info("exit gracefully", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
 			return nil
 		}
 	}
@@ -137,7 +136,7 @@ func (epoll *Epoll) handle(eventSize int) bool {
 	for i := 0; i < eventSize; i++ {
 		event := epoll.events[i]
 		operator := *(**FDOperator)(unsafe.Pointer(&event.Data))
-		epoll.log.InfoFields("wake epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("client_fd", operator.FD), zap.String("event", EventString(event.Events)))
+		epoll.info("wake epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("client_fd", operator.FD), zap.String("event", EventString(event.Events)))
 
 		// 通过write event fd主动触发循环优雅退出
 		if operator.FD == epoll.operator.FD {
