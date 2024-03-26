@@ -2,30 +2,31 @@ package netpoll
 
 import (
 	"errors"
+	"fmt"
 	"net"
 
 	"golang.org/x/sys/unix"
 )
 
-func ResolveAddr(network string, address string) (net.Addr, error) {
+func ResolveAddr(network, address string) (net.Addr, error) {
 	var addr net.Addr
 	var err error
 	switch network {
 	case "tcp", "tcp4", "tcp6":
 		if addr, err = net.ResolveTCPAddr(network, address); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveTCPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 	case "udp", "udp4", "udp6":
 		if addr, err = net.ResolveUDPAddr(network, address); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveUDPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 	case "unix", "unixgram", "unixpacket":
 		if addr, err = net.ResolveUnixAddr(network, address); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveUnixAddr network[%s] address[%s]: %v", network, address, err)
 		}
 	case "ip", "ip4", "ip6":
 		if addr, err = net.ResolveIPAddr(network, address); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveIPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 	default:
 		return nil, errors.New("network not support")
@@ -33,36 +34,36 @@ func ResolveAddr(network string, address string) (net.Addr, error) {
 	return addr, nil
 }
 
-func ResolveSockaddr(network string, address string) (unix.Sockaddr, error) {
+func ResolveSockaddr(network, address string) (unix.Sockaddr, error) {
 	switch network {
 	case "tcp", "tcp4":
 		addr, err := net.ResolveTCPAddr(network, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveTCPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 		return AddrToSockaddrInet4(addr)
 	case "tcp6":
 		addr, err := net.ResolveTCPAddr(network, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveTCPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 		return AddrToSockaddrInet6(addr)
 	case "udp", "udp4":
 		addr, err := net.ResolveUDPAddr(network, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveUDPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 		return AddrToSockaddrInet4(addr)
 	case "udp6":
 		addr, err := net.ResolveUDPAddr(network, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveUDPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 		return AddrToSockaddrInet6(addr)
 	case "unix", "unixgram", "unixpacket":
 		addr, err := net.ResolveUnixAddr(network, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveUnixAddr network[%s] address[%s]: %v", network, address, err)
 		}
 		sau := &unix.SockaddrUnix{
 			Name: addr.Name,
@@ -71,13 +72,13 @@ func ResolveSockaddr(network string, address string) (unix.Sockaddr, error) {
 	case "ip", "ip4":
 		addr, err := net.ResolveIPAddr(network, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveIPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 		return AddrToSockaddrInet4(addr)
 	case "ip6":
 		addr, err := net.ResolveIPAddr(network, address)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.ResolveIPAddr network[%s] address[%s]: %v", network, address, err)
 		}
 		return AddrToSockaddrInet6(addr)
 	default:
@@ -118,7 +119,7 @@ func AddrToSockaddrInet6(addr net.Addr) (unix.Sockaddr, error) {
 		if a.Zone != "" {
 			intf, err := net.InterfaceByName(a.Zone)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("net.TCPAddr net.InterfaceByName zone[%s]: %v", a.Zone, err)
 			}
 			sa6.ZoneId = uint32(intf.Index)
 		}
@@ -131,7 +132,7 @@ func AddrToSockaddrInet6(addr net.Addr) (unix.Sockaddr, error) {
 		if a.Zone != "" {
 			intf, err := net.InterfaceByName(a.Zone)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("net.UDPAddr net.InterfaceByName zone[%s]: %v", a.Zone, err)
 			}
 			sa6.ZoneId = uint32(intf.Index)
 		}
@@ -142,7 +143,7 @@ func AddrToSockaddrInet6(addr net.Addr) (unix.Sockaddr, error) {
 		if a.Zone != "" {
 			intf, err := net.InterfaceByName(a.Zone)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("net.IPAddr net.InterfaceByName zone[%s]: %v", a.Zone, err)
 			}
 			sa6.ZoneId = uint32(intf.Index)
 		}
@@ -183,19 +184,19 @@ func SockaddrInet6ToAddr(network string, sa6 *unix.SockaddrInet6) (net.Addr, err
 	case "tcp6":
 		intf, err := net.InterfaceByIndex(int(sa6.ZoneId))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.InterfaceByIndex network[%s] zone[%d]: %v", network, sa6.ZoneId, err)
 		}
 		return &net.TCPAddr{IP: net.IP(sa6.Addr[:]), Port: sa6.Port, Zone: intf.Name}, nil
 	case "udp6":
 		intf, err := net.InterfaceByIndex(int(sa6.ZoneId))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.InterfaceByIndex network[%s] zone[%d]: %v", network, sa6.ZoneId, err)
 		}
 		return &net.UDPAddr{IP: net.IP(sa6.Addr[:]), Port: sa6.Port, Zone: intf.Name}, nil
 	case "ip6":
 		intf, err := net.InterfaceByIndex(int(sa6.ZoneId))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("net.InterfaceByIndex network[%s] zone[%d]: %v", network, sa6.ZoneId, err)
 		}
 		return &net.IPAddr{IP: net.IP(sa6.Addr[:]), Zone: intf.Name}, nil
 	default:

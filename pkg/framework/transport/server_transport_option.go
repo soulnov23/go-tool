@@ -1,13 +1,13 @@
 package transport
 
 type ServerTransportOptions struct {
-	loopSize int
+	coreSize int
 }
 
 type ServerTransportOption func(*ServerTransportOptions)
 
-func WithLoopSize(loopSize int) ServerTransportOption {
+func WithCoreSize(coreSize int) ServerTransportOption {
 	return func(o *ServerTransportOptions) {
-		o.loopSize = loopSize
+		o.coreSize = coreSize
 	}
 }

@@ -1,33 +1,23 @@
+pprof:
+    address: 0.0.0.0:6060
+    read_timeout: 0
+    write_timeout: 0
+    idle_timeout: 0
+
 server: #服务端配置
-    debug:
-        address: 0.0.0.0:6060
-        read_timeout: 0
-        write_timeout: 0
-        idle_timeout: 0
+    update_gomaxprocs_interval: 3000
+    max_close_wait_time: 3000
     services:
         - name: rpc_service
-          network: tcp #网络监听类型 tcp udp
           address: 0.0.0.0:6666 #服务监听地址ipv4/ipv6
+          network: tcp #网络监听类型 tcp udp
           protocol: rpc #应用层协议 rpc http
           timeout: 3000 #请求最长处理时间 单位 毫秒
         - name: http_service
-          network: tcp #网络监听类型 tcp udp
           address: 0.0.0.0:8888 #服务监听地址ipv4/ipv6
+          network: tcp #网络监听类型 tcp udp
           protocol: http #应用层协议 rpc http
           timeout: 3000 #请求最长处理时间 单位 毫秒
-
-client: #客户端调用的后端配置
-    services:
-        - name: a
-          network: tcp
-          address: 0.0.0.0:6666
-          protocol: rpc
-          timeout: 3000
-        - name: b
-          network: tcp
-          address: 0.0.0.0:8888
-          protocol: rpc
-          timeout: 3000
 
 default_log: #默认日志配置
     caller_skip: &caller 1 #控制log函数嵌套深度
@@ -76,19 +66,12 @@ default_log: #默认日志配置
           writer_config:
               <<: *writer_config
 
-frame_log: #框架日志配置
-    caller_skip: *caller
-    core_config:
-        - <<: *console_json
-        - <<: *file_json
-          writer_config:
-              <<: *writer_config
-              file_name: ../log/frame.log
-run_log: #运行日志配置
-    caller_skip: *caller
-    core_config:
-        - <<: *console_json
-        - <<: *file_json
-          writer_config:
-              <<: *writer_config
-              file_name: ../log/run.log
+plugins:
+    frame_log: #框架日志配置
+        caller_skip: *caller
+        core_config:
+            - <<: *console_json
+            - <<: *file_json
+              writer_config:
+                  <<: *writer_config
+                  file_name: ../log/frame.log

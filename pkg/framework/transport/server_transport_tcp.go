@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"runtime"
@@ -21,8 +20,8 @@ func init() {
 }
 
 type serverTransportTCP struct {
-	network       string
 	address       string
+	network       string
 	protocol      string
 	epoll         *netpoll.Epoll
 	localAddr     net.Addr
@@ -30,13 +29,13 @@ type serverTransportTCP struct {
 	opts          *ServerTransportOptions
 }
 
-func newServerTransportTCP(network, address, protocol string, opts ...ServerTransportOption) (ServerTransport, error) {
+func newServerTransportTCP(address, network, protocol string, opts ...ServerTransportOption) (ServerTransport, error) {
 	transport := &serverTransportTCP{
-		network:  network,
 		address:  address,
+		network:  network,
 		protocol: protocol,
 		opts: &ServerTransportOptions{
-			loopSize: runtime.GOMAXPROCS(0),
+			coreSize: runtime.GOMAXPROCS(0),
 		},
 	}
 	for _, opt := range opts {
@@ -51,19 +50,20 @@ func newServerTransportTCP(network, address, protocol string, opts ...ServerTran
 
 	addr, err := netpoll.ResolveAddr(network, address)
 	if err != nil {
-		return nil, fmt.Errorf("netpoll.ResolveAddr network[%s] address[%s]: %v", network, address, err)
+		return nil, fmt.Errorf("netpoll.ResolveAddr: %v", err)
 	}
 	transport.localAddr = addr
 
 	sockaddr, err := netpoll.ResolveSockaddr(network, address)
 	if err != nil {
-		return nil, fmt.Errorf("netpoll.ResolveSockaddr network[%s] address[%s]: %v", network, address, err)
+		return nil, fmt.Errorf("netpoll.ResolveSockaddr: %v", err)
 	}
 	transport.localSockAddr = sockaddr
+
 	return transport, nil
 }
 
-func (t *serverTransportTCP) ListenAndServe(ctx context.Context) error {
+func (t *serverTransportTCP) ListenAndServe() error {
 	listenFD, err := netpoll.Socket(t.network)
 	if err != nil {
 		return fmt.Errorf("netpoll.Socket[%s]: %v", t.network, err)
@@ -78,7 +78,7 @@ func (t *serverTransportTCP) ListenAndServe(ctx context.Context) error {
 	}
 	if err := unix.Bind(listenFD, t.localSockAddr); err != nil {
 		unix.Close(listenFD)
-		return fmt.Errorf("unix.Bind[%d] network[%s] address[%s]: %v", listenFD, t.network, t.address, err)
+		return fmt.Errorf("unix.Bind[%d] address[%s] network[%s]: %v", listenFD, t.network, t.address, err)
 	}
 	backlog := netpoll.MaxListenerBacklog()
 	if err := unix.Listen(listenFD, backlog); err != nil {
@@ -92,13 +92,12 @@ func (t *serverTransportTCP) ListenAndServe(ctx context.Context) error {
 	}
 	if err := t.epoll.Control(operator, netpoll.ReadWritable); err != nil {
 		unix.Close(listenFD)
-		return fmt.Errorf("epoll_fd[%d] epoll.Control listen_fd[%d]: %v", t.epoll.FD, listenFD, err)
+		return fmt.Errorf("epoll_fd[%d] epoll.Control listen_fd[%d]: %v", t.epoll.FD(), listenFD, err)
 	}
-	log.InfoFields("listen success", zap.Int("epoll_fd", t.epoll.FD), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address))
 	if err := t.epoll.Wait(); err != nil {
-		log.ErrorFields("epoll.Wait", zap.Int("epoll_fd", t.epoll.FD), zap.Int("listen_fd", listenFD), zap.Error(err))
 		return fmt.Errorf("epoll.Wait: %v", err)
 	}
+	log.InfoFields("listen success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address))
 	return nil
 }
 
@@ -147,10 +146,10 @@ func (t *serverTransportTCP) accept(operator *netpoll.FDOperator) {
 		}
 		if err := operator.Epoll.Control(operator, netpoll.Readable); err != nil {
 			unix.Close(clientFD)
-			log.ErrorFields("epoll.Control", zap.Error(err), zap.Int("epoll_fd", t.epoll.FD), zap.Int("client_fd", clientFD), zap.String("epoll_event", netpoll.EventString(netpoll.Readable)))
+			log.ErrorFields("epoll.Control", zap.Error(err), zap.Int("epoll_fd", t.epoll.FD()), zap.Int("client_fd", clientFD), zap.String("epoll_event", netpoll.EventString(netpoll.Readable)))
 			continue
 		}
-		log.InfoFields("accept success", zap.Int("epoll_fd", t.epoll.FD), zap.Int("client_fd", operator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", t.localAddr.String()))
+		log.InfoFields("accept success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("client_fd", operator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", t.localAddr.String()))
 	}
 }
 
@@ -178,7 +177,7 @@ func (t *serverTransportTCP) read(operator *netpoll.FDOperator) {
 				goto ERROR
 			}
 		ERROR:
-			log.ErrorFields("unix.Read", zap.Error(err), zap.Int("epoll_fd", operator.Epoll.FD), zap.Int("client_fd", operator.FD))
+			log.ErrorFields("unix.Read", zap.Error(err), zap.Int("epoll_fd", operator.Epoll.FD()), zap.Int("client_fd", operator.FD))
 			break
 		}
 		offset += n
@@ -187,7 +186,7 @@ func (t *serverTransportTCP) read(operator *netpoll.FDOperator) {
 		}
 	}
 	tcpConn.readBuffer.Write(buf[:offset])
-	log.InfoFields("read success", zap.Int("epoll_fd", operator.Epoll.FD), zap.Int("client_fd", operator.FD), zap.ByteString("buffer", buf[:offset]))
+	log.InfoFields("read success", zap.Int("epoll_fd", operator.Epoll.FD()), zap.Int("client_fd", operator.FD), zap.ByteString("buffer", buf[:offset]))
 }
 
 func (t *serverTransportTCP) write(operator *netpoll.FDOperator) {
@@ -218,7 +217,7 @@ func (t *serverTransportTCP) write(operator *netpoll.FDOperator) {
 				goto ERROR
 			}
 		ERROR:
-			log.ErrorFields("unix.Write", zap.Error(err), zap.Int("epoll_fd", operator.Epoll.FD), zap.Int("client_fd", operator.FD))
+			log.ErrorFields("unix.Write", zap.Error(err), zap.Int("epoll_fd", operator.Epoll.FD()), zap.Int("client_fd", operator.FD))
 			break
 		}
 		offset += n
@@ -228,7 +227,7 @@ func (t *serverTransportTCP) write(operator *netpoll.FDOperator) {
 	}
 	tcpConn.writeBuffer.Skip(offset)
 	tcpConn.writeBuffer.GC()
-	log.InfoFields("write success", zap.Int("epoll_fd", operator.Epoll.FD), zap.Int("client_fd", operator.FD), zap.ByteString("buffer", buf[:offset]))
+	log.InfoFields("write success", zap.Int("epoll_fd", operator.Epoll.FD()), zap.Int("client_fd", operator.FD), zap.ByteString("buffer", buf[:offset]))
 }
 
 func (t *serverTransportTCP) hup(operator *netpoll.FDOperator) {
@@ -240,6 +239,10 @@ func (t *serverTransportTCP) hup(operator *netpoll.FDOperator) {
 	unix.Close(tcpConn.fd)
 	tcpConn.readBuffer.Close()
 	tcpConn.writeBuffer.Close()
+}
+
+func (t *serverTransportTCP) Close() {
+	t.epoll.Close()
 }
 
 type Operator interface {
