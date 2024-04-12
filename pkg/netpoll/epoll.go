@@ -133,6 +133,7 @@ func (epoll *Epoll) Wait() error {
 
 func (epoll *Epoll) handle(eventSize int) bool {
 	exit := false
+	var hups []*FDOperator
 	for i := 0; i < eventSize; i++ {
 		event := epoll.events[i]
 		operator := *(**FDOperator)(unsafe.Pointer(&event.Data))
@@ -148,11 +149,9 @@ func (epoll *Epoll) handle(eventSize int) bool {
 		}
 
 		if event.Events&(unix.EPOLLRDHUP|unix.EPOLLHUP|unix.EPOLLERR) != 0 {
-			epoll.Control(operator, Detach)
 			if operator != nil && operator.OnHup != nil {
-				operator.OnHup(operator)
+				hups = append(hups, operator)
 			}
-			continue
 		}
 
 		if event.Events&(unix.EPOLLIN) != 0 {
@@ -166,6 +165,11 @@ func (epoll *Epoll) handle(eventSize int) bool {
 				operator.OnWrite(operator)
 			}
 		}
+	}
+	for _, opt := range hups {
+		epoll.Control(opt, Detach)
+		opt.OnHup(opt)
+		opt = nil
 	}
 	// 是否退出循环：否
 	return exit
