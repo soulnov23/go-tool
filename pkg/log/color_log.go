@@ -18,9 +18,7 @@ const (
 	colorReset  = "\033[m"
 )
 
-var (
-	callers sync.Map
-)
+var callers sync.Map
 
 func ColorDebug(args ...any) {
 	fmt.Printf("%s%s DEBUG %s %s%s\n", colorGreen, time.Now().Format(time.DateTime), caller(2), fmt.Sprint(args...), colorReset)

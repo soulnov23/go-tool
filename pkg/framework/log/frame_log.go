@@ -3,10 +3,11 @@ package log
 import (
 	"fmt"
 
-	"github.com/soulnov23/go-tool/pkg/framework/plugin"
-	"github.com/soulnov23/go-tool/pkg/log"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
+
+	"github.com/soulnov23/go-tool/pkg/framework/plugin"
+	"github.com/soulnov23/go-tool/pkg/log"
 )
 
 const pluginName = "frame_log"

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/panjf2000/ants/v2"
+
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
 

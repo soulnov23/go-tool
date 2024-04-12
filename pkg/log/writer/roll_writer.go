@@ -78,7 +78,7 @@ func New(filePath string, opt ...Option) (*rollWriter, error) {
 		currDir:  filepath.Dir(filePath),
 	}
 
-	if err := os.MkdirAll(w.currDir, 0755); err != nil {
+	if err := os.MkdirAll(w.currDir, 0o755); err != nil {
 		return nil, err
 	}
 
@@ -180,7 +180,7 @@ func (w *rollWriter) setCurrFile(file *os.File) {
 // doReopenFile reopen the file.
 func (w *rollWriter) doReopenFile(path string) error {
 	lastFile := w.getCurrFile()
-	of, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	of, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o666)
 	if err == nil {
 		w.setCurrFile(of)
 		if lastFile != nil {
@@ -409,7 +409,7 @@ func compressFile(src, dst string) (err error) {
 	}
 	defer f.Close()
 
-	gzf, err := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
+	gzf, err := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o666)
 	if err != nil {
 		return errors.New("failed to open compressed file " + dst + ": " + err.Error())
 	}

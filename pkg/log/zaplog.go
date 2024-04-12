@@ -6,9 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/soulnov23/go-tool/pkg/log/writer"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/soulnov23/go-tool/pkg/log/writer"
 )
 
 const (

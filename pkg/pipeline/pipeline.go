@@ -42,9 +42,7 @@ func (p *Pipeline) Add(s *stage) *Pipeline {
 
 func (p *Pipeline) Process(t ProcessType) error {
 	if t == Serial {
-
 	} else if t == Parallel {
-
 	} else {
 		return fmt.Errorf("not support process type: %s", string(t))
 	}

@@ -5,12 +5,13 @@ import (
 	"net"
 	"runtime"
 
+	"go.uber.org/zap"
+	"golang.org/x/sys/unix"
+
 	"github.com/soulnov23/go-tool/pkg/buffer"
 	"github.com/soulnov23/go-tool/pkg/cache"
 	"github.com/soulnov23/go-tool/pkg/framework/log"
 	"github.com/soulnov23/go-tool/pkg/netpoll"
-	"go.uber.org/zap"
-	"golang.org/x/sys/unix"
 )
 
 func init() {

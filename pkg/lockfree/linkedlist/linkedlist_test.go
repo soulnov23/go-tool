@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/soulnov23/go-tool/pkg/log"
 	"go.uber.org/zap"
+
+	"github.com/soulnov23/go-tool/pkg/log"
 )
 
 func TestQueue(t *testing.T) {

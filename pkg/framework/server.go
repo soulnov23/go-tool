@@ -7,11 +7,12 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
+
 	"github.com/soulnov23/go-tool/pkg/framework/log"
 	"github.com/soulnov23/go-tool/pkg/pprof"
 	"github.com/soulnov23/go-tool/pkg/utils"
-	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
 )
 
 var (

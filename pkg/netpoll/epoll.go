@@ -43,7 +43,7 @@ func NewEpoll(info func(msg string, fields ...zap.Field)) (*Epoll, error) {
 	}
 	epoll := &Epoll{
 		fd:         fd,
-		events:     make([]EpollEvent, 128), //https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go#L114
+		events:     make([]EpollEvent, 128), // https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go#L114
 		triggerBuf: make([]byte, 8),
 		close:      make(chan struct{}, 1),
 		info:       info,

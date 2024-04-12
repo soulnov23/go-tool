@@ -143,12 +143,15 @@
     //go选项
     "go.toolsManagement.autoUpdate": true,
     "go.toolsManagement.checkForUpdates": "proxy",
-    "go.lintTool": "golangci-lint",
     "go.testFlags": [
         "-v",
         "-count=1",
         //"-timeout=3s"
     ],
+    "gopls": {
+        "formatting.local": "github.com/soulnov23/go-tool",
+        "formatting.gofumpt": true
+    },
     //xml选项
     "xmlTools.enableXmlTreeViewCursorSync": true,
     "xmlTools.enforcePrettySelfClosingTagOnFormat": true,
