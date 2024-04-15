@@ -15,16 +15,16 @@ WORKSPACE=$(pwd | awk -F'/go-tool' '{print $1}')
 function golang() {
     mkdir -p tmp
     cd tmp
-    FILE=go$1.src.tar.gz
+    FILE=go$1.tar.gz
     wget https://github.com/golang/go/archive/refs/tags/${FILE}
     tar -zvxf ${FILE}
     cd go-go$1/src
     ./make.bash
     cd -
-    mv ${FILE} go/
+    mv ${FILE} go-go$1/
     GOROOT=$(go env GOROOT)
     rm -rf ${GOROOT}
-    cp -rf go ${GOROOT}
+    cp -rf go-go$1 ${GOROOT}
     cd ..
     rm -rf tmp
 }
