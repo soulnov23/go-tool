@@ -144,13 +144,13 @@ func (epoll *Epoll) handle(eventSize int) bool {
 
 		if event.Events&(unix.EPOLLIN) != 0 {
 			if operator != nil && operator.OnRead != nil {
-				operator.OnRead(operator)
+				operator.OnRead(epoll, operator)
 			}
 		}
 
 		if event.Events&unix.EPOLLOUT != 0 {
 			if operator != nil && operator.OnWrite != nil {
-				operator.OnWrite(operator)
+				operator.OnWrite(epoll, operator)
 			}
 		}
 	}
@@ -158,7 +158,7 @@ func (epoll *Epoll) handle(eventSize int) bool {
 		if err := epoll.Control(operator, Detach); err != nil {
 			epoll.info("epoll.Control event_fd failed", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD), zap.Error(err))
 		}
-		operator.OnHup(operator)
+		operator.OnHup(epoll, operator)
 		epoll.Free(operator)
 	}
 	epoll.operatorCache.free()

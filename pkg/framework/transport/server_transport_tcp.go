@@ -24,7 +24,7 @@ type serverTransportTCP struct {
 	address       string
 	network       string
 	protocol      string
-	epoll         *netpoll.Epoll
+	epolls        []*netpoll.Epoll
 	localAddr     net.Addr
 	localSockAddr unix.Sockaddr
 	opts          *ServerTransportOptions
@@ -46,62 +46,66 @@ func newServerTransportTCP(address, network, protocol string, opts ...ServerTran
 }
 
 func (t *serverTransportTCP) ListenAndServe() error {
-	epoll, err := netpoll.NewEpoll(log.DefaultLogger.InfoFields)
-	if err != nil {
-		return fmt.Errorf("netpoll.NewEpoll: %v", err)
-	}
-	t.epoll = epoll
+	for range t.opts.coreSize {
+		epoll, err := netpoll.NewEpoll(log.DefaultLogger.InfoFields)
+		if err != nil {
+			return fmt.Errorf("netpoll.NewEpoll: %v", err)
+		}
 
-	addr, err := netpoll.ResolveAddr(t.network, t.address)
-	if err != nil {
-		return fmt.Errorf("netpoll.ResolveAddr: %v", err)
-	}
-	t.localAddr = addr
+		addr, err := netpoll.ResolveAddr(t.network, t.address)
+		if err != nil {
+			return fmt.Errorf("netpoll.ResolveAddr: %v", err)
+		}
+		t.localAddr = addr
 
-	sockaddr, err := netpoll.ResolveSockaddr(t.network, t.address)
-	if err != nil {
-		return fmt.Errorf("netpoll.ResolveSockaddr: %v", err)
-	}
-	t.localSockAddr = sockaddr
+		sockaddr, err := netpoll.ResolveSockaddr(t.network, t.address)
+		if err != nil {
+			return fmt.Errorf("netpoll.ResolveSockaddr: %v", err)
+		}
+		t.localSockAddr = sockaddr
 
-	listenFD, err := netpoll.Socket(t.network)
-	if err != nil {
-		return fmt.Errorf("netpoll.Socket[%s]: %v", t.network, err)
-	}
-	if err := netpoll.SetSocketReuseaddr(listenFD); err != nil {
-		unix.Close(listenFD)
-		return fmt.Errorf("netpoll.SetSocketReuseaddr[%d]: %v", listenFD, err)
-	}
-	if err := netpoll.SetSocketReUsePort(listenFD); err != nil {
-		unix.Close(listenFD)
-		return fmt.Errorf("netpoll.SetSocketReUsePort[%d]: %v", listenFD, err)
-	}
-	if err := unix.Bind(listenFD, t.localSockAddr); err != nil {
-		unix.Close(listenFD)
-		return fmt.Errorf("unix.Bind[%d] address[%s] network[%s]: %v", listenFD, t.network, t.address, err)
-	}
-	backlog := netpoll.MaxListenerBacklog()
-	if err := unix.Listen(listenFD, backlog); err != nil {
-		unix.Close(listenFD)
-		return fmt.Errorf("unix.Listen[%d] backlog[%d]: %v", listenFD, backlog, err)
-	}
-	log.DefaultLogger.InfoFields("listen success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address))
+		listenFD, err := netpoll.Socket(t.network)
+		if err != nil {
+			return fmt.Errorf("netpoll.Socket[%s]: %v", t.network, err)
+		}
+		if err := netpoll.SetSocketReuseaddr(listenFD); err != nil {
+			unix.Close(listenFD)
+			return fmt.Errorf("netpoll.SetSocketReuseaddr[%d]: %v", listenFD, err)
+		}
+		if err := netpoll.SetSocketReUsePort(listenFD); err != nil {
+			unix.Close(listenFD)
+			return fmt.Errorf("netpoll.SetSocketReUsePort[%d]: %v", listenFD, err)
+		}
+		if err := unix.Bind(listenFD, t.localSockAddr); err != nil {
+			unix.Close(listenFD)
+			return fmt.Errorf("unix.Bind[%d] address[%s] network[%s]: %v", listenFD, t.network, t.address, err)
+		}
+		backlog := netpoll.MaxListenerBacklog()
+		if err := unix.Listen(listenFD, backlog); err != nil {
+			unix.Close(listenFD)
+			return fmt.Errorf("unix.Listen[%d] backlog[%d]: %v", listenFD, backlog, err)
+		}
+		log.DefaultLogger.InfoFields("listen success", zap.Int("epoll_fd", epoll.FD()), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address))
 
-	operator := t.epoll.Alloc()
-	operator.FD = listenFD
-	operator.Epoll = t.epoll
-	operator.OnRead = t.accept
-	if err := t.epoll.Control(operator, netpoll.ReadWritable); err != nil {
-		unix.Close(listenFD)
-		return fmt.Errorf("epoll_fd[%d] epoll.Control listen_fd[%d]: %v", t.epoll.FD(), listenFD, err)
-	}
-	if err := t.epoll.Wait(); err != nil {
-		return fmt.Errorf("epoll.Wait: %v", err)
+		operator := epoll.Alloc()
+		operator.FD = listenFD
+		operator.Epoll = epoll
+		operator.OnRead = t.accept
+		if err := epoll.Control(operator, netpoll.ReadWritable); err != nil {
+			unix.Close(listenFD)
+			return fmt.Errorf("epoll_fd[%d] epoll.Control listen_fd[%d]: %v", epoll.FD(), listenFD, err)
+		}
+		go func() {
+			if err := epoll.Wait(); err != nil {
+				log.DefaultLogger.FatalFields("epoll.Wait", zap.Error(err), zap.Reflect("service_transport", t))
+				panic(fmt.Sprintf("epoll.Wait: %v", err))
+			}
+		}()
 	}
 	return nil
 }
 
-func (t *serverTransportTCP) accept(operator *netpoll.FDOperator) {
+func (t *serverTransportTCP) accept(epoll *netpoll.Epoll, operator *netpoll.FDOperator) {
 	for {
 		clientFD, addr, err := unix.Accept4(operator.FD, unix.SOCK_CLOEXEC)
 		if err != nil {
@@ -130,9 +134,9 @@ func (t *serverTransportTCP) accept(operator *netpoll.FDOperator) {
 			log.DefaultLogger.ErrorFields("netpoll.SockaddrToAddr", zap.Error(err), zap.Reflect("sockaddr", addr))
 			continue
 		}
-		clientOperator := t.epoll.Alloc()
+		clientOperator := epoll.Alloc()
 		clientOperator.FD = clientFD
-		clientOperator.Epoll = t.epoll
+		clientOperator.Epoll = epoll
 		clientOperator.OnRead = t.read
 		clientOperator.OnWrite = t.write
 		clientOperator.OnHup = t.hup
@@ -145,14 +149,14 @@ func (t *serverTransportTCP) accept(operator *netpoll.FDOperator) {
 		}
 		if err := operator.Epoll.Control(clientOperator, netpoll.Readable); err != nil {
 			unix.Close(clientFD)
-			log.DefaultLogger.ErrorFields("epoll.Control", zap.Error(err), zap.Int("epoll_fd", t.epoll.FD()), zap.Int("client_fd", clientFD), zap.String("epoll_event", netpoll.EventString(netpoll.Readable)))
+			log.DefaultLogger.ErrorFields("epoll.Control", zap.Error(err), zap.Int("epoll_fd", epoll.FD()), zap.Int("client_fd", clientFD), zap.String("epoll_event", netpoll.EventString(netpoll.Readable)))
 			continue
 		}
-		log.DefaultLogger.InfoFields("accept success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("listen_fd", operator.FD), zap.Int("client_fd", clientOperator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", t.localAddr.String()))
+		log.DefaultLogger.InfoFields("accept success", zap.Int("epoll_fd", epoll.FD()), zap.Int("listen_fd", operator.FD), zap.Int("client_fd", clientOperator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", t.localAddr.String()))
 	}
 }
 
-func (t *serverTransportTCP) read(operator *netpoll.FDOperator) {
+func (t *serverTransportTCP) read(epoll *netpoll.Epoll, operator *netpoll.FDOperator) {
 	tcpConn, ok := operator.Data.(*tcpConnection)
 	if !ok || tcpConn == nil {
 		log.DefaultLogger.ErrorFields("data is not tcpConnection", zap.Reflect("operator", operator))
@@ -188,7 +192,7 @@ func (t *serverTransportTCP) read(operator *netpoll.FDOperator) {
 	log.DefaultLogger.InfoFields("read success", zap.Int("epoll_fd", operator.Epoll.FD()), zap.Int("client_fd", operator.FD), zap.ByteString("buffer", buf[:offset]))
 }
 
-func (t *serverTransportTCP) write(operator *netpoll.FDOperator) {
+func (t *serverTransportTCP) write(epoll *netpoll.Epoll, operator *netpoll.FDOperator) {
 	tcpConn, ok := operator.Data.(*tcpConnection)
 	if !ok || tcpConn == nil {
 		log.DefaultLogger.ErrorFields("data is not tcpConnection", zap.Reflect("operator", operator))
@@ -229,7 +233,7 @@ func (t *serverTransportTCP) write(operator *netpoll.FDOperator) {
 	log.DefaultLogger.InfoFields("write success", zap.Int("epoll_fd", operator.Epoll.FD()), zap.Int("client_fd", operator.FD), zap.ByteString("buffer", buf[:offset]))
 }
 
-func (t *serverTransportTCP) hup(operator *netpoll.FDOperator) {
+func (t *serverTransportTCP) hup(epoll *netpoll.Epoll, operator *netpoll.FDOperator) {
 	unix.Close(operator.FD)
 
 	tcpConn, ok := operator.Data.(*tcpConnection)
@@ -240,11 +244,13 @@ func (t *serverTransportTCP) hup(operator *netpoll.FDOperator) {
 	tcpConn.readBuffer.Close()
 	tcpConn.writeBuffer.Close()
 
-	log.DefaultLogger.InfoFields("close success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("client_fd", operator.FD), zap.String("remote_address", tcpConn.remoteAddr.String()), zap.String("local_address", tcpConn.localAddr.String()))
+	log.DefaultLogger.InfoFields("close success", zap.Int("epoll_fd", epoll.FD()), zap.Int("client_fd", operator.FD), zap.String("remote_address", tcpConn.remoteAddr.String()), zap.String("local_address", tcpConn.localAddr.String()))
 }
 
 func (t *serverTransportTCP) Close() {
-	t.epoll.Close()
+	for _, epoll := range t.epolls {
+		epoll.Close()
+	}
 }
 
 type Operator interface {

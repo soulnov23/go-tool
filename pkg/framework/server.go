@@ -103,13 +103,11 @@ func (s *Server) Serve() error {
 		}()
 	}
 
-	for n, s := range s.services {
-		go func(name string, service *service) {
-			if err := service.serve(); err != nil {
-				log.DefaultLogger.FatalFields("service serve", zap.String("service_name", name), zap.Error(err))
-			}
-			service.close()
-		}(n, s)
+	for name, service := range s.services {
+		if err := service.serve(); err != nil {
+			log.DefaultLogger.FatalFields("service serve", zap.String("service_name", name), zap.Error(err))
+		}
+		service.close()
 	}
 
 	signalClose := make(chan os.Signal, 1)

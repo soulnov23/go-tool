@@ -5,9 +5,9 @@ type FDOperator struct {
 	FD int
 
 	// Desc provides three callbacks for fd's reading, writing or hanging events.
-	OnRead  func(*FDOperator)
-	OnWrite func(*FDOperator)
-	OnHup   func(*FDOperator)
+	OnRead  func(*Epoll, *FDOperator)
+	OnWrite func(*Epoll, *FDOperator)
+	OnHup   func(*Epoll, *FDOperator)
 
 	// Epoll is the registered location of the file descriptor.
 	Epoll *Epoll
