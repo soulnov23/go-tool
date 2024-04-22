@@ -2,18 +2,15 @@ package netpoll
 
 import (
 	"runtime"
-	"sync/atomic"
 	"unsafe"
 )
 
 type operatorCache struct {
-	locked int32
-	first  *FDOperator
-	cache  []*FDOperator
+	first *FDOperator
+	cache []*FDOperator
 	// freelist store the freeable operator
 	// to reduce GC pressure, we only store operator index here
-	freelist   []int32
-	freelocked int32
+	freelist []int32
 }
 
 func newOperatorCache() *operatorCache {
@@ -26,7 +23,6 @@ func newOperatorCache() *operatorCache {
 }
 
 func (c *operatorCache) alloc() *FDOperator {
-	lock(&c.locked)
 	if c.first == nil {
 		const opSize = unsafe.Sizeof(FDOperator{})
 		n := 4 * 1024 / opSize
@@ -44,7 +40,6 @@ func (c *operatorCache) alloc() *FDOperator {
 	}
 	operator := c.first
 	c.first = operator.next
-	unlock(&c.locked)
 	return operator
 }
 
@@ -53,34 +48,18 @@ func (c *operatorCache) alloc() *FDOperator {
 func (c *operatorCache) freeable(operator *FDOperator) {
 	// reset all state
 	operator.reset()
-	lock(&c.freelocked)
 	c.freelist = append(c.freelist, operator.index)
-	unlock(&c.freelocked)
 }
 
 func (c *operatorCache) free() {
-	lock(&c.freelocked)
-	defer unlock(&c.freelocked)
 	if len(c.freelist) == 0 {
 		return
 	}
 
-	lock(&c.locked)
 	for _, index := range c.freelist {
 		operator := c.cache[index]
 		operator.next = c.first
 		c.first = operator
 	}
 	c.freelist = c.freelist[:0]
-	unlock(&c.locked)
-}
-
-func lock(locked *int32) {
-	for !atomic.CompareAndSwapInt32(locked, 0, 1) {
-		runtime.Gosched()
-	}
-}
-
-func unlock(locked *int32) {
-	atomic.StoreInt32(locked, 0)
 }
