@@ -11,29 +11,15 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type FDOperator struct {
-	// FD is file descriptor, poll will bind when register.
-	FD int
-
-	// Desc provides three callbacks for fd's reading, writing or hanging events.
-	OnRead  func(*FDOperator)
-	OnWrite func(*FDOperator)
-	OnHup   func(*FDOperator)
-
-	// Epoll is the registered location of the file descriptor.
-	Epoll *Epoll
-
-	Data any
-}
-
 type Epoll struct {
-	fd         int
-	operator   *FDOperator
-	events     []EpollEvent
-	triggerBuf []byte
-	trigger    atomic.Uint32
-	close      chan struct{}
-	info       func(msg string, fields ...zap.Field)
+	fd            int
+	wakeOperator  *FDOperator // eventfd, wake epoll_wait
+	events        []EpollEvent
+	operatorCache *operatorCache
+	triggerBuf    []byte
+	trigger       atomic.Uint32
+	close         chan struct{}
+	info          func(msg string, fields ...zap.Field)
 }
 
 func NewEpoll(info func(msg string, fields ...zap.Field)) (*Epoll, error) {
@@ -42,27 +28,27 @@ func NewEpoll(info func(msg string, fields ...zap.Field)) (*Epoll, error) {
 		return nil, fmt.Errorf("unix.EpollCreate1: %v", err)
 	}
 	epoll := &Epoll{
-		fd:         fd,
-		events:     make([]EpollEvent, 128), // https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go#L114
-		triggerBuf: make([]byte, 8),
-		close:      make(chan struct{}, 1),
-		info:       info,
+		fd:            fd,
+		events:        make([]EpollEvent, 128), // https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go#L114
+		operatorCache: newOperatorCache(),
+		triggerBuf:    make([]byte, 8),
+		close:         make(chan struct{}, 1),
+		info:          info,
 	}
 	eventFD, err := unix.Eventfd(0, unix.EFD_NONBLOCK|unix.EFD_CLOEXEC)
 	if err != nil {
 		unix.Close(fd)
 		return nil, fmt.Errorf("unix.Eventfd: %v", err)
 	}
-	operator := &FDOperator{
-		FD:    eventFD,
-		Epoll: epoll,
-	}
+	operator := epoll.Alloc()
+	operator.FD = eventFD
+	operator.Epoll = epoll
 	if err := epoll.Control(operator, Readable); err != nil {
 		unix.Close(eventFD)
 		unix.Close(fd)
 		return nil, fmt.Errorf("epoll_fd[%d] epoll.Control event_fd[%d]: %v", fd, eventFD, err)
 	}
-	epoll.operator = operator
+	epoll.wakeOperator = operator
 	epoll.info("new epoll", zap.Int("epoll_fd", fd), zap.Int("event_fd", eventFD))
 	return epoll, nil
 }
@@ -104,7 +90,7 @@ func (epoll *Epoll) Control(operator *FDOperator, event int) error {
 }
 
 func (epoll *Epoll) Wait() error {
-	epoll.info("wait epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
+	epoll.info("wait epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD))
 	// 先epoll_wait阻塞等待
 	msec := -1
 	for {
@@ -120,12 +106,14 @@ func (epoll *Epoll) Wait() error {
 		}
 		msec = 0
 		if epoll.handle(n) {
-			epoll.Control(epoll.operator, Detach)
-			unix.Close(epoll.operator.FD)
+			if err := epoll.Control(epoll.wakeOperator, Detach); err != nil {
+				epoll.info("epoll.Control event_fd failed", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD), zap.Error(err))
+			}
+			unix.Close(epoll.wakeOperator.FD)
 			unix.Close(epoll.fd)
 			epoll.close <- struct{}{}
 			epoll.trigger.Store(0)
-			epoll.info("exit gracefully", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.operator.FD))
+			epoll.info("exit gracefully", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD))
 			return nil
 		}
 	}
@@ -140,8 +128,8 @@ func (epoll *Epoll) handle(eventSize int) bool {
 		epoll.info("wake epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("client_fd", operator.FD), zap.String("event", EventString(event.Events)))
 
 		// 通过write event fd主动触发循环优雅退出
-		if operator.FD == epoll.operator.FD {
-			unix.Read(epoll.operator.FD, epoll.triggerBuf)
+		if operator.FD == epoll.wakeOperator.FD {
+			_, _ = unix.Read(epoll.wakeOperator.FD, epoll.triggerBuf)
 			if epoll.triggerBuf[0] > 0 {
 				exit = true
 			}
@@ -166,11 +154,14 @@ func (epoll *Epoll) handle(eventSize int) bool {
 			}
 		}
 	}
-	for _, opt := range hups {
-		epoll.Control(opt, Detach)
-		opt.OnHup(opt)
-		opt = nil
+	for _, operator := range hups {
+		if err := epoll.Control(operator, Detach); err != nil {
+			epoll.info("epoll.Control event_fd failed", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD), zap.Error(err))
+		}
+		operator.OnHup(operator)
+		epoll.Free(operator)
 	}
+	epoll.operatorCache.free()
 	// 是否退出循环：否
 	return exit
 }
@@ -180,9 +171,17 @@ func (epoll *Epoll) Close() error {
 	if epoll.trigger.Add(1) > 1 {
 		return nil
 	}
-	if _, err := unix.Write(epoll.operator.FD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
-		return fmt.Errorf("epoll_fd[%d] write event_fd[%d]: %v", epoll.fd, epoll.operator.FD, err)
+	if _, err := unix.Write(epoll.wakeOperator.FD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+		return fmt.Errorf("epoll_fd[%d] write event_fd[%d]: %v", epoll.fd, epoll.wakeOperator.FD, err)
 	}
 	<-epoll.close
 	return nil
+}
+
+func (epoll *Epoll) Alloc() *FDOperator {
+	return epoll.operatorCache.alloc()
+}
+
+func (epoll *Epoll) Free(operator *FDOperator) {
+	epoll.operatorCache.freeable(operator)
 }

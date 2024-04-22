@@ -8,7 +8,7 @@ PRINT := -v -x
 #使用go tool compile查看-gcflags传递给编译器的参数
 #-N禁用优化
 #-l禁用内联
-DEBUG := -gcflags "all=-N -l"
+DEBUG := -gcflags "all=-N -l -d=checkptr"
 
 #使用go tool link查看-ldflags传递给链接器的参数
 #-w禁用DWARF生成

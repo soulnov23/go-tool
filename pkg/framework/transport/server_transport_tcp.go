@@ -87,11 +87,10 @@ func (t *serverTransportTCP) ListenAndServe() error {
 	}
 	log.DefaultLogger.InfoFields("listen success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address))
 
-	operator := &netpoll.FDOperator{
-		FD:     listenFD,
-		Epoll:  t.epoll,
-		OnRead: t.accept,
-	}
+	operator := t.epoll.Alloc()
+	operator.FD = listenFD
+	operator.Epoll = t.epoll
+	operator.OnRead = t.accept
 	if err := t.epoll.Control(operator, netpoll.ReadWritable); err != nil {
 		unix.Close(listenFD)
 		return fmt.Errorf("epoll_fd[%d] epoll.Control listen_fd[%d]: %v", t.epoll.FD(), listenFD, err)
@@ -131,26 +130,25 @@ func (t *serverTransportTCP) accept(operator *netpoll.FDOperator) {
 			log.DefaultLogger.ErrorFields("netpoll.SockaddrToAddr", zap.Error(err), zap.Reflect("sockaddr", addr))
 			continue
 		}
-		operator := &netpoll.FDOperator{
-			FD:      clientFD,
-			Epoll:   t.epoll,
-			OnRead:  t.read,
-			OnWrite: t.write,
-			OnHup:   t.hup,
-			Data: &tcpConnection{
-				fd:          clientFD,
-				localAddr:   t.localAddr,
-				remoteAddr:  remoteAddr,
-				readBuffer:  buffer.New(),
-				writeBuffer: buffer.New(),
-			},
+		clientOperator := t.epoll.Alloc()
+		clientOperator.FD = clientFD
+		clientOperator.Epoll = t.epoll
+		clientOperator.OnRead = t.read
+		clientOperator.OnWrite = t.write
+		clientOperator.OnHup = t.hup
+		clientOperator.Data = &tcpConnection{
+			fd:          clientFD,
+			localAddr:   t.localAddr,
+			remoteAddr:  remoteAddr,
+			readBuffer:  buffer.New(),
+			writeBuffer: buffer.New(),
 		}
-		if err := operator.Epoll.Control(operator, netpoll.Readable); err != nil {
+		if err := operator.Epoll.Control(clientOperator, netpoll.Readable); err != nil {
 			unix.Close(clientFD)
 			log.DefaultLogger.ErrorFields("epoll.Control", zap.Error(err), zap.Int("epoll_fd", t.epoll.FD()), zap.Int("client_fd", clientFD), zap.String("epoll_event", netpoll.EventString(netpoll.Readable)))
 			continue
 		}
-		log.DefaultLogger.InfoFields("accept success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("client_fd", operator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", t.localAddr.String()))
+		log.DefaultLogger.InfoFields("accept success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("listen_fd", operator.FD), zap.Int("client_fd", clientOperator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", t.localAddr.String()))
 	}
 }
 
@@ -232,14 +230,16 @@ func (t *serverTransportTCP) write(operator *netpoll.FDOperator) {
 }
 
 func (t *serverTransportTCP) hup(operator *netpoll.FDOperator) {
+	unix.Close(operator.FD)
+
 	tcpConn, ok := operator.Data.(*tcpConnection)
 	if !ok || tcpConn == nil {
 		log.DefaultLogger.ErrorFields("data is not tcpConnection", zap.Reflect("operator", operator))
 		return
 	}
-	unix.Close(tcpConn.fd)
 	tcpConn.readBuffer.Close()
 	tcpConn.writeBuffer.Close()
+
 	log.DefaultLogger.InfoFields("close success", zap.Int("epoll_fd", t.epoll.FD()), zap.Int("client_fd", operator.FD), zap.String("remote_address", tcpConn.remoteAddr.String()), zap.String("local_address", tcpConn.localAddr.String()))
 }
 
