@@ -24,7 +24,7 @@ type node struct {
 }
 
 // 为了获得高性能，使用伪共享填充在多线程环境下确保read和write不共享相同的缓存行
-type RingBuffer struct {
+type Ring struct {
 	/*----------------CacheLine----------------*/
 	capacity uint64
 	size     *atomic.Uint64
@@ -40,9 +40,9 @@ type RingBuffer struct {
 	nodes []*node
 }
 
-func New(capacity uint64) *RingBuffer {
+func New(capacity uint64) *Ring {
 	capacity = roundUpToPower2(capacity)
-	ring := &RingBuffer{
+	ring := &Ring{
 		capacity: capacity,
 		size:     &atomic.Uint64{},
 		mask:     capacity - 1,
@@ -81,7 +81,7 @@ func roundUpToPower2(v uint64) uint64 {
 	return v
 }
 
-func (ring *RingBuffer) Enqueue(value any) error {
+func (ring *Ring) Enqueue(value any) error {
 	for {
 		if ring.Size() == ring.capacity {
 			return errors.New("queue is full")
@@ -105,7 +105,7 @@ func (ring *RingBuffer) Enqueue(value any) error {
 	}
 }
 
-func (ring *RingBuffer) Dequeue() any {
+func (ring *Ring) Dequeue() any {
 	for {
 		if ring.Size() == 0 {
 			return nil
@@ -130,11 +130,11 @@ func (ring *RingBuffer) Dequeue() any {
 }
 
 // Size 实际大小
-func (ring *RingBuffer) Size() uint64 {
+func (ring *Ring) Size() uint64 {
 	return ring.size.Load()
 }
 
 // Capacity 最大容量
-func (ring *RingBuffer) Capacity() uint64 {
+func (ring *Ring) Capacity() uint64 {
 	return ring.capacity
 }

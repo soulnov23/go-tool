@@ -41,7 +41,7 @@ func TestRingBuffer(t *testing.T) {
 	var enCount uint64
 	for i := 0; i < 8; i++ {
 		enWait.Add(1)
-		go func(ctx context.Context, queue *RingBuffer) {
+		go func(ctx context.Context, queue *Ring) {
 			defer enWait.Done()
 			for {
 				select {
@@ -63,7 +63,7 @@ func TestRingBuffer(t *testing.T) {
 	var deCount uint64
 	for i := 0; i < 8; i++ {
 		deWait.Add(1)
-		go func(ctx context.Context, queue *RingBuffer) {
+		go func(ctx context.Context, queue *Ring) {
 			defer deWait.Done()
 			for {
 				select {
