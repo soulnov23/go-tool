@@ -12,7 +12,7 @@ const (
 	cacheLinePadSize = unsafe.Sizeof(cpu.CacheLinePad{})
 )
 
-type node struct {
+type node[T any] struct {
 	/*----------------CacheLine----------------*/
 	enSeq *atomic.Uint64
 	_     [cacheLinePadSize - 8]byte
@@ -20,11 +20,11 @@ type node struct {
 	deSeq *atomic.Uint64
 	_     [cacheLinePadSize - 8]byte
 	/*----------------CacheLine----------------*/
-	value any
+	value T
 }
 
 // 为了获得高性能，使用伪共享填充在多线程环境下确保read和write不共享相同的缓存行
-type Ring struct {
+type Ring[T any] struct {
 	/*----------------CacheLine----------------*/
 	capacity uint64
 	size     *atomic.Uint64
@@ -37,21 +37,21 @@ type Ring struct {
 	tail *atomic.Uint64
 	_    [cacheLinePadSize - 8]byte
 	/*----------------CacheLine----------------*/
-	nodes []*node
+	nodes []*node[T]
 }
 
-func New(capacity uint64) *Ring {
+func New[T any](capacity uint64) *Ring[T] {
 	capacity = roundUpToPower2(capacity)
-	ring := &Ring{
+	ring := &Ring[T]{
 		capacity: capacity,
 		size:     &atomic.Uint64{},
 		mask:     capacity - 1,
 		head:     &atomic.Uint64{},
 		tail:     &atomic.Uint64{},
-		nodes:    make([]*node, capacity),
+		nodes:    make([]*node[T], capacity),
 	}
 	for index := range ring.nodes {
-		node := &node{
+		node := &node[T]{
 			enSeq: &atomic.Uint64{},
 			deSeq: &atomic.Uint64{},
 		}
@@ -81,7 +81,7 @@ func roundUpToPower2(v uint64) uint64 {
 	return v
 }
 
-func (ring *Ring) Enqueue(value any) error {
+func (ring *Ring[T]) Enqueue(value T) error {
 	for {
 		if ring.Size() == ring.capacity {
 			return errors.New("queue is full")
@@ -105,10 +105,11 @@ func (ring *Ring) Enqueue(value any) error {
 	}
 }
 
-func (ring *Ring) Dequeue() any {
+func (ring *Ring[T]) Dequeue() T {
 	for {
 		if ring.Size() == 0 {
-			return nil
+			var value T
+			return value
 		}
 		// 抢占pos
 		head := ring.head.Load()
@@ -130,11 +131,11 @@ func (ring *Ring) Dequeue() any {
 }
 
 // Size 实际大小
-func (ring *Ring) Size() uint64 {
+func (ring *Ring[T]) Size() uint64 {
 	return ring.size.Load()
 }
 
 // Capacity 最大容量
-func (ring *Ring) Capacity() uint64 {
+func (ring *Ring[T]) Capacity() uint64 {
 	return ring.capacity
 }

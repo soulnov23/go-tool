@@ -32,7 +32,7 @@ func TestRoundUpToPower2(t *testing.T) {
 }
 
 func TestRingBuffer(t *testing.T) {
-	queue := New(512)
+	queue := New[string](512)
 
 	timeout := 10 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
@@ -41,7 +41,7 @@ func TestRingBuffer(t *testing.T) {
 	var enCount uint64
 	for i := 0; i < 8; i++ {
 		enWait.Add(1)
-		go func(ctx context.Context, queue *Ring) {
+		go func(ctx context.Context, queue *Ring[string]) {
 			defer enWait.Done()
 			for {
 				select {
@@ -63,7 +63,7 @@ func TestRingBuffer(t *testing.T) {
 	var deCount uint64
 	for i := 0; i < 8; i++ {
 		deWait.Add(1)
-		go func(ctx context.Context, queue *Ring) {
+		go func(ctx context.Context, queue *Ring[string]) {
 			defer deWait.Done()
 			for {
 				select {
@@ -71,7 +71,7 @@ func TestRingBuffer(t *testing.T) {
 					log.DebugFields("ctx done")
 					return
 				default:
-					if queue.Dequeue() == nil {
+					if queue.Dequeue() == "" {
 						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
 					log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
