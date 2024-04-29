@@ -7,7 +7,7 @@ import (
 	"github.com/soulnov23/go-tool/pkg/json"
 )
 
-//go:generate protoc --proto_path=. --go_out=paths=source_relative:. --validate_out=lang=go,paths=source_relative:. errors.proto
+//go:generate protoc --proto_path=. --go_out=paths=source_relative:. --validate_out=lang=go,paths=source_relative:. wrap_error.proto
 
 /*
 1xx: Informational - Request received, continuing process
