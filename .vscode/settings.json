@@ -45,7 +45,7 @@
         "editor.defaultFormatter": "golang.go"
     },
     "[cpp]": {
-        "editor.defaultFormatter": "ms-vscode.cpptools"
+        "editor.defaultFormatter": "xaver.clang-format"
     },
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
