@@ -46,7 +46,7 @@ func newServerTransportTCP(address, network, protocol string, opts ...ServerTran
 }
 
 func (t *serverTransportTCP) ListenAndServe() error {
-	for range t.opts.coreSize {
+	for i := 0; i < t.opts.coreSize; i++ {
 		epoll, err := netpoll.NewEpoll(log.DefaultLogger.InfoFields)
 		if err != nil {
 			return fmt.Errorf("netpoll.NewEpoll: %v", err)
