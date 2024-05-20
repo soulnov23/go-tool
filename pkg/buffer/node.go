@@ -31,7 +31,7 @@ func new(blockSize int) *node {
 	return node
 }
 
-func (node *node) len() int {
+func (node *node) size() int {
 	return node.writeOffset - node.readOffset
 }
 
@@ -49,7 +49,7 @@ func (node *node) read(size int) []byte {
 	return node.block[offset:node.readOffset]
 }
 
-func (node *node) close() {
+func (node *node) delete() {
 	if atomic.AddInt32(&node.referCount, -1) == 0 {
 		cache.Delete(node.block)
 		node.block, node.readOffset, node.writeOffset, node.next = nil, 0, 0, nil

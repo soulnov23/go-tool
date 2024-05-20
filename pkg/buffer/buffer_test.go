@@ -42,7 +42,7 @@ func TestBuffer(t *testing.T) {
 				if err != nil {
 					t.Logf("Buffer.Peek: %v", err)
 				} else {
-					lkBuffer.Skip(len(res))
+					_ = lkBuffer.Skip(len(res))
 					t.Logf("buf: %s", utils.BytesToString(res))
 				}
 				lkBuffer.GC()
@@ -70,7 +70,7 @@ func TestBuffer(t *testing.T) {
 
 	time.Sleep(timeout)
 
-	lkBuffer.Close()
+	lkBuffer.Delete()
 
 	cancel()
 
