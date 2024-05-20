@@ -198,7 +198,7 @@ func (t *serverTransportTCP) write(epoll *netpoll.Epoll, operator *netpoll.FDOpe
 		log.DefaultLogger.ErrorFields("data is not tcpConnection", zap.Reflect("operator", operator))
 		return
 	}
-	buf, err := tcpConn.writeBuffer.Peek(int(tcpConn.writeBuffer.Len()))
+	buf, err := tcpConn.writeBuffer.Peek(int(tcpConn.writeBuffer.Size()))
 	if err != nil {
 		// 数据发送完了返回
 		return
@@ -228,7 +228,7 @@ func (t *serverTransportTCP) write(epoll *netpoll.Epoll, operator *netpoll.FDOpe
 			break
 		}
 	}
-	tcpConn.writeBuffer.Skip(offset)
+	_ = tcpConn.writeBuffer.Skip(offset)
 	tcpConn.writeBuffer.GC()
 	log.DefaultLogger.InfoFields("write success", zap.Int("epoll_fd", operator.Epoll.FD()), zap.Int("client_fd", operator.FD), zap.ByteString("buffer", buf[:offset]))
 }
@@ -241,8 +241,8 @@ func (t *serverTransportTCP) hup(epoll *netpoll.Epoll, operator *netpoll.FDOpera
 		log.DefaultLogger.ErrorFields("data is not tcpConnection", zap.Reflect("operator", operator))
 		return
 	}
-	tcpConn.readBuffer.Close()
-	tcpConn.writeBuffer.Close()
+	tcpConn.readBuffer.Delete()
+	tcpConn.writeBuffer.Delete()
 
 	log.DefaultLogger.InfoFields("close success", zap.Int("epoll_fd", epoll.FD()), zap.Int("client_fd", operator.FD), zap.String("remote_address", tcpConn.remoteAddr.String()), zap.String("local_address", tcpConn.localAddr.String()))
 }
@@ -274,8 +274,8 @@ func (conn *tcpConnection) RemoteAddr() net.Addr {
 	return conn.remoteAddr
 }
 
-func (conn *tcpConnection) ReadBufferLen() uint64 {
-	return conn.readBuffer.Len()
+func (conn *tcpConnection) ReadBufferSize() uint64 {
+	return conn.readBuffer.Size()
 }
 
 func (conn *tcpConnection) Peek(size int) ([]byte, error) {
