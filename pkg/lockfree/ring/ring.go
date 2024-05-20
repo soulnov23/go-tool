@@ -2,6 +2,7 @@ package ringbuffer
 
 import (
 	"errors"
+	"runtime"
 	"sync/atomic"
 	"unsafe"
 
@@ -101,6 +102,8 @@ func (ring *Ring) Enqueue(value any) error {
 				node.enSeq.Add(ring.capacity)
 				return nil
 			}
+			// 入列失败继续try
+			runtime.Gosched()
 		}
 	}
 }
@@ -125,6 +128,8 @@ func (ring *Ring) Dequeue() any {
 				node.deSeq.Add(ring.capacity)
 				return value
 			}
+			// 出列失败继续try
+			runtime.Gosched()
 		}
 	}
 }

@@ -77,8 +77,7 @@ func TestAddUint64(t *testing.T) {
 	atomic.AddUint64(&value, uint64(1))
 	log.Debug(value)
 
-	var atomicValue *atomic.Uint64
-	atomicValue = &atomic.Uint64{}
+	atomicValue := &atomic.Uint64{}
 	log.Debug(atomicValue.Load())
 	atomicValue.Add(^uint64(0))
 	log.Debug(atomicValue.Load())
