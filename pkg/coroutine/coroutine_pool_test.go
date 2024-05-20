@@ -21,12 +21,20 @@ func TestStack(t *testing.T) {
 }
 
 func TestPool(t *testing.T) {
-	pool, _ := NewPool(10, 10000, t.Errorf)
+	pool := NewPool(10, 10000, t.Errorf)
 	for i := 0; i < 60; i++ {
-		fn := func() {
+		fn := func(args ...any) {
 			t.Logf("runtime.NumGoroutine: %d", runtime.NumGoroutine())
 		}
-		pool.Submit(fn)
+		pool.Run(fn)
 	}
+
+	for i := 0; i < 60; i++ {
+		fn := func(args ...any) {
+			t.Logf("runtime.NumGoroutine: %d, index: %d", runtime.NumGoroutine(), args[0])
+		}
+		pool.Run(fn, i)
+	}
+
 	pool.Wait()
 }
