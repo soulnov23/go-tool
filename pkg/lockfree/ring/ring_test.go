@@ -1,4 +1,4 @@
-package ringbuffer
+package ring
 
 import (
 	"context"
@@ -37,11 +37,11 @@ func TestRingBuffer(t *testing.T) {
 	timeout := 10 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
-	enWait := &sync.WaitGroup{}
-	var enCount uint64
+	var enWait sync.WaitGroup
+	var enCount atomic.Uint64
 	for i := 0; i < 8; i++ {
 		enWait.Add(1)
-		go func(ctx context.Context, queue *Ring) {
+		go func(ctx context.Context, queue *Queue) {
 			defer enWait.Done()
 			for {
 				select {
@@ -53,17 +53,17 @@ func TestRingBuffer(t *testing.T) {
 						log.DebugFields("full", zap.Uint64("size", queue.Size()))
 					}
 					log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
-					atomic.AddUint64(&enCount, uint64(1))
+					enCount.Add(1)
 				}
 			}
 		}(ctx, queue)
 	}
 
-	deWait := &sync.WaitGroup{}
-	var deCount uint64
+	var deWait sync.WaitGroup
+	var deCount atomic.Uint64
 	for i := 0; i < 8; i++ {
 		deWait.Add(1)
-		go func(ctx context.Context, queue *Ring) {
+		go func(ctx context.Context, queue *Queue) {
 			defer deWait.Done()
 			for {
 				select {
@@ -75,7 +75,7 @@ func TestRingBuffer(t *testing.T) {
 						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
 					log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
-					atomic.AddUint64(&deCount, uint64(1))
+					deCount.Add(1)
 				}
 			}
 		}(ctx, queue)
@@ -87,5 +87,5 @@ func TestRingBuffer(t *testing.T) {
 	enWait.Wait()
 	deWait.Wait()
 
-	log.DebugFields("", zap.Uint64("enCount", enCount), zap.Uint64("deCount", deCount))
+	log.DebugFields("", zap.Uint64("enCount", enCount.Load()), zap.Uint64("deCount", deCount.Load()))
 }
