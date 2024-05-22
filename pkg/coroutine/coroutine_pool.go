@@ -95,9 +95,9 @@ type Pool struct {
 	printf     func(formatter string, args ...any)
 }
 
-func NewPool(capacity int, taskCapacity int, printf func(formatter string, args ...any)) *Pool {
+func NewPool(poolCapacity int, taskCapacity int, printf func(formatter string, args ...any)) *Pool {
 	return &Pool{
-		capacity:   uint64(capacity),
+		capacity:   uint64(poolCapacity),
 		workerSize: &atomic.Uint64{},
 		taskQueue:  ring.New(uint64(taskCapacity)),
 		printf:     printf,
