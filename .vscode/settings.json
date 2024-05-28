@@ -89,7 +89,8 @@
     "C_Cpp.clang_format_style": "file",
     //files选项
     "files.autoGuessEncoding": true,
-    "files.autoSave": "onFocusChange",
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 0,
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,
@@ -130,8 +131,9 @@
     "git.supportCancellation": true,
     "git.verboseCommit": true,
     //explorer选项
-    "explorer.confirmDelete": false,
-    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": true,
+    "explorer.confirmDragAndDrop": true,
+    "explorer.compactFolders": false,
     //terminal选项
     "terminal.integrated.fontSize": 22,
     "terminal.integrated.copyOnSelection": true,
