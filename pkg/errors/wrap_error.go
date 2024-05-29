@@ -70,6 +70,10 @@ func Equal(err1 error, err2 error) bool {
 		return false
 	}
 
+	if verr1.Name != verr2.Name {
+		return false
+	}
+
 	return true
 }
 

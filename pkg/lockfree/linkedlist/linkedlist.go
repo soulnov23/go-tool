@@ -29,7 +29,7 @@ func cas(addr *unsafe.Pointer, old, new *node) bool {
 type Queue struct {
 	head unsafe.Pointer
 	tail unsafe.Pointer
-	size uint64
+	size *atomic.Uint64
 }
 
 // New 创建无锁队列
@@ -42,7 +42,7 @@ func New() *Queue {
 	return &Queue{
 		head: unsafe.Pointer(p),
 		tail: unsafe.Pointer(p),
-		size: 0,
+		size: &atomic.Uint64{},
 	}
 }
 
@@ -70,7 +70,7 @@ func (queue *Queue) Enqueue(value any) {
 		if cas(&tail.next, tailNext, p) {
 			// 入列成功，尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
 			cas(&queue.tail, tail, p)
-			atomic.AddUint64(&queue.size, 1)
+			queue.size.Add(1)
 			return
 		}
 		// 入列失败继续try
@@ -105,7 +105,7 @@ func (queue *Queue) Dequeue() any {
 		// 执行cas前先把head.next的值保存下来，避免cas刚执行完那一刻，其它线程也同时DeQueue把head移动了，那么cas后再取值可能就是head.next.next的值
 		value := headNext.value
 		if cas(&queue.head, head, headNext) {
-			atomic.AddUint64(&queue.size, ^uint64(0))
+			queue.size.Add(^uint64(0))
 			return value
 		}
 		// 出列失败继续try
@@ -115,5 +115,5 @@ func (queue *Queue) Dequeue() any {
 
 // Size 实际大小，链表没有容量限制，这里不需要Capacity方法
 func (queue *Queue) Size() uint64 {
-	return atomic.LoadUint64(&queue.size)
+	return queue.size.Load()
 }
