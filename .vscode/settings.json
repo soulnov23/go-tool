@@ -89,8 +89,7 @@
     "C_Cpp.clang_format_style": "file",
     //files选项
     "files.autoGuessEncoding": true,
-    "files.autoSave": "afterDelay",
-    "files.autoSaveDelay": 8,
+    "files.autoSave": "onFocusChange",
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,
