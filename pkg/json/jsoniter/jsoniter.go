@@ -1,5 +1,5 @@
-// Package json
-package json
+// Package jsoniter
+package jsoniter
 
 import (
 	jsoniter "github.com/json-iterator/go"
@@ -26,24 +26,24 @@ func init() {
 	}.Froze()
 }
 
-// Unmarshal
-func Unmarshal(data []byte, value any) error {
-	return api.Unmarshal(data, value)
-}
-
 // Marshal
 func Marshal(value any) ([]byte, error) {
 	return api.Marshal(value)
 }
 
-// UnmarshalFromString
-func UnmarshalFromString(data string, value any) error {
-	return api.UnmarshalFromString(data, value)
+// Unmarshal
+func Unmarshal(data []byte, value any) error {
+	return api.Unmarshal(data, value)
 }
 
 // MarshalToString
 func MarshalToString(value any) (string, error) {
 	return api.MarshalToString(value)
+}
+
+// UnmarshalFromString
+func UnmarshalFromString(data string, value any) error {
+	return api.UnmarshalFromString(data, value)
 }
 
 // Stringify 使json struct字符串化

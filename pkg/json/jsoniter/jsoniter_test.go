@@ -1,9 +1,9 @@
-package json
+package jsoniter
 
 import (
 	"testing"
 
-	jsoniter "github.com/json-iterator/go"
+	stdjsoniter "github.com/json-iterator/go"
 )
 
 type FactoryA struct {
@@ -16,8 +16,8 @@ type FactoryB struct {
 
 func TestJSONRawMessage(t *testing.T) {
 	type Data struct {
-		Type    string              `json:"type"`
-		Factory jsoniter.RawMessage `json:"factory"`
+		Type    string                 `json:"type"`
+		Factory stdjsoniter.RawMessage `json:"factory"`
 	}
 	data := `{
 		"type": "a",
@@ -34,11 +34,11 @@ func TestJSONRawMessage(t *testing.T) {
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
-		Unmarshal(dataValue.Factory, factoryValue)
+		_ = Unmarshal(dataValue.Factory, factoryValue)
 		t.Log(Stringify(factoryValue))
 	case "b":
 		factoryValue := &FactoryB{}
-		Unmarshal(dataValue.Factory, factoryValue)
+		_ = Unmarshal(dataValue.Factory, factoryValue)
 		t.Log(Stringify(factoryValue))
 	default:
 		t.Error("unknown factory type")
@@ -58,11 +58,11 @@ func TestJSONRawMessage(t *testing.T) {
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
-		Unmarshal(dataValue.Factory, factoryValue)
+		_ = Unmarshal(dataValue.Factory, factoryValue)
 		t.Log(Stringify(factoryValue))
 	case "b":
 		factoryValue := &FactoryB{}
-		Unmarshal(dataValue.Factory, factoryValue)
+		_ = Unmarshal(dataValue.Factory, factoryValue)
 		t.Log(Stringify(factoryValue))
 	default:
 		t.Error("unknown factory type")
@@ -71,8 +71,8 @@ func TestJSONRawMessage(t *testing.T) {
 
 func TestJSONAny(t *testing.T) {
 	type Data struct {
-		Type    string       `json:"type"`
-		Factory jsoniter.Any `json:"factory"`
+		Type    string          `json:"type"`
+		Factory stdjsoniter.Any `json:"factory"`
 	}
 	data := `{
 		"type": "a",
