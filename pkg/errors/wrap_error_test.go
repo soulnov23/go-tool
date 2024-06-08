@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/soulnov23/go-tool/pkg/json"
+	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
 
 func Test(t *testing.T) {
@@ -26,10 +26,10 @@ func Test(t *testing.T) {
 		t.Log("OK")
 	}
 
-	temp := json.Stringify(New())
+	temp := jsoniter.Stringify(New())
 	t.Log(temp)
 
-	temp = json.Stringify(nil)
+	temp = jsoniter.Stringify(nil)
 	t.Log(temp)
 
 	t.Log(123456789 / 1_000_000)

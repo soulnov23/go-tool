@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/soulnov23/go-tool/pkg/json"
+	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
 
 //go:generate protoc --proto_path=. --go_out=paths=source_relative:. --validate_out=lang=go,paths=source_relative:. wrap_error.proto
@@ -21,7 +21,7 @@ func (e *Error) Error() string {
 	if e == nil {
 		return ""
 	}
-	return json.Stringify(e)
+	return jsoniter.Stringify(e)
 }
 
 func (e *Error) OK() bool {
@@ -38,7 +38,7 @@ var New = func() *Error {
 
 func Parse(err string) *Error {
 	e := New()
-	if errr := json.UnmarshalFromString(err, e); errr != nil {
+	if errr := jsoniter.UnmarshalFromString(err, e); errr != nil {
 		return nil
 	}
 	return e

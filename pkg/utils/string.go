@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/soulnov23/go-tool/pkg/json"
+	"github.com/soulnov23/go-tool/pkg/json/pbjson"
 )
 
 func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
@@ -83,9 +83,13 @@ func AnyToString(row any) string {
 	case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
 		return fmt.Sprintf("%v", v)
 	case []byte:
-		return string(v)
+		return BytesToString(v)
 	case *struct{}:
-		return json.Stringify(*v)
+		data, err := pbjson.Marshal(*v)
+		if err != nil {
+			return ""
+		}
+		return BytesToString(data)
 	case *any:
 		return AnyToString(*v)
 	case any:
@@ -93,7 +97,7 @@ func AnyToString(row any) string {
 		case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
 			return fmt.Sprintf("%v", vv)
 		case []byte:
-			return string(vv)
+			return BytesToString(vv)
 		default:
 			return fmt.Sprintf("%v", vv)
 		}

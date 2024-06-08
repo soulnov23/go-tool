@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/soulnov23/go-tool/pkg/json"
+	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
 
 func TestFlatten(t *testing.T) {
@@ -15,5 +15,5 @@ func TestFlatten(t *testing.T) {
 			"b": "c_b",
 		},
 	}
-	t.Log(json.Stringify(FlattenMap(recordMap)))
+	t.Log(jsoniter.Stringify(FlattenMap(recordMap)))
 }
