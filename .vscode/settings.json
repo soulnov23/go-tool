@@ -147,7 +147,6 @@
         //"-timeout=3s"
     ],
     "gopls": {
-        "formatting.local": "github.com/soulnov23/go-tool",
         "formatting.gofumpt": true
     },
     //xml选项
