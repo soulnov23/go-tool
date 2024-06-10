@@ -13,7 +13,7 @@ var (
 		Multiline:       false,
 		Indent:          "",
 		AllowPartial:    true,
-		UseProtoNames:   false,
+		UseProtoNames:   true,
 		UseEnumNumbers:  false,
 		EmitUnpopulated: true,
 	}
