@@ -10,13 +10,12 @@ import (
 
 var (
 	marshaler = protojson.MarshalOptions{
-		Multiline:         false,
-		Indent:            "",
-		AllowPartial:      true,
-		UseProtoNames:     false,
-		UseEnumNumbers:    false,
-		EmitUnpopulated:   false,
-		EmitDefaultValues: false,
+		Multiline:       false,
+		Indent:          "",
+		AllowPartial:    true,
+		UseProtoNames:   false,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
 	}
 	unmarshaler = protojson.UnmarshalOptions{
 		AllowPartial:   true,
