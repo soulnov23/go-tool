@@ -194,8 +194,5 @@
     },
     //diffEditor
     "diffEditor.ignoreTrimWhitespace": false,
-    "diffEditor.maxComputationTime": 0,
-    //gongfeng
-    "gongfeng.copilot.enableNativeChat": false,
-    "gongfeng.copilot.welcomeMessage": "never"
+    "diffEditor.maxComputationTime": 0
 }
