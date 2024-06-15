@@ -48,32 +48,22 @@ function protoc() {
     go install github.com/golang/mock/mockgen@latest
 }
 
-function jaeger() {
-    docker run -d --name jaeger \
-        -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \
-        -p 5775:5775/udp \
-        -p 6831:6831/udp \
-        -p 6832:6832/udp \
-        -p 5778:5778 \
-        -p 16686:16686 \
-        -p 14268:14268 \
-        -p 14250:14250 \
-        -p 9411:9411 \
-        jaegertracing/all-in-one:latest
-}
-
-function prometheus() {
-    docker run -d --name prometheus \
-        -p 9090:9090 \
-        -v /etc/prometheus/:/etc/prometheus/ \
-        prom/prometheus
-}
-
-function grafana() {
-    docker run -d --name grafana \
-        -p 3000:3000 \
-        -v /etc/grafana/:/etc/grafana/ \
-        grafana/grafana
+#./deploy.sh kubectl v1.18.4
+#kubectl版本和集群版本之间的差异必须在一个小版本号内。例如：v1.30版本的客户端能与v1.29、v1.30和v1.31版本的控制面通信。用最新兼容版的kubectl有助于避免不可预见的问题
+function kubectl() {
+    mkdir -p tmp
+    cd tmp
+    curl -LO "https://dl.k8s.io/release/$1/bin/linux/amd64/kubectl"
+    curl -LO "https://dl.k8s.io/release/$1/bin/linux/amd64/kubectl.sha256"
+    echo "$(cat kubectl.sha256) kubectl" | sha256sum --check
+    GOPATH=$(go env GOPATH)
+    cp -rf kubectl ${GOPATH}/bin
+    git clone https://github.com/ahmetb/kubectx
+    cp -rf ./kubectx/kubectx ${GOPATH}/bin
+    cp -rf ./kubectx/kubens ${GOPATH}/bin
+    go install github.com/derailed/k9s@latest
+    cd ..
+    rm -rf tmp
 }
 
 main() {
@@ -84,14 +74,8 @@ main() {
     protoc)
         protoc $2
         ;;
-    jaeger)
-        jaeger
-        ;;
-    prometheus)
-        prometheus
-        ;;
-    grafana)
-        grafana
+    kubectl)
+        kubectl $2
         ;;
     *)
         echo "error:argument is invalid"
