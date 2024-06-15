@@ -2,10 +2,9 @@
 package pbjson
 
 import (
+	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-
-	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
 
 var (

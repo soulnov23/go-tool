@@ -8,9 +8,8 @@ import (
 	"time"
 	"unsafe"
 
-	"go.uber.org/zap"
-
 	"github.com/soulnov23/go-tool/pkg/log"
+	"go.uber.org/zap"
 )
 
 func TestAnySize(t *testing.T) {
