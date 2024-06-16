@@ -11,8 +11,10 @@ import (
 )
 
 var (
-	tasks sync.Pool
-	works sync.Pool
+	tasks   sync.Pool
+	wgTasks sync.WaitGroup
+	works   sync.Pool
+	wgWorks sync.WaitGroup
 )
 
 func init() {
@@ -35,6 +37,7 @@ type task struct {
 }
 
 func newTask(fn func(...any), args ...any) *task {
+	wgTasks.Add(1)
 	task := tasks.Get().(*task)
 	task.fn = fn
 	task.args = append(task.args, args...)
@@ -43,6 +46,7 @@ func newTask(fn func(...any), args ...any) *task {
 
 func (task *task) delete() {
 	if atomic.AddInt32(&task.referCount, -1) == 0 {
+		wgTasks.Done()
 		task.fn = nil
 		task.args = nil
 		tasks.Put(task)
@@ -126,17 +130,15 @@ func (pool *Pool) worker() uint64 {
 
 func (pool *Pool) incWorker() {
 	pool.workerSize.Add(1)
+	wgWorks.Add(1)
 }
 
 func (pool *Pool) decWorker() {
 	pool.workerSize.Add(^uint64(0))
+	wgWorks.Done()
 }
 
 func (pool *Pool) Wait() {
-	for {
-		if pool.taskQueue.Size() == 0 && pool.worker() == 0 {
-			break
-		}
-		runtime.Gosched()
-	}
+	wgTasks.Wait()
+	wgWorks.Wait()
 }
