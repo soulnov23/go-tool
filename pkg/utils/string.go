@@ -3,9 +3,10 @@ package utils
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
-	"github.com/soulnov23/go-tool/pkg/json/pbjson"
+	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
 
 func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
@@ -50,57 +51,72 @@ func AnyToString(row any) string {
 	switch v := row.(type) {
 	case nil:
 		return ""
-	case *string:
-		return fmt.Sprintf("%v", *v)
-	case *bool:
-		return fmt.Sprintf("%v", *v)
-	case *uint8:
-		return fmt.Sprintf("%v", *v)
-	case *uint16:
-		return fmt.Sprintf("%v", *v)
-	case *uint32:
-		return fmt.Sprintf("%v", *v)
-	case *uint64:
-		return fmt.Sprintf("%v", *v)
-	case *int8:
-		return fmt.Sprintf("%v", *v)
-	case *int16:
-		return fmt.Sprintf("%v", *v)
-	case *int32:
-		return fmt.Sprintf("%v", *v)
-	case *int64:
-		return fmt.Sprintf("%v", *v)
-	case *float32:
-		return fmt.Sprintf("%v", *v)
-	case *float64:
-		return fmt.Sprintf("%v", *v)
-	case *int:
-		return fmt.Sprintf("%v", *v)
-	case *uint:
-		return fmt.Sprintf("%v", *v)
-	case *[]byte:
-		return fmt.Sprintf("%v", *v)
-	case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
-		return fmt.Sprintf("%v", v)
 	case []byte:
 		return BytesToString(v)
-	case *struct{}:
-		data, err := pbjson.Marshal(*v)
-		if err != nil {
-			return ""
-		}
-		return BytesToString(data)
+	case *[]byte:
+		return BytesToString(*v)
+	case string:
+		return v
+	case *string:
+		return *v
+	case bool:
+		return strconv.FormatBool(v)
+	case *bool:
+		return strconv.FormatBool(*v)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case *uint:
+		return strconv.FormatUint(uint64(*v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case *uint8:
+		return strconv.FormatUint(uint64(*v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case *uint16:
+		return strconv.FormatUint(uint64(*v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case *uint32:
+		return strconv.FormatUint(uint64(*v), 10)
+	case uint64:
+		return strconv.FormatUint(uint64(v), 10)
+	case *uint64:
+		return strconv.FormatUint(uint64(*v), 10)
+	case int:
+		return strconv.FormatInt(int64(v), 10)
+	case *int:
+		return strconv.FormatInt(int64(*v), 10)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case *int8:
+		return strconv.FormatInt(int64(*v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case *int16:
+		return strconv.FormatInt(int64(*v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case *int32:
+		return strconv.FormatInt(int64(*v), 10)
+	case int64:
+		return strconv.FormatInt(int64(v), 10)
+	case *int64:
+		return strconv.FormatInt(int64(*v), 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
+	case *float32:
+		return strconv.FormatFloat(float64(*v), 'f', -1, 32)
+	case float64:
+		return strconv.FormatFloat(float64(v), 'f', -1, 64)
+	case *float64:
+		return strconv.FormatFloat(float64(*v), 'f', -1, 64)
+	case struct{}, *struct{}:
+		return jsoniter.Stringify(v)
 	case *any:
 		return AnyToString(*v)
 	case any:
-		switch vv := v.(type) {
-		case string, bool, uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, int, uint:
-			return fmt.Sprintf("%v", vv)
-		case []byte:
-			return BytesToString(vv)
-		default:
-			return fmt.Sprintf("%v", vv)
-		}
+		return AnyToString(v)
 	default:
 		return fmt.Sprintf("%v", v)
 	}
