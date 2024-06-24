@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
@@ -111,8 +113,16 @@ func AnyToString(row any) string {
 		return strconv.FormatFloat(float64(v), 'f', -1, 64)
 	case *float64:
 		return strconv.FormatFloat(float64(*v), 'f', -1, 64)
+	case time.Time:
+		return v.Format(time.RFC3339)
+	case *time.Time:
+		return v.Format(time.RFC3339)
 	case struct{}, *struct{}:
 		return jsoniter.Stringify(v)
+	case json.Number:
+		return v.String()
+	case *json.Number:
+		return v.String()
 	default:
 		return fmt.Sprintf("%v", v)
 	}
