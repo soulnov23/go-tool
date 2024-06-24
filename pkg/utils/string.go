@@ -113,10 +113,6 @@ func AnyToString(row any) string {
 		return strconv.FormatFloat(float64(*v), 'f', -1, 64)
 	case struct{}, *struct{}:
 		return jsoniter.Stringify(v)
-	case *any:
-		return AnyToString(*v)
-	case any:
-		return AnyToString(v)
 	default:
 		return fmt.Sprintf("%v", v)
 	}
