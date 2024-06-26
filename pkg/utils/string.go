@@ -114,9 +114,9 @@ func AnyToString(row any) string {
 	case *float64:
 		return strconv.FormatFloat(float64(*v), 'f', -1, 64)
 	case time.Time:
-		return v.Format(time.RFC3339)
+		return strconv.FormatInt(v.Unix(), 10)
 	case *time.Time:
-		return v.Format(time.RFC3339)
+		return strconv.FormatInt(v.Unix(), 10)
 	case struct{}, *struct{}:
 		return jsoniter.Stringify(v)
 	case json.Number:
