@@ -2,9 +2,13 @@ syntax = "proto3";
 
 option go_package = "github.com/soulnov23/go-tool/errors";
 
+import "google/protobuf/any.proto";
+
 message Error {
-    int32 code = 1;     // http status code
-    string status = 2;  // http status text
-    string name = 3;    // error name
-    string msg = 4;     // error msg
+    int32 code = 1;                            // http status code
+    string status = 2;                         // http status text
+    string name = 3;                           // error name
+    string message = 4;                        // error message
+    repeated google.protobuf.Any details = 5;  // error details
+    string debug_id = 6;                       // request debug id
 }

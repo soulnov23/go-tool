@@ -9,7 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	err := NewInternalServerError("NOT_FOUND_USER", "not found user")
-	t.Log(err.Code, err.Status, err.Name, err.Msg, err.Error())
+	t.Log(err.Code, err.Status, err.Name, err.Message, err.Error())
 	if err.OK() {
 		t.Log("OK")
 	}

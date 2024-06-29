@@ -7,7 +7,7 @@ import (
 	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
 
-//go:generate protoc --proto_path=. --go_out=paths=source_relative:. --validate_out=lang=go,paths=source_relative:. wrap_error.proto
+//go:generate protoc --proto_path=. --go_out=paths=source_relative:. wrap_error.proto
 
 /*
 1xx: Informational - Request received, continuing process
@@ -112,159 +112,159 @@ func NewNoContent() *Error {
 // 300 Multiple Choices
 func NewMultipleChoices(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusMultipleChoices,
-		Status: http.StatusText(http.StatusMultipleChoices),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusMultipleChoices,
+		Status:  http.StatusText(http.StatusMultipleChoices),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 301 Moved Permanently
 func NewMovedPermanently(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusMovedPermanently,
-		Status: http.StatusText(http.StatusMovedPermanently),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusMovedPermanently,
+		Status:  http.StatusText(http.StatusMovedPermanently),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 302 Found
 func NewFound(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusFound,
-		Status: http.StatusText(http.StatusFound),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusFound,
+		Status:  http.StatusText(http.StatusFound),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 400 Bad Request
 func NewBadRequest(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusBadRequest,
-		Status: http.StatusText(http.StatusBadRequest),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusBadRequest,
+		Status:  http.StatusText(http.StatusBadRequest),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 401 Unauthorized
 func NewUnauthorized(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusUnauthorized,
-		Status: http.StatusText(http.StatusUnauthorized),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusUnauthorized,
+		Status:  http.StatusText(http.StatusUnauthorized),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 403 Forbidden
 func NewForbidden(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusForbidden,
-		Status: http.StatusText(http.StatusForbidden),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusForbidden,
+		Status:  http.StatusText(http.StatusForbidden),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 404 Not Found
 func NewNotFound(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusNotFound,
-		Status: http.StatusText(http.StatusNotFound),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusNotFound,
+		Status:  http.StatusText(http.StatusNotFound),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 405 Method Not Allowed
 func NewMethodNotAllowed(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusMethodNotAllowed,
-		Status: http.StatusText(http.StatusMethodNotAllowed),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusMethodNotAllowed,
+		Status:  http.StatusText(http.StatusMethodNotAllowed),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 408 Request Timeout
 func NewRequestTimeout(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusRequestTimeout,
-		Status: http.StatusText(http.StatusRequestTimeout),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusRequestTimeout,
+		Status:  http.StatusText(http.StatusRequestTimeout),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 409 Conflict
 func NewConflict(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusConflict,
-		Status: http.StatusText(http.StatusConflict),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusConflict,
+		Status:  http.StatusText(http.StatusConflict),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 500 Internal Server Error
 func NewInternalServerError(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusInternalServerError,
-		Status: http.StatusText(http.StatusInternalServerError),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusInternalServerError,
+		Status:  http.StatusText(http.StatusInternalServerError),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 501 Not Implemented
 func NewNotImplemented(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusNotImplemented,
-		Status: http.StatusText(http.StatusNotImplemented),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusNotImplemented,
+		Status:  http.StatusText(http.StatusNotImplemented),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 502 Bad Gateway
 func NewBadGateway(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusBadGateway,
-		Status: http.StatusText(http.StatusBadGateway),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusBadGateway,
+		Status:  http.StatusText(http.StatusBadGateway),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 503 Service Unavailable
 func NewServiceUnavailable(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusServiceUnavailable,
-		Status: http.StatusText(http.StatusServiceUnavailable),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusServiceUnavailable,
+		Status:  http.StatusText(http.StatusServiceUnavailable),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 504 Gateway Timeout
 func NewGatewayTimeout(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusGatewayTimeout,
-		Status: http.StatusText(http.StatusGatewayTimeout),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusGatewayTimeout,
+		Status:  http.StatusText(http.StatusGatewayTimeout),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
 
 // 504 HTTP Version Not Supported
 func NewHTTPVersionNotSupported(name string, formatter string, args ...any) *Error {
 	return &Error{
-		Code:   http.StatusHTTPVersionNotSupported,
-		Status: http.StatusText(http.StatusHTTPVersionNotSupported),
-		Name:   name,
-		Msg:    fmt.Sprintf(formatter, args...),
+		Code:    http.StatusHTTPVersionNotSupported,
+		Status:  http.StatusText(http.StatusHTTPVersionNotSupported),
+		Name:    name,
+		Message: fmt.Sprintf(formatter, args...),
 	}
 }
