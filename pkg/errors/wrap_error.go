@@ -3,6 +3,9 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"strings"
+	"sync"
+	"text/template"
 
 	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
@@ -17,11 +20,34 @@ import (
 5xx: Server Error - The server failed to fulfill an apparently valid request
 */
 
+var templateCache sync.Map
+
 func (e *Error) Error() string {
 	if e == nil {
 		return ""
 	}
 	return jsoniter.Stringify(e)
+}
+
+func (e *Error) WithMessageValues(values any) *Error {
+	var (
+		tpl *template.Template
+		err error
+	)
+	value, ok := templateCache.Load(e.Message)
+	if !ok {
+		tpl, err = template.New("generator error").Parse(e.Message)
+		if err != nil {
+			return e
+		}
+		templateCache.Store(e.Message, tpl)
+	}
+	builder := &strings.Builder{}
+	if err := value.(*template.Template).Execute(builder, values); err != nil {
+		return e
+	}
+	e.Message = builder.String()
+	return e
 }
 
 func (e *Error) OK() bool {
