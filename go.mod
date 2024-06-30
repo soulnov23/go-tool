@@ -3,6 +3,7 @@ module github.com/soulnov23/go-tool
 go 1.22.1
 
 require (
+	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/json-iterator/go v1.1.12
 	github.com/lestrrat-go/strftime v1.0.6
 	go.uber.org/automaxprocs v1.5.3
