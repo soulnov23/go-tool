@@ -7,16 +7,17 @@ const templateErrors = `
 package {{.package}}
 
 import (
-    "github.com/soulnov23/go-tool/pkg/errors"
+	"github.com/soulnov23/go-tool/pkg/errors"
 )
 
 var (
 {{- range $config := .configs}}
-    {{$config.Name}} = &errors.Error{
+	{{$config.Name}} = &errors.Error{
 		Code:    {{$config.Code}},
-        Status:  "{{$config.Status}}",
+		Status:  "{{$config.Status}}",
 		Name:    "{{$config.Name}}",
 		Message: "{{$config.Message}}",
 	}
 {{- end}}
-)`
+)
+`
