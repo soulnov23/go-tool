@@ -10,14 +10,6 @@ import (
 
 //go:generate protoc --proto_path=. --go_out=paths=source_relative:. --validate_out=lang=go,paths=source_relative:. errors.proto
 
-/*
-1xx: Informational - Request received, continuing process
-2xx: Success - The action was successfully received, understood, and accepted
-3xx: Redirection - Further action must be taken in order to complete the request
-4xx: Client Error - The request contains bad syntax or cannot be fulfilled
-5xx: Server Error - The server failed to fulfill an apparently valid request
-*/
-
 var templateCache sync.Map
 
 func (e *Error) Error() string {
@@ -48,20 +40,8 @@ func (e *Error) WithMessageValues(values any) *Error {
 	return e
 }
 
-func (e *Error) OK() bool {
-	if e == nil {
-		return true
-	}
-	return e.Code < 300
-}
-
-// nil
-var New = func() *Error {
-	return &Error{}
-}
-
 func Parse(err string) *Error {
-	e := New()
+	e := &Error{}
 	if errr := jsoniter.UnmarshalFromString(err, e); errr != nil {
 		return nil
 	}

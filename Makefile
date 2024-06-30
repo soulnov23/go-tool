@@ -40,6 +40,12 @@ debug:
 release:
 	${CGO} go build ${PRINT} ${VERSION} ${RELEASE} -o ${BIN} ${SRC}
 
+errors:
+	protoc --proto_path=./pkg/errors --go_out=paths=source_relative:./pkg/errors --validate_out=lang=go,paths=source_relative:./pkg/errors errors.proto
+
+example:
+	go run ./pkg/errors/generator -source=./pkg/errors/example/common.yaml,./pkg/errors/example/errors.yaml -destination=./pkg/errors/example/errors.go -package=errors
+
 escape:
 	go build ${ESCAPE} -o temp ${SRC}
 	rm -rf temp
