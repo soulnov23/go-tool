@@ -1,0 +1,80 @@
+- code: 100
+  status: Continue
+  name: Continue
+  message: The server has received the request headers and the client should proceed to send the request body.
+- code: 200
+  status: OK
+  name: OK
+  message: Standard response for successful HTTP requests.
+- code: 201
+  status: Created
+  name: Created
+  message: The request has been fulfilled, resulting in the creation of a new resource.
+- code: 204
+  status: No Content
+  name: NoContent
+  message: The server successfully processed the request, but is not returning any content.
+- code: 300
+  status: Multiple Choices
+  name: MultipleChoices
+  message: Indicates multiple options for the resource from which the client may choose.
+- code: 301
+  status: Moved Permanently
+  name: MovedPermanently
+  message: This and all future requests should be directed to the given URI.
+- code: 302
+  status: Found
+  name: Found
+  message: Tells the client to look at (browse to) another URL.
+- code: 400
+  status: Bad Request
+  name: BadRequest
+  message: The server cannot or will not process the request due to an apparent client error.
+- code: 401
+  status: Unauthorized
+  name: Unauthorized
+  message: Similar to 403 Forbidden, but specifically for use when authentication is required and has failed or has not yet been provided.
+- code: 403
+  status: Forbidden
+  name: Forbidden
+  message: The request contained valid data and was understood by the server, but the server is refusing action.
+- code: 404
+  status: Not Found
+  name: NotFound
+  message: The requested resource could not be found but may be available in the future.
+- code: 405
+  status: Method Not Allowed
+  name: MethodNotAllowed
+  message: A request method is not supported for the requested resource.
+- code: 408
+  status: Request Timeout
+  name: RequestTimeout
+  message: The server timed out waiting for the request.
+- code: 409
+  status: Conflict
+  name: Conflict
+  message: Indicates that the request could not be processed because of conflict in the current state of the resource, such as an edit conflict between multiple simultaneous updates.
+- code: 500
+  status: Internal Server Error
+  name: InternalServerError
+  message: A generic error message, given when an unexpected condition was encountered and no more specific message is suitable.
+- code: 501
+  status: Not Implemented
+  name: NotImplemented
+  message: The server either does not recognize the request method, or it lacks the ability to fulfill the request.
+- code: 502
+  status: Bad Gateway
+  name: BadGateway
+  message: The server was acting as a gateway or proxy and received an invalid response from the upstream server.
+- code: 503
+  status: Service Unavailable
+  name: ServiceUnavailable
+  message: The server is currently unavailable (because it is overloaded or down for maintenance).
+- code: 504
+  status: Gateway Timeout
+  name: GatewayTimeout
+  message: The server was acting as a gateway or proxy and did not receive a timely response from the upstream server.
+- code: 505
+  status: HTTP Version Not Supported
+  name: HttpVersionNotSupported
+  message: The server does not support the HTTP version used in the request.

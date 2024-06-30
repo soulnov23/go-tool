@@ -1,0 +1,4 @@
+- code: 503
+  status: Service Unavailable
+  name: UnavailableDB
+  message: "db system busy: {{.}}"
