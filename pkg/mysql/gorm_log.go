@@ -2,13 +2,17 @@ package mysql
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/soulnov23/go-tool/pkg/log"
-	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+)
+
+const (
+	infoFormatter  = "[%.3fms] [rows:%v] %s"
+	warnFormatter  = "[%s] [%.3fms] [rows:%v] %s"
+	errorFormatter = "[%s] [%.3fms] [rows:%v] %s"
 )
 
 // New initialize gormLogger
@@ -57,29 +61,29 @@ func (l *gormLogger) Error(ctx context.Context, msg string, data ...interface{})
 //nolint:cyclop
 func (l *gormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
-	switch {
-	case err != nil && (!errors.Is(err, gorm.ErrRecordNotFound) || !l.IgnoreRecordNotFoundError):
-		sql, rows := fc()
+	sql, rows := fc()
+	if err != nil {
 		if rows == -1 {
-			l.Logger.Errorf("[%s] [%.3fms] [rows:%v] %s", err, float64(elapsed.Nanoseconds())/1e6, "-", sql)
+			l.Logger.Errorf(errorFormatter, err, float64(elapsed.Nanoseconds())/1e6, "-", sql)
 		} else {
-			l.Logger.Errorf("[%s] [%.3fms] [rows:%v] %s", err, float64(elapsed.Nanoseconds())/1e6, rows, sql)
+			l.Logger.Errorf(errorFormatter, err, float64(elapsed.Nanoseconds())/1e6, rows, sql)
 		}
-	case elapsed > l.SlowThreshold && l.SlowThreshold != 0:
-		sql, rows := fc()
-		slowLog := fmt.Sprintf("SLOW SQL >= %v", l.SlowThreshold)
+		return
+	}
+
+	if elapsed > l.SlowThreshold && l.SlowThreshold != 0 {
 		if rows == -1 {
-			l.Logger.Warnf("[%s] [%.3fms] [rows:%v] %s", slowLog, float64(elapsed.Nanoseconds())/1e6, "-", sql)
+			l.Logger.Warnf(warnFormatter, fmt.Sprintf("SLOW SQL >= %v", l.SlowThreshold), float64(elapsed.Nanoseconds())/1e6, "-", sql)
 		} else {
-			l.Logger.Warnf("[%s] [%.3fms] [rows:%v] %s", slowLog, float64(elapsed.Nanoseconds())/1e6, rows, sql)
+			l.Logger.Warnf(warnFormatter, fmt.Sprintf("SLOW SQL >= %v", l.SlowThreshold), float64(elapsed.Nanoseconds())/1e6, rows, sql)
 		}
-	default:
-		sql, rows := fc()
-		if rows == -1 {
-			l.Infof("[%.3fms] [rows:%v] %s", float64(elapsed.Nanoseconds())/1e6, "-", sql)
-		} else {
-			l.Infof("[%.3fms] [rows:%v] %s", float64(elapsed.Nanoseconds())/1e6, rows, sql)
-		}
+		return
+	}
+
+	if rows == -1 {
+		l.Logger.Infof(infoFormatter, float64(elapsed.Nanoseconds())/1e6, "-", sql)
+	} else {
+		l.Logger.Infof(infoFormatter, float64(elapsed.Nanoseconds())/1e6, rows, sql)
 	}
 }
 
