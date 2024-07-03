@@ -188,5 +188,11 @@
     },
     //diffEditor
     "diffEditor.ignoreTrimWhitespace": false,
-    "diffEditor.maxComputationTime": 0
+    "diffEditor.maxComputationTime": 0,
+    //gongfeng选项
+    "gongfeng.copilot.enableAutoCompletions": true,
+    "gongfeng.copilot.enableCompletionLanguage": {
+        "scminput": true,
+        "markdown": true
+    }
 }
