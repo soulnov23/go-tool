@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/soulnov23/go-tool/pkg/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-func New(ctx context.Context, dsn string, opts ...Option) (*gorm.DB, error) {
+func New(ctx context.Context, dsn string, logger log.Logger, opts ...Option) (*gorm.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("sql.Open: %v", err)
@@ -31,9 +32,10 @@ func New(ctx context.Context, dsn string, opts ...Option) (*gorm.DB, error) {
 	db.SetMaxOpenConns(defaultOpts.MaxOpenConns)
 	db.SetConnMaxLifetime(defaultOpts.ConnMaxLifetime)
 	db.SetConnMaxIdleTime(defaultOpts.ConnMaxIdleTime)
-	orm, err := gorm.Open(mysql.New(mysql.Config{
-		Conn: db,
-	}))
+
+	gormLogger := new(logger, opts...)
+
+	orm, err := gorm.Open(mysql.New(mysql.Config{Conn: db}), &gorm.Config{Logger: gormLogger})
 	if err != nil {
 		return nil, fmt.Errorf("gorm.Open: %v", err)
 	}
