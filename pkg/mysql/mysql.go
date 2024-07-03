@@ -12,11 +12,11 @@ import (
 func New(ctx context.Context, dsn string, opts ...Option) (*gorm.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sql.Open: %v", err)
 	}
 	// sql.Open无法检测连接是否有效，需要Ping一下
 	if err := db.PingContext(ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db.PingContext: %v", err)
 	}
 	defaultOpts := &Options{
 		MaxIdleConns:    0, // 不保留空闲连接
