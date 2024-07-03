@@ -54,6 +54,10 @@ func init() {
 	}
 }
 
+func GetDefaultLogger() Logger {
+	return defaultLogger
+}
+
 func With(fields ...zap.Field) Logger {
 	return defaultLogger.With(fields...)
 }
