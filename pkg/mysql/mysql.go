@@ -35,7 +35,7 @@ func New(ctx context.Context, dsn string, logger log.Logger, opts ...Option) (*g
 
 	gormLogger := new(logger, opts...)
 
-	orm, err := gorm.Open(mysql.New(mysql.Config{Conn: db}), &gorm.Config{Logger: gormLogger})
+	orm, err := gorm.Open(mysql.New(mysql.Config{Conn: db}), &gorm.Config{Logger: gormLogger, QueryFields: true})
 	if err != nil {
 		return nil, fmt.Errorf("gorm.Open: %v", err)
 	}
