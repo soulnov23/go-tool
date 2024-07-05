@@ -7,9 +7,9 @@ type Options struct {
 	MaxOpenConns              int           // 最大打开连接数
 	ConnMaxLifetime           time.Duration // 连接重用最大时间
 	ConnMaxIdleTime           time.Duration // 连接空闲最大时间
-	SlowThreshold             time.Duration
-	IgnoreRecordNotFoundError bool
-	ParameterizedQueries      bool
+	SlowThreshold             time.Duration // TraceLog打印慢查询日志时的阈值
+	IgnoreRecordNotFoundError bool          // TraceLog打印错误日志时是否忽略RecordNotFound错误
+	ParameterizedQueries      bool          // TraceLog打印日志时SQL语句是否使用?占位符代替实际的参数
 }
 
 type Option func(*Options)

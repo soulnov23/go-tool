@@ -20,9 +20,9 @@ const (
 // New initialize gormLogger
 func new(logger log.Logger, opts ...Option) logger.Interface {
 	defaultOpts := &Options{
-		SlowThreshold:             200 * time.Millisecond,
-		IgnoreRecordNotFoundError: false,
-		ParameterizedQueries:      false,
+		SlowThreshold:             200 * time.Millisecond, // TraceLog打印慢查询日志时的阈值设为200毫秒
+		IgnoreRecordNotFoundError: false,                  // TraceLog打印错误日志时RecordNotFound错误也打印
+		ParameterizedQueries:      false,                  // TraceLog打印日志时SQL语句使用实际的参数
 	}
 	for _, opt := range opts {
 		opt(defaultOpts)
