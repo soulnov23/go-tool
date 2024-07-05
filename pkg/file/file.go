@@ -2,12 +2,27 @@ package file
 
 import (
 	"bufio"
+	"io"
 	"os"
 	"slices"
 	"sync"
+
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
-func ReadAll(filepath string) ([]string, error) {
+func ReadAll(filepath string) (string, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return "", err
+	}
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+	return utils.BytesToString(data), nil
+}
+
+func ReadLines(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -16,7 +31,7 @@ func ReadAll(filepath string) ([]string, error) {
 	var lines []string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		lines = append(lines, utils.BytesToString(scanner.Bytes()))
 	}
 	return lines, scanner.Err()
 }
@@ -32,7 +47,7 @@ func Deduplicate(filepath string, sorted bool) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		if _, loaded := uniq.LoadOrStore(scanner.Text(), true); !loaded {
-			lines = append(lines, scanner.Text())
+			lines = append(lines, utils.BytesToString(scanner.Bytes()))
 		}
 	}
 	if err := scanner.Err(); err != nil {

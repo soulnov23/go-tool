@@ -8,7 +8,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.6
 	go.uber.org/automaxprocs v1.5.3
 	go.uber.org/zap v1.27.0
-	golang.org/x/sys v0.21.0
+	golang.org/x/sys v0.22.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.7
