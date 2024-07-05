@@ -35,22 +35,3 @@ func Marshal(value any) ([]byte, error) {
 func Unmarshal(data []byte, value any) error {
 	return api.Unmarshal(data, value)
 }
-
-// MarshalToString
-func MarshalToString(value any) (string, error) {
-	return api.MarshalToString(value)
-}
-
-// UnmarshalFromString
-func UnmarshalFromString(data string, value any) error {
-	return api.UnmarshalFromString(data, value)
-}
-
-// Stringify 使json struct字符串化
-func Stringify(value any) string {
-	data, err := MarshalToString(value)
-	if err != nil {
-		return ""
-	}
-	return data
-}

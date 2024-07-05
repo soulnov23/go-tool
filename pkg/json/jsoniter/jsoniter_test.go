@@ -26,20 +26,21 @@ func TestJSONRawMessage(t *testing.T) {
 		}
 	}`
 	dataValue := &Data{}
-	if err := UnmarshalFromString(data, dataValue); err != nil {
+	if err := Unmarshal([]byte(data), dataValue); err != nil {
 		t.Error(err)
 		return
 	}
-	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		_ = Unmarshal(dataValue.Factory, factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	case "b":
 		factoryValue := &FactoryB{}
 		_ = Unmarshal(dataValue.Factory, factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	default:
 		t.Error("unknown factory type")
 	}
@@ -50,20 +51,21 @@ func TestJSONRawMessage(t *testing.T) {
 			"b": "FactoryB"
 		}
 	}`
-	if err := UnmarshalFromString(data, dataValue); err != nil {
+	if err := Unmarshal([]byte(data), dataValue); err != nil {
 		t.Error(err)
 		return
 	}
-	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		_ = Unmarshal(dataValue.Factory, factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	case "b":
 		factoryValue := &FactoryB{}
 		_ = Unmarshal(dataValue.Factory, factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	default:
 		t.Error("unknown factory type")
 	}
@@ -81,20 +83,21 @@ func TestJSONAny(t *testing.T) {
 		}
 	}`
 	dataValue := &Data{}
-	if err := UnmarshalFromString(data, dataValue); err != nil {
+	if err := Unmarshal([]byte(data), dataValue); err != nil {
 		t.Error(err)
 		return
 	}
-	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		dataValue.Factory.ToVal(factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	case "b":
 		factoryValue := &FactoryB{}
 		dataValue.Factory.ToVal(factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	default:
 		t.Error("unknown factory type")
 	}
@@ -105,20 +108,21 @@ func TestJSONAny(t *testing.T) {
 			"b": "FactoryB"
 		}
 	}`
-	if err := UnmarshalFromString(data, dataValue); err != nil {
+	if err := Unmarshal([]byte(data), dataValue); err != nil {
 		t.Error(err)
 		return
 	}
-	t.Log(Stringify(dataValue))
 	switch dataValue.Type {
 	case "a":
 		factoryValue := &FactoryA{}
 		dataValue.Factory.ToVal(factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	case "b":
 		factoryValue := &FactoryB{}
 		dataValue.Factory.ToVal(factoryValue)
-		t.Log(Stringify(factoryValue))
+		value, _ := Marshal(factoryValue)
+		t.Log(string(value))
 	default:
 		t.Error("unknown factory type")
 	}

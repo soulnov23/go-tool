@@ -11,6 +11,14 @@ import (
 	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 )
 
+func Stringify(value any) string {
+	data, err := jsoniter.Marshal(value)
+	if err != nil {
+		return ""
+	}
+	return BytesToString(data)
+}
+
 func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
 	recordMap := map[string]string{}
 	fieldSlice := strings.Split(data, fieldSep)
@@ -118,7 +126,7 @@ func AnyToString(row any) string {
 	case *time.Time:
 		return strconv.FormatInt(v.UnixMilli(), 10)
 	case struct{}, *struct{}:
-		return jsoniter.Stringify(v)
+		return Stringify(v)
 	case json.Number:
 		return v.String()
 	case *json.Number:
