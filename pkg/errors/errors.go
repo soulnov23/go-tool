@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
+	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
 //go:generate protoc --proto_path=. --go_out=paths=source_relative:. --validate_out=lang=go,paths=source_relative:. errors.proto
@@ -16,7 +17,7 @@ func (e *Error) Error() string {
 	if e == nil {
 		return ""
 	}
-	return jsoniter.Stringify(e)
+	return utils.Stringify(e)
 }
 
 func (e *Error) WithMessageValues(values any) *Error {
@@ -42,7 +43,7 @@ func (e *Error) WithMessageValues(values any) *Error {
 
 func Parse(err string) *Error {
 	e := &Error{}
-	if errr := jsoniter.UnmarshalFromString(err, e); errr != nil {
+	if errr := jsoniter.Unmarshal(utils.StringToBytes(err), e); errr != nil {
 		return nil
 	}
 	return e
