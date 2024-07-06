@@ -10,6 +10,49 @@ import (
 	"gorm.io/gorm"
 )
 
+/*
+create database if not exists test_database;
+use test_database;
+drop table test_database.test_table;
+create table test_database.test_table (
+    id bigint auto_increment,
+    int_field int,
+    bigint_field bigint,
+    float_field float,
+    double_field double,
+    decimal_field decimal(16,6),
+    time_field time,
+    datetime_field datetime,
+    timestamp_field timestamp,
+    char_field char(128),
+    varchar_field varchar(128),
+    blob_field blob,
+    text_field text,
+    enum_field enum('enum1','enum2','enum3'),
+    set_field set('set1','set2','set3'),
+    primary key (id)
+) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_bin;
+delete from test_database.test_table;
+insert into test_database.test_table set
+id = 1;
+insert into test_database.test_table set
+id = 2,
+int_field = 123456789,
+bigint_field = 123456789123456789,
+float_field = 123456789.123456789,
+double_field = 123456789.123456789,
+decimal_field = 123456789.123456789,
+time_field = '12:12:12',
+datetime_field = '2020-01-01 12:12:12',
+timestamp_field = '2020-01-01 12:12:12',
+char_field = 'char',
+varchar_field = 'varchar',
+blob_field = 0x0123456789ABCDEF,
+text_field = 'text',
+enum_field = 'enum1',
+set_field = 'set1';
+*/
+
 type TestTable struct {
 	ID             int64     `gorm:"column:id" json:"id"`
 	IntField       int64     `gorm:"column:int_field" json:"int_field"`
