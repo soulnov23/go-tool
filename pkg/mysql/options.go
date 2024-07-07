@@ -10,6 +10,7 @@ type Options struct {
 	SlowThreshold             time.Duration // TraceLog打印慢查询日志时的阈值
 	IgnoreRecordNotFoundError bool          // TraceLog打印错误日志时是否忽略RecordNotFound错误
 	ParameterizedQueries      bool          // TraceLog打印日志时SQL语句是否使用?占位符代替实际的参数
+	DryRun                    bool          // 生成SQL但不执行
 }
 
 type Option func(*Options)
@@ -53,5 +54,11 @@ func WithIgnoreRecordNotFoundError(b bool) Option {
 func WithParameterizedQueries(b bool) Option {
 	return func(o *Options) {
 		o.ParameterizedQueries = b
+	}
+}
+
+func WithDryRun(b bool) Option {
+	return func(o *Options) {
+		o.DryRun = b
 	}
 }

@@ -35,7 +35,19 @@ func New(ctx context.Context, dsn string, logger log.Logger, opts ...Option) (*g
 
 	gormLogger := new(logger, opts...)
 
-	orm, err := gorm.Open(mysql.New(mysql.Config{Conn: db}), &gorm.Config{Logger: gormLogger, QueryFields: true})
+	config := &gorm.Config{
+		Logger:               gormLogger,
+		DryRun:               false, // 调试时可以打开查看生成的SQL
+		DisableAutomaticPing: true,  // Open禁用自动ping数据库
+		QueryFields:          true,  // select *使用全部字段
+	}
+	if defaultOpts.DryRun {
+		config.DryRun = defaultOpts.DryRun
+	}
+
+	// First、Last、Take等方法未找到记录时，GORM会返回gorm.ErrRecordNotFound，其它错误需要使用.(*mysql.MySQLError)转换去判断
+	// *mysql.MySQLError.Number参考https://dev.mysql.com/doc/mysql-errors/8.0/en/error-reference-introduction.html
+	orm, err := gorm.Open(mysql.New(mysql.Config{Conn: db}), config)
 	if err != nil {
 		return nil, fmt.Errorf("gorm.Open: %v", err)
 	}
