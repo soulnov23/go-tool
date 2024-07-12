@@ -31,7 +31,7 @@ func ReadLines(filepath string) ([]string, error) {
 	var lines []string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		lines = append(lines, utils.BytesToString(scanner.Bytes()))
+		lines = append(lines, scanner.Text())
 	}
 	return lines, scanner.Err()
 }
@@ -47,7 +47,7 @@ func Deduplicate(filepath string, sorted bool) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		if _, loaded := uniq.LoadOrStore(scanner.Text(), true); !loaded {
-			lines = append(lines, utils.BytesToString(scanner.Bytes()))
+			lines = append(lines, scanner.Text())
 		}
 	}
 	if err := scanner.Err(); err != nil {
