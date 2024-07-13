@@ -36,6 +36,7 @@ func ReadLines(filepath string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+// scanner每次Scan返回的buf，如果使用BytesToString引用buf的地址，当Scan超过startBufSize后，前面引用buf地址的数据就被覆盖了
 func Deduplicate(filepath string, sorted bool) error {
 	file, err := os.Open(filepath)
 	if err != nil {
