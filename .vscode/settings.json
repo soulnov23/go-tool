@@ -60,7 +60,7 @@
     "[proto3]": {
         "editor.defaultFormatter": "xaver.clang-format"
     },
-    "clang-format.language.proto.style": "{BasedOnStyle: Google,IncludeBlocks: Regroup,TabWidth: 4,IndentWidth: 4,ColumnLimit: 120}",
+    "clang-format.language.proto.style": "{BasedOnStyle: Google,IncludeBlocks: Regroup,TabWidth: 4,IndentWidth: 4,ColumnLimit: 0}",
     //workbench选项
     "workbench.colorTheme": "Default Dark+",
     "workbench.editor.enablePreview": false,
