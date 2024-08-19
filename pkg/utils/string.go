@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
+	"github.com/soulnov23/go-tool/pkg/json/pbjson"
 )
 
 func Stringify(value any) string {
-	data, err := jsoniter.Marshal(value)
+	data, err := pbjson.Marshal(value)
 	if err != nil {
 		return ""
 	}
