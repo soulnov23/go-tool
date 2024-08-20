@@ -19,7 +19,7 @@ func init() {
 		// 允许定义的Struct中有未知的字段
 		DisallowUnknownFields:         false,
 		TagKey:                        "json",
-		OnlyTaggedField:               true,
+		OnlyTaggedField:               false,
 		ValidateJsonRawMessage:        true,
 		ObjectFieldMustBeSimpleString: false,
 		CaseSensitive:                 true,
