@@ -4,6 +4,11 @@ import (
 	"testing"
 )
 
+func TestString(t *testing.T) {
+	BytesToString([]byte{})
+	StringToBytes("")
+}
+
 func TestFlatten(t *testing.T) {
 	recordMap := map[string]any{
 		"a": "a",
