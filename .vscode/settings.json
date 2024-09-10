@@ -194,5 +194,9 @@
     "gongfeng.copilot.enableCompletionLanguage": {
         "scminput": true,
         "markdown": true
+    },
+    //remote选项
+    "remote.SSH.remotePlatform": {
+        "cloud": "linux"
     }
 }
