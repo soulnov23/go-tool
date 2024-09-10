@@ -12,29 +12,29 @@ import (
 )
 
 func Stringify(value any) string {
-	data, err := pbjson.Marshal(value)
+	result, err := pbjson.Marshal(value)
 	if err != nil {
 		return ""
 	}
-	return BytesToString(data)
+	return BytesToString(result)
 }
 
 func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
-	recordMap := map[string]string{}
+	result := map[string]string{}
 	fieldSlice := strings.Split(data, fieldSep)
 	for _, kv := range fieldSlice {
 		valueSlice := strings.Split(kv, valueSep)
 		if len(valueSlice) == 2 {
-			recordMap[valueSlice[0]] = valueSlice[1]
+			result[valueSlice[0]] = valueSlice[1]
 		} else if len(valueSlice) == 1 && strings.Count(kv, valueSep) == 1 {
-			recordMap[valueSlice[0]] = ""
+			result[valueSlice[0]] = ""
 		}
 	}
-	return recordMap
+	return result
 }
 
-func MapToString(recordMap map[string]string, sorted bool) string {
-	size := len(recordMap)
+func MapToString(record map[string]string, sorted bool) string {
+	size := len(record)
 	if size == 0 {
 		return ""
 	}
@@ -42,23 +42,23 @@ func MapToString(recordMap map[string]string, sorted bool) string {
 	var builder strings.Builder
 	if sorted {
 		keys := make([]string, 0, size)
-		for key := range recordMap {
+		for key := range record {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
 		for _, key := range keys {
-			builder.WriteString(key + "=" + recordMap[key] + "&")
+			builder.WriteString(key + "=" + record[key] + "&")
 		}
 	} else {
-		for key, value := range recordMap {
+		for key, value := range record {
 			builder.WriteString(key + "=" + value + "&")
 		}
 	}
 	return builder.String()[0 : builder.Len()-1]
 }
 
-func AnyToString(row any) string {
-	switch v := row.(type) {
+func AnyToString(value any) string {
+	switch v := value.(type) {
 	case nil:
 		return ""
 	case []byte:
@@ -134,33 +134,4 @@ func AnyToString(row any) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
-}
-
-type item struct {
-	prefixKey string
-	value     map[string]any
-}
-
-func FlattenMap(recordMap map[string]any) map[string]any {
-	result := map[string]any{}
-	var stack Stack
-	stack.Push(&item{"", recordMap})
-
-	for i := stack.Pop(); i != nil; i = stack.Pop() {
-		current := i.(*item)
-		for key, value := range current.value {
-			flattenKey := key
-			if current.prefixKey != "" {
-				flattenKey = current.prefixKey + "_" + key
-			}
-			switch v := value.(type) {
-			case map[string]any:
-				stack.Push(&item{flattenKey, v})
-			default:
-				result[flattenKey] = value
-			}
-		}
-	}
-
-	return result
 }
