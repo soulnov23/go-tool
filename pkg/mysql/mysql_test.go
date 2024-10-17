@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/soulnov23/go-tool/pkg/log"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -79,6 +80,15 @@ func getDBClient() error {
 		"user:password@tcp(ip:port)/?timeout=1s&charset=utf8mb4&parseTime=true&loc=Local",
 		log.GetDefaultLogger())
 	return err
+}
+
+func TestParseDSN(t *testing.T) {
+	cfg, err := mysql.ParseDSN("user:password@tcp(ip:port)/?timeout=1s&charset=utf8mb4&parseTime=true&loc=Local")
+	if err != nil {
+		log.ErrorFields("mysql.ParseDSN failed", zap.Error(err))
+		return
+	}
+	log.InfoFields("mysql.ParseDSN success", zap.Reflect("cfg", cfg))
 }
 
 func TestCreateEmpty(t *testing.T) {
