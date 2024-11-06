@@ -15,6 +15,7 @@ func ReadAll(filepath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer file.Close()
 	data, err := io.ReadAll(file)
 	if err != nil {
 		return "", err
