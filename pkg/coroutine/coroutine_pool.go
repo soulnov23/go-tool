@@ -50,6 +50,7 @@ func (task *task) delete() {
 		task.args = nil
 		tasks.Put(task)
 		task.pool.wgTasks.Done()
+		task.pool = nil
 	}
 }
 
@@ -88,10 +89,10 @@ func (worker *worker) run() {
 
 func (worker *worker) delete() {
 	if atomic.AddInt32(&worker.referCount, -1) == 0 {
-		worker.pool = nil
 		works.Put(worker)
 		worker.pool.workerSize.Add(^uint64(0))
 		worker.pool.wgWorks.Done()
+		worker.pool = nil
 	}
 }
 
@@ -110,8 +111,8 @@ func NewPool(poolCapacity int, taskCapacity int, printf func(formatter string, a
 		workerSize: &atomic.Uint64{},
 		taskQueue:  ring.New(uint64(taskCapacity)),
 		printf:     printf,
-		wgTasks:    &sync.WaitGroup{},
 		wgWorks:    &sync.WaitGroup{},
+		wgTasks:    &sync.WaitGroup{},
 	}
 }
 
