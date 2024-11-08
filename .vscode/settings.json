@@ -138,7 +138,7 @@
     "go.testFlags": [
         "-v",
         "-count=1",
-        //"-timeout=3s"
+        "-timeout=24h"
     ],
     "gopls": {
         "formatting.gofumpt": true
