@@ -202,5 +202,9 @@
         "midas.devcloud.woa.com": "linux",
         "anydev": "linux"
     },
-    "security.promptForRemoteFileProtocolHandling": false
+    //gitlens选项
+    "gitlens.advanced.fileHistoryShowAllBranches": true,
+    "gitlens.views.scm.grouped.views": {
+        "searchAndCompare": false,
+    }
 }
