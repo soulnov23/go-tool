@@ -11,7 +11,7 @@ set -e
 
 WORKSPACE=$(pwd | awk -F'/go-tool' '{print $1}')
 
-#./deploy.sh golang 1.21.3
+#./deploy.sh golang 1.23.1
 function golang() {
     mkdir -p tmp
     cd tmp

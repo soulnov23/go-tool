@@ -1,6 +1,6 @@
 module github.com/soulnov23/go-tool
 
-go 1.22.1
+go 1.23.1
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
@@ -10,8 +10,8 @@ require (
 	github.com/panjf2000/ants/v2 v2.10.0
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sys v0.27.0
-	google.golang.org/protobuf v1.35.1
+	golang.org/x/sys v0.28.0
+	google.golang.org/protobuf v1.36.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
@@ -24,6 +24,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 )
