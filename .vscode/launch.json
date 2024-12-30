@@ -32,9 +32,6 @@
             "coreFilePath": "./build/bin/core.3274",
             // working directory of the program being debugged
             "cwd": "./build/bin",
-            "env": {
-                "GOTRACEBACK": "crash"
-            },
             "mode": "core",
             // path to the program folder 
             "program": "./build/bin/go-tool"
