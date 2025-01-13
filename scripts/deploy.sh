@@ -29,12 +29,12 @@ function golang() {
     rm -rf tmp
 }
 
-#./deploy.sh protoc 29.3
+#./deploy.sh protoc v29.3
 function protoc() {
     mkdir -p tmp
     cd tmp
-    wget https://github.com/protocolbuffers/protobuf/releases/download/v$1/protoc-$1-linux-x86_64.zip
-    unzip protoc-$1-linux-x86_64.zip
+    wget https://github.com/protocolbuffers/protobuf/releases/download/$1/protoc-${1#v}-linux-x86_64.zip
+    unzip protoc-${1#v}-linux-x86_64.zip
     for FILE in ./bin/*; do
         cp -rf ${FILE} /usr/local/bin
     done
@@ -66,6 +66,21 @@ function kubectl() {
     rm -rf tmp
 }
 
+#./deploy.sh nvm v0.40.1
+function nvm() {
+    # Download and install nvm:
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$1/install.sh | bash
+    source ~/.bashrc
+    nvm --version
+    # Download and install Node.js:
+    nvm install 23
+    # Verify the Node.js version:
+    nvm current # Should print "v23.6.0".
+    node -v     # Should print "v23.6.0".
+    # Verify npm version:
+    npm -v # Should print "10.9.2".
+}
+
 main() {
     case $1 in
     golang)
@@ -76,6 +91,9 @@ main() {
         ;;
     kubectl)
         kubectl $2
+        ;;
+    nvm)
+        nvm $2
         ;;
     *)
         echo "error:argument is invalid"
