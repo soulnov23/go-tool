@@ -29,7 +29,7 @@ function golang() {
     rm -rf tmp
 }
 
-#./deploy.sh protoc 24.4
+#./deploy.sh protoc 29.3
 function protoc() {
     mkdir -p tmp
     cd tmp
