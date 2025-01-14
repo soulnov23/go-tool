@@ -62,6 +62,6 @@ chmod:
     #(755)rwxr-xr-x
 	chmod +x ./build/bin/* ./scripts/*
 
-.PHONY: all debug escape test clean chmod
+.PHONY: all debug errors example escape test clean chmod
 
 .DEFAULT_GOAL: all
