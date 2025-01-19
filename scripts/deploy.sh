@@ -46,6 +46,7 @@ function protoc() {
     go install github.com/golang/protobuf/protoc-gen-go@latest
     go install github.com/envoyproxy/protoc-gen-validate@latest
     go install github.com/golang/mock/mockgen@latest
+    go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 }
 
 #./deploy.sh kubectl v1.18.4
