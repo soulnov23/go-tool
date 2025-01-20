@@ -32,10 +32,13 @@ VERSION := -ldflags "-X 'main.goVersion=$(shell go version)' \
 CGO := CGO_ENABLED=0
 
 all:
-	${CGO} go build ${PRINT} ${VERSION} ${RELEASE} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} ${VERSION} -o ${BIN} ${SRC}
 
 debug:
 	${CGO} go build ${PRINT} ${VERSION} ${DEBUG} -o ${BIN} ${SRC}
+
+release:
+	${CGO} go build ${PRINT} ${VERSION} ${RELEASE} -o ${BIN} ${SRC}
 
 errors:
 	protoc --proto_path ./pkg/errors --go_out paths=source_relative:./pkg/errors --validate_out lang=go,paths=source_relative:./pkg/errors errors.proto
@@ -62,6 +65,6 @@ chmod:
     #(755)rwxr-xr-x
 	chmod +x ./build/bin/* ./scripts/*
 
-.PHONY: all debug errors example escape test clean chmod
+.PHONY: all debug release errors example escape test clean chmod
 
 .DEFAULT_GOAL: all
