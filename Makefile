@@ -65,6 +65,10 @@ chmod:
     #(755)rwxr-xr-x
 	chmod +x ./build/bin/* ./scripts/*
 
-.PHONY: all debug release errors example escape test clean chmod
+docker:
+	docker build -t go-tool:latest .
+	docker run --rm -it --entrypoint /bin/bash go-tool:latest
+
+.PHONY: all debug release errors example escape test clean chmod docker
 
 .DEFAULT_GOAL: all
