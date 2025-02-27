@@ -105,7 +105,7 @@
     "files.defaultLanguage": "jsonc",
     "files.associations": {
         "*.json*": "jsonc",
-        "*.log.*": "jsonl",
+        "*.log.*": "jsonc",
         "*.tterm*": "jsonc"
     },
     //git选项
