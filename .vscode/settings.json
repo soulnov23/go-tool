@@ -196,6 +196,7 @@
         "scminput": true,
         "markdown": true
     },
+    "gongfeng.copilot.enableCodeIndexingForCompletion": true,
     //remote选项
     "remote.SSH.remotePlatform": {
         "cloud": "linux",
@@ -206,5 +207,6 @@
     "gitlens.advanced.fileHistoryShowAllBranches": true,
     "gitlens.views.scm.grouped.views": {
         "searchAndCompare": false,
-    }
+    },
+    "chat.commandCenter.enabled": false
 }
