@@ -131,6 +131,8 @@ func AnyToString(value any) string {
 		return v.String()
 	case *json.Number:
 		return v.String()
+	case *any:
+		return AnyToString(*v)
 	default:
 		return fmt.Sprintf("%v", v)
 	}
