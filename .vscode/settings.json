@@ -29,7 +29,7 @@
     "editor.detectIndentation": false,
     "editor.formatOnSave": true,
     "editor.wordSeparators": " `~!@#$%^&*()-=+[{]}\\\\|;:'\\\",.<>/?",
-    "editor.maxTokenizationLineLength": 1000000000000000000000000000000000000,
+    "editor.maxTokenizationLineLength": 1e+36,
     "editor.accessibilitySupport": "off",
     "editor.guides.bracketPairs": true,
     "editor.gotoLocation.alternativeDefinitionCommand": "editor.action.revealDefinition",
@@ -157,7 +157,7 @@
     //proto文件include目录
     "protoc": {
         "options": [
-            "--proto_path=${workspaceFolder}/protocol",
+            "--proto_path=${workspaceFolder}/protocol"
         ]
     },
     //显示子文件夹的git
