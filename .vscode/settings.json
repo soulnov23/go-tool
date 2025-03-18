@@ -208,5 +208,7 @@
     "gitlens.views.scm.grouped.views": {
         "searchAndCompare": false,
     },
-    "chat.commandCenter.enabled": false
+    "chat.commandCenter.enabled": false,
+    //cursor选项
+    "workbench.activityBar.orientation": "vertical"
 }
