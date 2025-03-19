@@ -206,7 +206,7 @@
     //gitlens选项
     "gitlens.advanced.fileHistoryShowAllBranches": true,
     "gitlens.views.scm.grouped.views": {
-        "searchAndCompare": false,
+        "searchAndCompare": false
     },
     "chat.commandCenter.enabled": false,
     //cursor选项
