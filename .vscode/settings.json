@@ -206,9 +206,12 @@
     //gitlens选项
     "gitlens.advanced.fileHistoryShowAllBranches": true,
     "gitlens.views.scm.grouped.views": {
-        "searchAndCompare": false
+        "searchAndCompare": false,
     },
     "chat.commandCenter.enabled": false,
     //cursor选项
-    "workbench.activityBar.orientation": "vertical"
+    "workbench.activityBar.orientation": "vertical",
+    "cursor.cpp.enablePartialAccepts": true,
+    "cursor.composer.collapsePaneInputBoxPills": true,
+    "cursor.diffs.useCharacterLevelDiffs": true
 }
