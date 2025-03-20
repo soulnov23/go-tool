@@ -136,7 +136,7 @@ func (queue *Queue) Dequeue() any {
 			queue.size.Add(^uint64(0)) // 相当于-1
 
 			// 释放旧head的引用，帮助GC回收
-			head.next = nil
+			atomic.StorePointer(&head.next, nil)
 			head.value = nil
 
 			return value
