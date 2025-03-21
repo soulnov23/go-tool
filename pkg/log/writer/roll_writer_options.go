@@ -16,6 +16,12 @@ type Options struct {
 
 	// TimeFormat is the time format to split log file by time.
 	TimeFormat string
+
+	// CloseFileDelay is the delay duration before closing rotated files (in milliseconds)
+	CloseFileDelay int
+
+	// CloseFileChanSize is the size of channel for delayed file closing
+	CloseFileChanSize int
 }
 
 // Option modifies the Options.
@@ -53,5 +59,19 @@ func WithCompress(b bool) Option {
 func WithRotationTime(s string) Option {
 	return func(o *Options) {
 		o.TimeFormat = s
+	}
+}
+
+// WithCloseFileDelay returns an Option which sets the delay time in milliseconds before closing rotated files.
+func WithCloseFileDelay(n int) Option {
+	return func(o *Options) {
+		o.CloseFileDelay = n
+	}
+}
+
+// WithCloseFileChanSize returns an Option which sets the size of channel for delayed file closing.
+func WithCloseFileChanSize(n int) Option {
+	return func(o *Options) {
+		o.CloseFileChanSize = n
 	}
 }

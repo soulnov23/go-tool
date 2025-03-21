@@ -8,7 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -51,10 +51,12 @@ type rollWriter struct {
 // New creates a new rollWriter.
 func New(filePath string, opt ...Option) (*rollWriter, error) {
 	opts := &Options{
-		MaxSize:    0,     // default no rolling by file size
-		MaxAge:     0,     // default no scavenging on expired logs
-		MaxBackups: 0,     // default no scavenging on redundant logs
-		Compress:   false, // default no compressing
+		MaxSize:           0,     // default no rolling by file size
+		MaxAge:            0,     // default no scavenging on expired logs
+		MaxBackups:        0,     // default no scavenging on redundant logs
+		Compress:          false, // default no compressing
+		CloseFileDelay:    20,    // default 20ms delay before closing files
+		CloseFileChanSize: 100,   // default 100 buffer size for close channel
 	}
 
 	// opt has the highest priority and should overwrite the original one.
@@ -90,25 +92,9 @@ func (w *rollWriter) Write(v []byte) (n int, err error) {
 	now := time.Now()
 	// reopen file every 10 seconds.
 	if w.getCurrFile() == nil || now.Unix()-atomic.LoadInt64(&w.openTime) > 10 {
-		w.mu.Lock()
-		if w.getCurrFile() == nil || now.Unix()-atomic.LoadInt64(&w.openTime) > 10 {
-			formatString := w.pattern.FormatString(now)
-			lastFileNum := w.getLastFileNum(filepath.Base(formatString))
-			if lastFileNum == -1 {
-				lastFileNum = 0
-			}
-			currPath := w.fileNameWithTimeAndNum(w.pattern, lastFileNum)
-			if w.currPath != currPath {
-				w.notify()
-			}
-			if w.doReopenFile(currPath) == nil {
-				w.currPath = currPath
-				w.currNum = lastFileNum
-				w.currTime = formatString
-				atomic.StoreInt64(&w.openTime, now.Unix())
-			}
+		if err := w.reopenWithCheck(now, false, int64(len(v))); err != nil {
+			return 0, err
 		}
-		w.mu.Unlock()
 	}
 
 	// return when failed to open the file.
@@ -116,24 +102,14 @@ func (w *rollWriter) Write(v []byte) (n int, err error) {
 		return 0, errors.New("get current file: open file fail")
 	}
 
-	// rolling on full
-	if w.currTime != w.pattern.FormatString(now) || (w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize)+int64(len(v)) >= w.opts.MaxSize) {
-		w.mu.Lock()
-		if w.currTime != w.pattern.FormatString(now) || (w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize)+int64(len(v)) >= w.opts.MaxSize) {
-			formatString := w.pattern.FormatString(now)
-			lastFileNum := w.getLastFileNum(filepath.Base(formatString))
-			currPath := w.fileNameWithTimeAndNum(w.pattern, lastFileNum+1)
-			if w.currPath != currPath {
-				w.notify()
-			}
-			if w.doReopenFile(currPath) == nil {
-				w.currPath = currPath
-				w.currNum = lastFileNum
-				w.currTime = formatString
-				atomic.StoreInt64(&w.openTime, now.Unix())
-			}
+	// check if we need to roll the log file due to time change or size limit
+	needRolling := w.currTime != w.pattern.FormatString(now)
+	needRolling = needRolling || (w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize)+int64(len(v)) >= w.opts.MaxSize)
+
+	if needRolling {
+		if err := w.reopenWithCheck(now, true, int64(len(v))); err != nil {
+			return 0, err
 		}
-		w.mu.Unlock()
 	}
 
 	// write logs to file.
@@ -141,6 +117,68 @@ func (w *rollWriter) Write(v []byte) (n int, err error) {
 	atomic.AddInt64(&w.currSize, int64(n))
 
 	return n, err
+}
+
+// reopenWithCheck handles reopening log file with proper locking and checks
+func (w *rollWriter) reopenWithCheck(now time.Time, isRolling bool, bytes int64) error {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	// recheck condition after acquiring the lock
+	if !isRolling && (w.getCurrFile() == nil || now.Unix()-atomic.LoadInt64(&w.openTime) > 10) {
+		formatString := w.pattern.FormatString(now)
+		lastFileNum := w.getLastFileNum(filepath.Base(formatString))
+		if lastFileNum == -1 {
+			lastFileNum = 0
+		}
+		currPath := w.fileNameWithTimeAndNum(formatString, lastFileNum)
+		if w.currPath != currPath {
+			w.notify()
+		}
+		if w.doReopenFile(currPath) == nil {
+			w.currPath = currPath
+			w.currNum = lastFileNum
+			w.currTime = formatString
+			atomic.StoreInt64(&w.openTime, now.Unix())
+		}
+		return nil
+	}
+
+	// Check if time changed
+	if isRolling && (w.currTime != w.pattern.FormatString(now)) {
+		formatString := w.pattern.FormatString(now)
+		lastFileNum := w.getLastFileNum(filepath.Base(formatString))
+		currPath := w.fileNameWithTimeAndNum(formatString, lastFileNum+1)
+		if w.currPath != currPath {
+			w.notify()
+		}
+		if w.doReopenFile(currPath) == nil {
+			w.currPath = currPath
+			w.currNum = lastFileNum
+			w.currTime = formatString
+			atomic.StoreInt64(&w.openTime, now.Unix())
+		}
+		return nil
+	}
+
+	// Check for size-based rolling
+	if isRolling && w.opts.MaxSize > 0 && atomic.LoadInt64(&w.currSize)+bytes >= w.opts.MaxSize {
+		formatString := w.pattern.FormatString(now)
+		lastFileNum := w.getLastFileNum(filepath.Base(formatString))
+		currPath := w.fileNameWithTimeAndNum(formatString, lastFileNum+1)
+		if w.currPath != currPath {
+			w.notify()
+		}
+		if w.doReopenFile(currPath) == nil {
+			w.currPath = currPath
+			w.currNum = lastFileNum
+			w.currTime = formatString
+			atomic.StoreInt64(&w.openTime, now.Unix())
+		}
+		return nil
+	}
+
+	return nil
 }
 
 // Close closes the current log file. It implements io.Closer.
@@ -220,17 +258,24 @@ func (w *rollWriter) runCleanFiles() {
 // delayCloseFile delay closing file
 func (w *rollWriter) delayCloseFile(file *os.File) {
 	w.closeOnce.Do(func() {
-		w.closeCh = make(chan *os.File, 100)
+		w.closeCh = make(chan *os.File, w.opts.CloseFileChanSize)
 		go w.runCloseFiles()
 	})
-	w.closeCh <- file
+	select {
+	case w.closeCh <- file:
+		// File added to close channel
+	default:
+		// Channel is full, close immediately
+		file.Close()
+	}
 }
 
 // runCloseFiles delay closing file in a new goroutine.
 func (w *rollWriter) runCloseFiles() {
 	for f := range w.closeCh {
-		// delay 20ms
-		time.Sleep(20 * time.Millisecond)
+		if w.opts.CloseFileDelay > 0 {
+			time.Sleep(time.Duration(w.opts.CloseFileDelay) * time.Millisecond)
+		}
 		f.Close()
 	}
 }
@@ -262,22 +307,24 @@ func (w *rollWriter) cleanFiles() {
 
 // getLastFileNum returns the log file list ordered by modified time.
 func (w *rollWriter) getLastFileNum(fileName string) int {
-	var files []string
 	number := -1
 	fileInfo, err := os.ReadDir(w.currDir)
 	if err != nil {
 		return number
 	}
+
+	pattern := "^" + regexp.QuoteMeta(fileName) + "\\.(\\d+)$"
+	re := regexp.MustCompile(pattern)
+
 	for _, file := range fileInfo {
-		if strings.HasPrefix(file.Name(), fileName) {
-			files = append(files, file.Name())
+		if file.IsDir() {
+			continue
 		}
-	}
-	for _, file := range files {
-		ext := filepath.Ext(file)
-		if len(ext) > 0 {
-			extNum, err := strconv.Atoi(strings.TrimLeft(ext, "."))
-			if err == nil && extNum > number {
+
+		matches := re.FindStringSubmatch(file.Name())
+		if len(matches) == 2 {
+			// Extract the number from the matched group
+			if extNum, err := strconv.Atoi(matches[1]); err == nil && extNum > number {
 				number = extNum
 			}
 		}
@@ -285,27 +332,45 @@ func (w *rollWriter) getLastFileNum(fileName string) int {
 	return number
 }
 
-func (w *rollWriter) fileNameWithTimeAndNum(pattern *strftime.Strftime, fileNum int) string {
-	return fmt.Sprintf("%s.%d", pattern.FormatString(time.Now()), fileNum)
+// fileNameWithTimeAndNum generates a filename with the time and sequence number
+func (w *rollWriter) fileNameWithTimeAndNum(formatTimeStr string, fileNum int) string {
+	return fmt.Sprintf("%s.%d", formatTimeStr, fileNum)
 }
 
 // getOldLogFiles returns the log file list ordered by modified time.
 func (w *rollWriter) getOldLogFiles() ([]logInfo, error) {
 	files, err := os.ReadDir(w.currDir)
 	if err != nil {
-		return nil, errors.New("can't read log file " + w.currDir + " directory: " + err.Error())
+		return nil, fmt.Errorf("can't read log file directory %s: %w", w.currDir, err)
 	}
-	logFiles := []logInfo{}
+
+	// Pre-allocate reasonable size to avoid reallocations
+	logFiles := make([]logInfo, 0, len(files)/2)
 	filename := filepath.Base(w.filePath)
+	currPathBase := filepath.Base(w.currPath)
+
 	for _, f := range files {
 		if f.IsDir() {
 			continue
 		}
 
-		if modTime, err := w.matchLogFile(f.Name(), filename); err == nil {
-			logFiles = append(logFiles, logInfo{modTime, f})
+		fname := f.Name()
+
+		// Quick check to avoid expensive operations
+		if !strings.HasPrefix(fname, filename) {
+			continue
+		}
+
+		// Skip current log file
+		if fname == currPathBase {
+			continue
+		}
+
+		if st, err := os.Stat(filepath.Join(w.currDir, fname)); err == nil {
+			logFiles = append(logFiles, logInfo{st.ModTime(), f})
 		}
 	}
+
 	sort.Sort(byFormatTime(logFiles))
 	return logFiles, nil
 }
@@ -317,7 +382,6 @@ func (w *rollWriter) matchLogFile(filename, filePrefix string) (time.Time, error
 	// a.log
 	// a.log.20200712
 	if filepath.Base(w.currPath) == filename {
-		runtime.Caller(0)
 		return time.Time{}, errors.New("ignore current logfile")
 	}
 
@@ -405,29 +469,37 @@ func filterByCompressExt(files []logInfo, compress *[]logInfo, needCompress bool
 func compressFile(src, dst string) (err error) {
 	f, err := os.Open(src)
 	if err != nil {
-		return errors.New("failed to open file " + src + ": " + err.Error())
+		return fmt.Errorf("failed to open file %s: %w", src, err)
 	}
 	defer f.Close()
 
 	gzf, err := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o666)
 	if err != nil {
-		return errors.New("failed to open compressed file " + dst + ": " + err.Error())
+		return fmt.Errorf("failed to open compressed file %s: %w", dst, err)
 	}
-	defer gzf.Close()
+	defer func() {
+		gzErr := gzf.Close()
+		if err == nil && gzErr != nil {
+			err = fmt.Errorf("failed to close compressed file %s: %w", dst, gzErr)
+		}
+	}()
 
 	gz := gzip.NewWriter(gzf)
 	defer func() {
-		gz.Close()
-		if err != nil {
+		closeErr := gz.Close()
+		if err == nil && closeErr != nil {
+			err = fmt.Errorf("failed to close gzip writer: %w", closeErr)
 			os.Remove(dst)
-			err = errors.New("failed to compress file: " + err.Error())
+		} else if err != nil {
+			os.Remove(dst)
+			err = fmt.Errorf("failed to compress file: %w", err)
 		} else {
 			os.Remove(src)
 		}
 	}()
 
 	if _, err := io.Copy(gz, f); err != nil {
-		return err
+		return fmt.Errorf("failed to write compressed data: %w", err)
 	}
 	return nil
 }
