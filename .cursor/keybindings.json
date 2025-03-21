@@ -1,0 +1,102 @@
+// 将键绑定放在此文件中以覆盖默认值auto[]
+[
+    {
+        "key": "f1",
+        "command": "revealFileInOS"
+    },
+    {
+        "key": "f3",
+        "command": "editor.action.previousMatchFindAction",
+        "when": "editorFocus"
+    },
+    {
+        "key": "f3",
+        "command": "editor.action.previousSelectionMatchFindAction",
+        "when": "editorFocus"
+    },
+    {
+        "key": "f3",
+        "command": "workbench.action.terminal.findPrevious",
+        "when": "terminalFindWidgetFocused"
+    },
+    {
+        "key": "f4",
+        "command": "editor.action.nextMatchFindAction",
+        "when": "editorFocus"
+    },
+    {
+        "key": "f4",
+        "command": "editor.action.nextSelectionMatchFindAction",
+        "when": "editorFocus"
+    },
+    {
+        "key": "f4",
+        "command": "workbench.action.terminal.findNext",
+        "when": "terminalFindWidgetFocused"
+    },
+    {
+        "key": "ctrl+f4",
+        "command": "workbench.action.closeOtherEditors"
+    },
+    {
+        "key": "cmd+f4",
+        "command": "workbench.action.closeOtherEditors"
+    },
+    {
+        "key": "f6",
+        "command": "workbench.action.debug.stepOver",
+        "when": "debugState == 'stopped'"
+    },
+    {
+        "key": "f7",
+        "command": "workbench.action.debug.stepInto"
+    },
+    {
+        "key": "f8",
+        "command": "workbench.action.debug.stepOut"
+    },
+    {
+        "key": "f9",
+        "command": "workbench.action.tasks.build"
+    },
+    {
+        "key": "f10",
+        "command": "workbench.files.action.showActiveFileInExplorer"
+    },
+    {
+        "key": "f11",
+        "command": "editor.action.goToReferences"
+    },
+    {
+        "key": "ctrl+f11",
+        "command": "references-view.findReferences"
+    },
+    {
+        "key": "cmd+f11",
+        "command": "references-view.findReferences"
+    },
+    {
+        "key": "f12",
+        "command": "editor.action.goToImplementation"
+    },
+    {
+        "key": "ctrl+f12",
+        "command": "references-view.findImplementations"
+    },
+    {
+        "key": "cmd+f12",
+        "command": "references-view.findImplementations"
+    },
+    {
+        "key": "ctrl+oem_2",
+        "command": "editor.action.commentLine"
+    },
+    {
+        "key": "cmd+oem_2",
+        "command": "editor.action.commentLine"
+    },
+    {
+        "key": "alt+p",
+        "command": "workbench.action.showCommands"
+    }
+]
