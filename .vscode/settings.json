@@ -213,5 +213,7 @@
     "workbench.activityBar.orientation": "vertical",
     "cursor.cpp.enablePartialAccepts": true,
     "cursor.composer.collapsePaneInputBoxPills": true,
-    "cursor.diffs.useCharacterLevelDiffs": true
+    "cursor.diffs.useCharacterLevelDiffs": true,
+    "cursor.terminal.usePreviewBox": true,
+    "cursor.cpp.disabledLanguages": []
 }
