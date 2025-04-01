@@ -54,6 +54,9 @@
         "editor.defaultFormatter": "redhat.vscode-yaml",
         "editor.tabSize": 4
     },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
     "[shellscript]": {
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
