@@ -164,7 +164,7 @@ func (buffer *Buffer) Read(size int) ([]byte, error) {
 		ack += offset
 	}
 	buffer.readNode = node
-	buffer.size.Add(uint64(ack - 1))
+	buffer.size.Add(^uint64(ack - 1))
 	return buf[:ack], nil
 }
 
@@ -173,15 +173,32 @@ func (buffer *Buffer) GC() {
 	defer buffer.readLock.Unlock()
 	buffer.writeLock.Lock()
 	defer buffer.writeLock.Unlock()
-	if buffer.Size() > 0 {
+
+	// 如果缓冲区为空，释放所有节点
+	if buffer.Size() == 0 {
+		for node := buffer.head; node != nil; {
+			next := node.next
+			node.delete()
+			node = next
+		}
+		buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 		return
 	}
-	for node := buffer.head; node != nil; {
-		next := node.next
-		node.delete()
-		node = next
+
+	// 如果有未读的数据，尝试回收已读完的节点
+	if buffer.head != buffer.readNode && buffer.head != nil {
+		// 回收head到readNode之间已经读完的节点
+		for node := buffer.head; node != nil && node != buffer.readNode; {
+			if node.size() > 0 {
+				// 跳过还有未读数据的节点
+				break
+			}
+			next := node.next
+			node.delete()
+			node = next
+			buffer.head = node
+		}
 	}
-	buffer.head, buffer.readNode, buffer.writeNode = nil, nil, nil
 }
 
 func (buffer *Buffer) Write(buf []byte) {
