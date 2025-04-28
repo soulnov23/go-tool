@@ -4,9 +4,7 @@ package ring
 
 import (
 	"errors"
-	"runtime"
 	"sync/atomic"
-	"time"
 	"unsafe"
 
 	"golang.org/x/sys/cpu"
@@ -18,15 +16,11 @@ var (
 	ErrQueueFull = errors.New("queue is full")
 	// ErrQueueEmpty 队列为空错误
 	ErrQueueEmpty = errors.New("queue is empty")
-	// ErrTimeout 操作超时错误
-	ErrTimeout = errors.New("operation timeout")
 )
 
 const (
 	// 缓存行大小
 	cacheLinePadSize = unsafe.Sizeof(cpu.CacheLinePad{})
-	// 最大退避次数
-	maxBackoff = 5
 	// 最小容量
 	minCapacity = 2
 )
@@ -119,7 +113,6 @@ func roundUpToPower2(v uint64) uint64 {
 
 // Enqueue 将元素添加到队列尾部
 func (queue *Queue) Enqueue(value any) error {
-	var backoff uint = 0
 	for {
 		if queue.IsFull() {
 			return ErrQueueFull
@@ -128,13 +121,6 @@ func (queue *Queue) Enqueue(value any) error {
 		// 抢占pos
 		tail := queue.tail.Load()
 		if !queue.tail.CompareAndSwap(tail, tail+1) {
-			// 使用指数退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
 			continue
 		}
 
@@ -142,7 +128,6 @@ func (queue *Queue) Enqueue(value any) error {
 		queue.size.Add(1)
 		node := queue.nodes[tail&queue.mask]
 
-		backoff = 0 // 重置退避计数
 		for {
 			// 当Dequeue更新ring.head后，还没有更新node.deSeq，这里需要判断是否已经被读取，避免被覆盖
 			// 通过比较序列号确保节点状态一致性，防止ABA问题
@@ -153,115 +138,13 @@ func (queue *Queue) Enqueue(value any) error {
 				node.enSeq.Add(queue.capacity)
 				return nil
 			}
-
-			// 增加退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
+			// 入列失败继续try
 		}
 	}
-}
-
-// EnqueueTimeout 添加元素到队列尾部，支持超时
-func (queue *Queue) EnqueueTimeout(value any, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	var backoff uint = 0
-
-	for {
-		if time.Now().After(deadline) {
-			return ErrTimeout
-		}
-
-		if queue.IsFull() {
-			if timeout == 0 {
-				return ErrQueueFull
-			}
-
-			// 简单退避后继续尝试
-			runtime.Gosched()
-			continue
-		}
-
-		// 抢占pos
-		tail := queue.tail.Load()
-		if !queue.tail.CompareAndSwap(tail, tail+1) {
-			// 使用指数退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
-			continue
-		}
-
-		// 抢到位置后，就没有数据竞争了
-		queue.size.Add(1)
-		node := queue.nodes[tail&queue.mask]
-
-		backoff = 0 // 重置退避计数
-		for {
-			if time.Now().After(deadline) {
-				// 超时但已经获取到位置，需要放弃这个位置
-				node.deSeq.Add(queue.capacity) // 标记为已读取
-				queue.size.Add(^uint64(0))     // 减少size
-				return ErrTimeout
-			}
-
-			// 当Dequeue更新ring.head后，还没有更新node.deSeq，这里需要判断是否已经被读取，避免被覆盖
-			if node.enSeq.Load() == node.deSeq.Load() {
-				node.value = value
-				node.enSeq.Add(queue.capacity)
-				return nil
-			}
-
-			// 增加退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
-		}
-	}
-}
-
-// TryEnqueue 尝试入队，不阻塞，立即返回成功或失败
-func (queue *Queue) TryEnqueue(value any) bool {
-	if queue.IsFull() {
-		return false
-	}
-
-	// 尝试抢占pos
-	tail := queue.tail.Load()
-	if !queue.tail.CompareAndSwap(tail, tail+1) {
-		return false
-	}
-
-	// 抢到位置后
-	queue.size.Add(1)
-	node := queue.nodes[tail&queue.mask]
-
-	// 检查节点是否可写
-	if node.enSeq.Load() != node.deSeq.Load() {
-		// 标记节点为可用，不修改值
-		node.deSeq.Add(queue.capacity)
-		queue.size.Add(^uint64(0))
-		return false
-	}
-
-	// 写入值
-	node.value = value
-	node.enSeq.Add(queue.capacity)
-	return true
 }
 
 // Dequeue 从队列头部取出元素
 func (queue *Queue) Dequeue() (any, error) {
-	var backoff uint = 0
 	for {
 		if queue.IsEmpty() {
 			return nil, ErrQueueEmpty
@@ -270,13 +153,6 @@ func (queue *Queue) Dequeue() (any, error) {
 		// 抢占pos
 		head := queue.head.Load()
 		if !queue.head.CompareAndSwap(head, head+1) {
-			// 使用指数退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
 			continue
 		}
 
@@ -284,7 +160,6 @@ func (queue *Queue) Dequeue() (any, error) {
 		queue.size.Add(^uint64(0))
 		node := queue.nodes[head&queue.mask]
 
-		backoff = 0 // 重置退避计数
 		for {
 			// 当Enqueue更新ring.tail后，还没有更新node.enSeq，这里需要判断是否已经被写入，避免取旧值
 			// 通过序列号检查确保节点已被写入且未被读取
@@ -298,114 +173,9 @@ func (queue *Queue) Dequeue() (any, error) {
 				node.value = nil
 				return value, nil
 			}
-
-			// 增加退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
+			// 出列失败继续try
 		}
 	}
-}
-
-// DequeueTimeout 从队列头部取出元素，支持超时
-func (queue *Queue) DequeueTimeout(timeout time.Duration) (any, error) {
-	deadline := time.Now().Add(timeout)
-	var backoff uint = 0
-
-	for {
-		if time.Now().After(deadline) {
-			return nil, ErrTimeout
-		}
-
-		if queue.IsEmpty() {
-			if timeout == 0 {
-				return nil, ErrQueueEmpty
-			}
-
-			// 简单退避后继续尝试
-			runtime.Gosched()
-			continue
-		}
-
-		// 抢占pos
-		head := queue.head.Load()
-		if !queue.head.CompareAndSwap(head, head+1) {
-			// 使用指数退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
-			continue
-		}
-
-		// 抢到位置后，就没有数据竞争了
-		queue.size.Add(^uint64(0))
-		node := queue.nodes[head&queue.mask]
-
-		backoff = 0 // 重置退避计数
-		for {
-			if time.Now().After(deadline) {
-				// 超时但已经获取到位置，需要放弃这个位置
-				node.enSeq.Add(queue.capacity) // 标记为已写入
-				queue.size.Add(1)              // 恢复size
-				return nil, ErrTimeout
-			}
-
-			// 当Enqueue更新ring.tail后，还没有更新node.enSeq，这里需要判断是否已经被写入，避免取旧值
-			if node.enSeq.Load() == node.deSeq.Load()+queue.capacity {
-				value := node.value
-				node.deSeq.Add(queue.capacity)
-				// 清除引用帮助GC
-				node.value = nil
-				return value, nil
-			}
-
-			// 增加退避策略
-			if backoff < maxBackoff {
-				backoff++
-			}
-			for i := uint(0); i < (1 << backoff); i++ {
-				runtime.Gosched()
-			}
-		}
-	}
-}
-
-// TryDequeue 尝试出队，不阻塞，立即返回成功或失败
-func (queue *Queue) TryDequeue() (any, bool) {
-	if queue.IsEmpty() {
-		return nil, false
-	}
-
-	// 尝试抢占pos
-	head := queue.head.Load()
-	if !queue.head.CompareAndSwap(head, head+1) {
-		return nil, false
-	}
-
-	// 抢到位置后
-	queue.size.Add(^uint64(0))
-	node := queue.nodes[head&queue.mask]
-
-	// 检查节点是否可读
-	if node.enSeq.Load() != node.deSeq.Load()+queue.capacity {
-		// 标记节点为可用，不取值
-		node.enSeq.Add(queue.capacity)
-		queue.size.Add(1)
-		return nil, false
-	}
-
-	// 读取值
-	value := node.value
-	node.deSeq.Add(queue.capacity)
-	// 清除引用帮助GC
-	node.value = nil
-	return value, true
 }
 
 // Size 返回队列当前大小
