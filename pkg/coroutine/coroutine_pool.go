@@ -39,7 +39,8 @@ func newTask(pool *Pool, fn func(...any), args ...any) *task {
 	task := tasks.Get().(*task)
 	task.pool = pool
 	task.fn = fn
-	task.args = append(task.args, args...)
+	task.args = args
+	atomic.StoreInt32(&task.referCount, 1)
 	task.pool.wgTasks.Add(1)
 	return task
 }
@@ -48,9 +49,9 @@ func (task *task) delete() {
 	if atomic.AddInt32(&task.referCount, -1) == 0 {
 		task.fn = nil
 		task.args = nil
-		tasks.Put(task)
 		task.pool.wgTasks.Done()
 		task.pool = nil
+		tasks.Put(task)
 	}
 }
 
@@ -64,6 +65,7 @@ func newWork(pool *Pool) *worker {
 	worker.pool = pool
 	worker.pool.workerSize.Add(1)
 	worker.pool.wgWorks.Add(1)
+	atomic.StoreInt32(&worker.referCount, 1)
 	return worker
 }
 
@@ -94,10 +96,10 @@ func (worker *worker) run() {
 
 func (worker *worker) delete() {
 	if atomic.AddInt32(&worker.referCount, -1) == 0 {
-		works.Put(worker)
 		worker.pool.workerSize.Add(^uint64(0))
 		worker.pool.wgWorks.Done()
 		worker.pool = nil
+		works.Put(worker)
 	}
 }
 
