@@ -2,7 +2,6 @@
 package linkedlist
 
 import (
-	"runtime"
 	"sync/atomic"
 	"unsafe"
 )
@@ -81,7 +80,6 @@ func (queue *Queue) Enqueue(value any) {
 			return
 		}
 		// 入列失败继续try
-		runtime.Gosched()
 	}
 }
 
@@ -128,7 +126,6 @@ func (queue *Queue) Dequeue() any {
 			return value
 		}
 		// 出列失败继续try
-		runtime.Gosched()
 	}
 }
 
