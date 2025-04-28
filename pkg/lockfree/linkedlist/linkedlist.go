@@ -53,7 +53,6 @@ func (queue *Queue) Enqueue(value any) {
 		next:  nil,
 	}
 	var tail, tailNext *node
-	backoff := uint(0) // 添加退避策略
 	for {
 		// 执行cas前先把上一刻的tail和tail.next保存
 		tail = load(&queue.tail)
@@ -65,14 +64,12 @@ func (queue *Queue) Enqueue(value any) {
 
 		// 如果tail已经被其它线程移动了，重新开始
 		if tail != load(&queue.tail) {
-			backoff = 0 // 重置退避
 			continue
 		}
 
 		// 如果tail.next不为nil，往下遍历到尾位置
 		if tailNext != nil {
 			cas(&queue.tail, tail, tailNext)
-			backoff = 0 // 重置退避
 			continue
 		}
 
@@ -83,21 +80,14 @@ func (queue *Queue) Enqueue(value any) {
 			queue.size.Add(1)
 			return
 		}
-
-		// 入列失败实现指数退避策略
-		if backoff < 5 {
-			backoff++
-		}
-		for i := uint(0); i < (1 << backoff); i++ {
-			runtime.Gosched()
-		}
+		// 入列失败继续try
+		runtime.Gosched()
 	}
 }
 
 // Dequeue 出队列头
 func (queue *Queue) Dequeue() any {
 	var head, tail, headNext *node
-	backoff := uint(0) // 添加退避策略
 	for {
 		// 执行cas前先把上一刻的head，tail和head.next保存
 		head = load(&queue.head)
@@ -110,7 +100,6 @@ func (queue *Queue) Dequeue() any {
 
 		// 如果head已经被其它线程移动了，重新开始
 		if head != load(&queue.head) {
-			backoff = 0 // 重置退避
 			continue
 		}
 
@@ -124,7 +113,6 @@ func (queue *Queue) Dequeue() any {
 		if head == tail && headNext != nil {
 			// 尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
 			cas(&queue.tail, tail, headNext)
-			backoff = 0 // 重置退避
 			continue
 		}
 
@@ -134,21 +122,13 @@ func (queue *Queue) Dequeue() any {
 		if cas(&queue.head, head, headNext) {
 			// 使用-1代替^uint64(0)提高可读性
 			queue.size.Add(^uint64(0)) // 相当于-1
-
 			// 释放旧head的引用，帮助GC回收
 			atomic.StorePointer(&head.next, nil)
 			head.value = nil
-
 			return value
 		}
-
-		// 出列失败实现指数退避策略
-		if backoff < 5 {
-			backoff++
-		}
-		for i := uint(0); i < (1 << backoff); i++ {
-			runtime.Gosched()
-		}
+		// 出列失败继续try
+		runtime.Gosched()
 	}
 }
 
