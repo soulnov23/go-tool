@@ -23,10 +23,10 @@ func TestStack(t *testing.T) {
 func TestPool(t *testing.T) {
 	pool := NewPool(6400, 1024*1024, t.Errorf)
 	for i := 0; i < 10000000; i++ {
-		fn := func(args ...any) {
+		fn := func() {
 			t.Logf("runtime.NumGoroutine: %d", runtime.NumGoroutine())
 		}
-		pool.Run(fn, i)
+		pool.Run(fn)
 	}
 	pool.Wait()
 }
