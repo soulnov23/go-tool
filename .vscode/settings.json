@@ -166,12 +166,6 @@
     "window.title": "${dirty}${separator}${rootName}",
     "window.titleBarStyle": "custom",
     "window.commandCenter": false,
-    //excalidraw导出图片质量
-    "excalidraw.image": {
-        "exportScale": 3,
-        "exportWithBackground": true,
-        "exportWithDarkMode": false
-    },
     //plantuml渲染服务器
     "plantuml.server": "http://9.134.3.96:38080",
     "plantuml.render": "PlantUMLServer",
@@ -196,13 +190,27 @@
         "scminput": true,
         "markdown": true
     },
-    "gongfeng.copilot.enableCodeIndexingForCompletion": true,
-    "gongfeng.copilot.enableNextEditSuggestionsUI": true,
     "gongfeng.copilot.enableCodelensForFunctions": true,
+    "gongfeng.copilot.enableNextEditSuggestionsUI": true,
+    "gongfeng.copilot.featureConfig": {
+        "terminal": {
+            "autorun": true,
+            "whiteList": [],
+            "blackList": [
+                "rm"
+            ]
+        },
+        "chat": {
+            "autofix": true,
+            "autoweb": true
+        }
+    },
+    "gongfeng.copilot.mcpConfig": {
+        "autorun": true
+    },
     //remote选项
     "remote.SSH.remotePlatform": {
         "cloud": "linux",
-        "midas.devcloud.woa.com": "linux",
         "anydev": "linux"
     },
     //gitlens选项
