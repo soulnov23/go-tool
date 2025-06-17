@@ -224,5 +224,7 @@
     "cursor.composer.collapsePaneInputBoxPills": true,
     "cursor.diffs.useCharacterLevelDiffs": true,
     "cursor.terminal.usePreviewBox": true,
-    "cursor.cpp.disabledLanguages": []
+    "cursor.cpp.disabledLanguages": [],
+    //隐藏GitHub Copilot
+    "chat.commandCenter.enabled": false
 }
