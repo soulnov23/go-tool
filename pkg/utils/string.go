@@ -11,6 +11,14 @@ import (
 	"github.com/soulnov23/go-tool/pkg/json/pbjson"
 )
 
+func Bytesify(value any) []byte {
+	result, err := pbjson.Marshal(value)
+	if err != nil {
+		return nil
+	}
+	return result
+}
+
 func Stringify(value any) string {
 	result, err := pbjson.Marshal(value)
 	if err != nil {
