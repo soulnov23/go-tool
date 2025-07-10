@@ -136,7 +136,21 @@
         "command": "editor.action.commentLine"
     },
     {
+        "key": "ctrl+p",
+        "command": "workbench.action.quickOpen"
+    },
+    {
         "key": "alt+p",
         "command": "workbench.action.showCommands"
+    },
+    {
+        "key": "alt+left",
+        "command": "workbench.action.navigateBack",
+        "when": "canNavigateBack"
+    },
+    {
+        "key": "alt+right",
+        "command": "workbench.action.navigateForward",
+        "when": "canNavigateForward"
     }
 ]
