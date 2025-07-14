@@ -12,18 +12,12 @@ import (
 )
 
 func Bytesify(value any) []byte {
-	result, err := pbjson.Marshal(value)
-	if err != nil {
-		return nil
-	}
+	result, _ := pbjson.Marshal(value)
 	return result
 }
 
 func Stringify(value any) string {
-	result, err := pbjson.Marshal(value)
-	if err != nil {
-		return ""
-	}
+	result, _ := pbjson.Marshal(value)
 	return BytesToString(result)
 }
 
