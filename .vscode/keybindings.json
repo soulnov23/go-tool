@@ -44,10 +44,6 @@
         "command": "workbench.action.closeOtherEditors"
     },
     {
-        "key": "cmd+f4",
-        "command": "workbench.action.closeOtherEditors"
-    },
-    {
         "key": "f5",
         "command": "workbench.action.debug.continue",
         "when": "debugState == 'stopped'"
@@ -63,22 +59,12 @@
         "when": "debuggersAvailable && debugState != 'initializing'"
     },
     {
-        "key": "cmd+f5",
-        "command": "workbench.action.debug.run",
-        "when": "debuggersAvailable && debugState != 'initializing'"
-    },
-    {
         "key": "shift+f5",
         "command": "workbench.action.debug.stop",
         "when": "inDebugMode && !focusedSessionIsAttach"
     },
     {
         "key": "ctrl+shift+f5",
-        "command": "workbench.action.debug.restart",
-        "when": "inDebugMode"
-    },
-    {
-        "key": "cmd+shift+f5",
         "command": "workbench.action.debug.restart",
         "when": "inDebugMode"
     },
@@ -112,10 +98,6 @@
         "command": "references-view.findReferences"
     },
     {
-        "key": "cmd+f11",
-        "command": "references-view.findReferences"
-    },
-    {
         "key": "f12",
         "command": "editor.action.goToImplementation"
     },
@@ -124,15 +106,7 @@
         "command": "references-view.findImplementations"
     },
     {
-        "key": "cmd+f12",
-        "command": "references-view.findImplementations"
-    },
-    {
         "key": "ctrl+oem_2",
-        "command": "editor.action.commentLine"
-    },
-    {
-        "key": "cmd+oem_2",
         "command": "editor.action.commentLine"
     },
     {
@@ -152,5 +126,23 @@
         "key": "alt+right",
         "command": "workbench.action.navigateForward",
         "when": "canNavigateForward"
+    },
+    {
+        "key": "ctrl+f",
+        "command": "actions.find",
+        "when": "editorFocus || editorIsOpen"
+    },
+    {
+        "key": "ctrl+shift+f",
+        "command": "workbench.action.findInFiles"
+    },
+    {
+        "key": "ctrl+h",
+        "command": "editor.action.startFindReplaceAction",
+        "when": "editorFocus || editorIsOpen"
+    },
+    {
+        "key": "ctrl+shift+h",
+        "command": "workbench.action.replaceInFiles"
     }
 ]
