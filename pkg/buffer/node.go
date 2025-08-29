@@ -11,9 +11,7 @@ var nodes sync.Pool
 
 func init() {
 	nodes.New = func() any {
-		return &node{
-			referCount: 1,
-		}
+		return &node{}
 	}
 }
 
@@ -21,13 +19,14 @@ type node struct {
 	block       []byte
 	readOffset  int
 	writeOffset int
-	referCount  int32
+	referCount  atomic.Int32
 	next        *node
 }
 
 func new(blockSize int) *node {
 	node := nodes.Get().(*node)
 	node.block = cache.New(blockSize)
+	node.referCount.Store(1)
 	return node
 }
 
@@ -50,7 +49,7 @@ func (node *node) read(size int) []byte {
 }
 
 func (node *node) delete() {
-	if atomic.AddInt32(&node.referCount, -1) == 0 {
+	if node.referCount.CompareAndSwap(1, 0) {
 		cache.Delete(node.block)
 		node.block, node.readOffset, node.writeOffset, node.next = nil, 0, 0, nil
 		nodes.Put(node)
