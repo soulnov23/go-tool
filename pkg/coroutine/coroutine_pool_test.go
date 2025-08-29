@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"testing"
+	"time"
 
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
@@ -21,12 +22,13 @@ func TestStack(t *testing.T) {
 }
 
 func TestPool(t *testing.T) {
-	pool := NewPool(6400, 1024*1024, t.Errorf)
-	for i := 0; i < 10000000; i++ {
-		fn := func() {
-			t.Logf("runtime.NumGoroutine: %d", runtime.NumGoroutine())
+	pool := NewPool(100, t.Errorf)
+	for i := 0; i < 1000000; i++ {
+		fn := func(args ...any) {
+			t.Logf("%s: %d", time.Now().Format(time.DateTime+".000"), runtime.NumGoroutine())
 		}
-		pool.Run(fn)
+		pool.Run(fn, i)
 	}
 	pool.Wait()
+	pool.Close()
 }
