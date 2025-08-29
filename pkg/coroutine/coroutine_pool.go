@@ -45,9 +45,7 @@ func (pool *Pool) Run(fn func(...any), args ...any) {
 		}
 		if pool.length.CompareAndSwap(length, length+1) {
 			go func() {
-				defer func() {
-					pool.length.Add(^uint64(0))
-				}()
+				defer pool.length.Add(^uint64(0))
 				for task := range pool.taskChan {
 					func() {
 						defer func() {
