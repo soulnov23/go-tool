@@ -27,14 +27,6 @@ type WriteConfig struct {
 	FileName string `yaml:"file_name"`
 	// TimeFormat is the time format to split log file by time.
 	TimeFormat string `yaml:"time_format"`
-	// MaxSize is the max size of log file(MB).
-	MaxSize int `yaml:"max_size"`
-	// MaxBackups is the max backup files.
-	MaxBackups int `yaml:"max_backups"`
-	// MaxAge is the max expire times(day).
-	MaxAge int `yaml:"max_age"`
-	// Compress defines whether log should be compressed.
-	Compress bool `yaml:"compress"`
 }
 
 // FormatConfig is the log format config.

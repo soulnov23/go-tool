@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -72,42 +73,52 @@ type TestTable struct {
 	SetField       string    `gorm:"column:set_field" json:"set_field"`
 }
 
-var dbClient *gorm.DB
+var (
+	dbClient *gorm.DB
+	glog     log.Logger
+)
 
 func getDBClient() error {
 	var err error
+	glog, err = log.GetDefaultLogger()
+	if err != nil {
+		return fmt.Errorf("log.GetDefaultLogger: %v", err)
+	}
 	dbClient, err = New(context.Background(),
 		"user:password@tcp(ip:port)/?timeout=1s&charset=utf8mb4&parseTime=true&loc=Local",
-		log.GetDefaultLogger())
-	return err
+		glog)
+	if err != nil {
+		return fmt.Errorf("New: %v", err)
+	}
+	return nil
 }
 
 func TestParseDSN(t *testing.T) {
 	cfg, err := mysql.ParseDSN("user:password@tcp(ip:port)/?timeout=1s&charset=utf8mb4&parseTime=true&loc=Local")
 	if err != nil {
-		log.ErrorFields("mysql.ParseDSN failed", zap.Error(err))
+		glog.ErrorFields("mysql.ParseDSN failed", zap.Error(err))
 		return
 	}
-	log.InfoFields("mysql.ParseDSN success", zap.Reflect("cfg", cfg))
+	glog.InfoFields("mysql.ParseDSN success", zap.Reflect("cfg", cfg))
 }
 
 func TestCreateEmpty(t *testing.T) {
 	if err := getDBClient(); err != nil {
-		log.ErrorFields("New gorm db client failed", zap.Error(err))
+		glog.ErrorFields("New gorm db client failed", zap.Error(err))
 		return
 	}
 
 	// Create时即使struct字段都为默认值，insert时也会把字段带上
 	data := &TestTable{}
 	if err := dbClient.Table("test_database.test_table").Create(data).Error; err != nil {
-		log.ErrorFields("gorm.Create failed", zap.Error(err))
+		glog.ErrorFields("gorm.Create failed", zap.Error(err))
 		return
 	}
 }
 
 func TestCreate(t *testing.T) {
 	if err := getDBClient(); err != nil {
-		log.ErrorFields("New gorm db client failed", zap.Error(err))
+		glog.ErrorFields("New gorm db client failed", zap.Error(err))
 		return
 	}
 
@@ -127,57 +138,57 @@ func TestCreate(t *testing.T) {
 		SetField:       "set1",
 	}
 	if err := dbClient.Table("test_database.test_table").Create(data).Error; err != nil {
-		log.ErrorFields("gorm.Create failed", zap.Error(err))
+		glog.ErrorFields("gorm.Create failed", zap.Error(err))
 		return
 	}
 }
 
 func TestWhere(t *testing.T) {
 	if err := getDBClient(); err != nil {
-		log.ErrorFields("New gorm db client failed", zap.Error(err))
+		glog.ErrorFields("New gorm db client failed", zap.Error(err))
 		return
 	}
 
 	var results []*TestTable
 	// Where时struct中字段是默认值时，都不会带在where条件中
 	if err := dbClient.Table("test_database.test_table").Where(&TestTable{ID: 0, CharField: ""}).Find(&results).Error; err != nil {
-		log.ErrorFields("gorm.Find failed", zap.Error(err))
+		glog.ErrorFields("gorm.Find failed", zap.Error(err))
 		return
 	}
 	// Where时即使map字段都为默认值，都会带在where条件中
 	if err := dbClient.Table("test_database.test_table").Where(map[string]any{"id": 0, "char_field": ""}).Find(&results).Error; err != nil {
-		log.ErrorFields("gorm.Find failed", zap.Error(err))
+		glog.ErrorFields("gorm.Find failed", zap.Error(err))
 		return
 	}
 }
 
 func TestUpdates(t *testing.T) {
 	if err := getDBClient(); err != nil {
-		log.ErrorFields("New gorm db client failed", zap.Error(err))
+		glog.ErrorFields("New gorm db client failed", zap.Error(err))
 		return
 	}
 
 	// Updates时struct中字段是默认值时，都不会带在set值中
 	if err := dbClient.Table("test_database.test_table").Where("char_field = ?", "char").Updates(&TestTable{ID: 0, CharField: ""}).Error; err != nil {
-		log.ErrorFields("gorm.Find failed", zap.Error(err))
+		glog.ErrorFields("gorm.Find failed", zap.Error(err))
 		return
 	}
 	// Updates时可以使用Select强制字段默认值也要带在set值中
 	if err := dbClient.Table("test_database.test_table").Where("char_field = ?", "char").Select("char_field").Updates(&TestTable{ID: 0, CharField: ""}).Error; err != nil {
-		log.ErrorFields("gorm.Find failed", zap.Error(err))
+		glog.ErrorFields("gorm.Find failed", zap.Error(err))
 		return
 	}
 }
 
 func TestSave(t *testing.T) {
 	if err := getDBClient(); err != nil {
-		log.ErrorFields("New gorm db client failed", zap.Error(err))
+		glog.ErrorFields("New gorm db client failed", zap.Error(err))
 		return
 	}
 
 	// Save是一个组合函数，如果保存值不包含主键，它将执行Create，否则它将执行Update(包含所有字段)
 	if err := dbClient.Table("test_database.test_table").Save(&TestTable{}).Error; err != nil {
-		log.ErrorFields("gorm.Find failed", zap.Error(err))
+		glog.ErrorFields("gorm.Find failed", zap.Error(err))
 		return
 	}
 }

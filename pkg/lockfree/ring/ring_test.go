@@ -31,6 +31,12 @@ func TestRoundUpToPower2(t *testing.T) {
 }
 
 func TestRingBuffer(t *testing.T) {
+	glog, err := log.GetDefaultLogger()
+	if err != nil {
+		t.Logf("log.GetDefaultLogger: %v", err)
+		return
+	}
+
 	queue := New(512)
 
 	timeout := 10 * time.Second
@@ -45,13 +51,13 @@ func TestRingBuffer(t *testing.T) {
 			for {
 				select {
 				case <-ctx.Done():
-					log.DebugFields("ctx done")
+					glog.DebugFields("ctx done")
 					return
 				default:
 					if queue.Enqueue("ringbuffer") == ErrQueueFull {
-						log.DebugFields("full", zap.Uint64("size", queue.Size()))
+						glog.DebugFields("full", zap.Uint64("size", queue.Size()))
 					}
-					log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
+					glog.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
 					enCount.Add(1)
 				}
 			}
@@ -67,14 +73,14 @@ func TestRingBuffer(t *testing.T) {
 			for {
 				select {
 				case <-ctx.Done():
-					log.DebugFields("ctx done")
+					glog.DebugFields("ctx done")
 					return
 				default:
 					_, err := queue.Dequeue()
 					if err == ErrQueueEmpty {
-						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
+						glog.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
-					log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
+					glog.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
 					deCount.Add(1)
 				}
 			}
@@ -87,5 +93,5 @@ func TestRingBuffer(t *testing.T) {
 	enWait.Wait()
 	deWait.Wait()
 
-	log.DebugFields("", zap.Uint64("enCount", enCount.Load()), zap.Uint64("deCount", deCount.Load()))
+	glog.DebugFields("", zap.Uint64("enCount", enCount.Load()), zap.Uint64("deCount", deCount.Load()))
 }

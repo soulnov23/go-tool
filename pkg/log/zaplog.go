@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
-	"github.com/soulnov23/go-tool/pkg/log/writer"
+	"github.com/lestrrat-go/strftime"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -135,19 +136,18 @@ func newConsoleCore(c *CoreConfig) zapcore.Core {
 }
 
 func newFileCore(c *CoreConfig) (zapcore.Core, error) {
-	opts := []writer.Option{
-		writer.WithMaxSize(c.WriteConfig.MaxSize),
-		writer.WithMaxBackups(c.WriteConfig.MaxBackups),
-		writer.WithMaxAge(c.WriteConfig.MaxAge),
-		writer.WithCompress(c.WriteConfig.Compress),
-		writer.WithRotationTime(c.WriteConfig.TimeFormat),
+	if err := os.MkdirAll(filepath.Dir(c.WriteConfig.FileName), 0o755); err != nil {
+		return nil, fmt.Errorf("create log directory: %v", err)
 	}
-	writer, err := writer.New(c.WriteConfig.FileName, opts...)
+	pattern, err := strftime.New(c.WriteConfig.FileName + c.WriteConfig.TimeFormat)
 	if err != nil {
-		return nil, errors.New("new roll writer: " + err.Error())
+		return nil, fmt.Errorf("get file pattern: %v", err)
 	}
-	ws := zapcore.AddSync(writer)
-	return zapcore.NewCore(newEncoder(c), ws, zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level])), nil
+	file, err := os.OpenFile(pattern.FormatString(time.Now()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o666)
+	if err != nil {
+		return nil, fmt.Errorf("open log file: %v", err)
+	}
+	return zapcore.NewCore(newEncoder(c), zapcore.Lock(file), zap.NewAtomicLevelAt(zapCoreLevelMap[c.Level])), nil
 }
 
 func newEncoder(c *CoreConfig) zapcore.Encoder {

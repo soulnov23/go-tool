@@ -48,9 +48,6 @@ default_log: #默认日志配置
           writer: file #本地文件日志
           writer_config: &writer_config
               time_format: .%Y-%m-%d #日志文件名后缀日期格式
-              max_size: 1 #本地文件滚动日志的大小 单位 MB
-              max_backups: 0 #最大日志文件数
-              max_age: 7 #最大日志保留天数
         - &file_json
           level: debug #本地文件滚动日志的级别
           formatter: json #日志打印格式

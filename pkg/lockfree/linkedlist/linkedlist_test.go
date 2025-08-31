@@ -12,6 +12,12 @@ import (
 )
 
 func TestQueue(t *testing.T) {
+	glog, err := log.GetDefaultLogger()
+	if err != nil {
+		t.Logf("log.GetDefaultLogger: %v", err)
+		return
+	}
+
 	queue := New()
 
 	timeout := 10 * time.Second
@@ -26,11 +32,11 @@ func TestQueue(t *testing.T) {
 			for {
 				select {
 				case <-ctx.Done():
-					log.DebugFields("ctx done")
+					glog.DebugFields("ctx done")
 					return
 				default:
 					queue.Enqueue("linkedlist")
-					log.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
+					glog.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
 					atomic.AddUint64(&enCount, uint64(1))
 				}
 			}
@@ -46,13 +52,13 @@ func TestQueue(t *testing.T) {
 			for {
 				select {
 				case <-ctx.Done():
-					log.DebugFields("ctx done")
+					glog.DebugFields("ctx done")
 					return
 				default:
 					if queue.Dequeue() == nil {
-						log.DebugFields("empty", zap.Uint64("size", queue.Size()))
+						glog.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					}
-					log.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
+					glog.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
 					atomic.AddUint64(&deCount, uint64(1))
 				}
 			}
@@ -65,21 +71,27 @@ func TestQueue(t *testing.T) {
 	enWait.Wait()
 	deWait.Wait()
 
-	log.DebugFields("", zap.Uint64("enCount", enCount), zap.Uint64("deCount", deCount))
+	glog.DebugFields("", zap.Uint64("enCount", enCount), zap.Uint64("deCount", deCount))
 }
 
 func TestAddUint64(t *testing.T) {
+	glog, err := log.GetDefaultLogger()
+	if err != nil {
+		t.Logf("log.GetDefaultLogger: %v", err)
+		return
+	}
+
 	var value uint64
-	log.Debug(value)
+	glog.DebugFields("value", zap.Uint64("value", value))
 	atomic.AddUint64(&value, ^uint64(0))
-	log.Debug(value)
+	glog.DebugFields("value", zap.Uint64("value", value))
 	atomic.AddUint64(&value, uint64(1))
-	log.Debug(value)
+	glog.DebugFields("value", zap.Uint64("value", value))
 
 	atomicValue := &atomic.Uint64{}
-	log.Debug(atomicValue.Load())
+	glog.DebugFields("atomicValue", zap.Uint64("atomicValue", atomicValue.Load()))
 	atomicValue.Add(^uint64(0))
-	log.Debug(atomicValue.Load())
+	glog.DebugFields("atomicValue", zap.Uint64("atomicValue", atomicValue.Load()))
 	atomicValue.Add(uint64(1))
-	log.Debug(atomicValue.Load())
+	glog.DebugFields("atomicValue", zap.Uint64("atomicValue", atomicValue.Load()))
 }
