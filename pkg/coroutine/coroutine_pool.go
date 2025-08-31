@@ -37,38 +37,44 @@ func NewPool(poolCapacity int, printf func(formatter string, args ...any)) *Pool
 	}
 }
 
-func (pool *Pool) Run(fn func(...any), args ...any) {
+func (pool *Pool) Go(fn func(...any), args ...any) {
+	pool.spawnWorker()
+	task := tasks.Get().(*task)
+	task.fn = fn
+	task.args = args
+	pool.wg.Add(1)
+	pool.taskChan <- task
+}
+
+func (pool *Pool) spawnWorker() {
 	for {
 		length := pool.length.Load()
 		if length >= pool.capacity {
 			break
 		}
 		if pool.length.CompareAndSwap(length, length+1) {
-			go func() {
-				defer pool.length.Add(^uint64(0))
-				for task := range pool.taskChan {
-					func() {
-						defer func() {
-							if err := recover(); err != nil {
-								pool.printf("[PANIC] %v\n%s\n", err, utils.BytesToString(debug.Stack()))
-							}
-							pool.wg.Done()
-							task.fn = nil
-							task.args = nil
-							tasks.Put(task)
-						}()
-						task.fn(task.args...)
-					}()
-				}
-			}()
+			go pool.worker()
 			break
 		}
 	}
-	task := tasks.Get().(*task)
-	task.fn = fn
-	task.args = args
-	pool.wg.Add(1)
-	pool.taskChan <- task
+}
+
+func (pool *Pool) worker() {
+	defer pool.length.Add(^uint64(0))
+	for task := range pool.taskChan {
+		func() {
+			defer func() {
+				if err := recover(); err != nil {
+					pool.printf("[PANIC] %v\n%s\n", err, utils.BytesToString(debug.Stack()))
+				}
+				pool.wg.Done()
+				task.fn = nil
+				task.args = nil
+				tasks.Put(task)
+			}()
+			task.fn(task.args...)
+		}()
+	}
 }
 
 func (pool *Pool) Length() uint64 {

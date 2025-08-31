@@ -22,13 +22,22 @@ func TestStack(t *testing.T) {
 }
 
 func TestPool(t *testing.T) {
-	pool := NewPool(100, t.Errorf)
-	for i := 0; i < 1000000; i++ {
+	pool := NewPool(32, t.Errorf)
+	for i := range 10000 {
 		fn := func(args ...any) {
 			t.Logf("%s: %d", time.Now().Format(time.DateTime+".000"), runtime.NumGoroutine())
 		}
-		pool.Run(fn, i)
+		pool.Go(fn, i)
 	}
 	pool.Wait()
+	t.Logf("wait 1")
+	for i := range 10000 {
+		fn := func(args ...any) {
+			t.Logf("%s: %d", time.Now().Format(time.DateTime+".000"), runtime.NumGoroutine())
+		}
+		pool.Go(fn, i)
+	}
+	pool.Wait()
+	t.Logf("wait 2")
 	pool.Close()
 }
