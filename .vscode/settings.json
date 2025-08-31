@@ -162,6 +162,7 @@
     },
     //显示子文件夹的git
     "git-graph.maxDepthOfRepoSearch": 3,
+    "git-graph.date.format": "ISO Date & Time",
     //编辑器窗口
     "window.title": "${dirty}${separator}${rootName}",
     "window.titleBarStyle": "custom",
