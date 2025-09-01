@@ -144,7 +144,7 @@ func newFileCore(c *CoreConfig) (zapcore.Core, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get file pattern: %v", err)
 	}
-	file, err := os.OpenFile(pattern.FormatString(time.Now()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o666)
+	file, err := os.OpenFile(pattern.FormatString(time.Now()), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
 		return nil, fmt.Errorf("open log file: %v", err)
 	}
