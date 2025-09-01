@@ -219,6 +219,13 @@
     "gitlens.views.scm.grouped.views": {
         "searchAndCompare": false
     },
+    "gitlens.currentLine.dateFormat": "YYYY-MM-DD HH:mm:ss",
+    "gitlens.codeLens.dateFormat": "YYYY-MM-DD HH:mm:ss",
+    "gitlens.statusBar.dateFormat": "YYYY-MM-DD HH:mm:ss",
+    "gitlens.blame.dateFormat": "YYYY-MM-DD HH:mm:ss",
+    "gitlens.graph.dateFormat": "YYYY-MM-DD HH:mm:ss",
+    "gitlens.defaultTimeFormat": "YYYY-MM-DD HH:mm:ss",
+    "gitlens.defaultDateFormat": "YYYY-MM-DD HH:mm:ss",
     //cursor选项
     "workbench.activityBar.orientation": "vertical",
     "cursor.cpp.enablePartialAccepts": true,
