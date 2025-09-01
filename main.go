@@ -45,5 +45,5 @@ func main() {
 		fmt.Printf("git commit author: %s\n", gitCommitAuthor)
 		return
 	}
-	framework.New("../conf/go_tool.yaml").Serve()
+	framework.New(path).Serve()
 }
