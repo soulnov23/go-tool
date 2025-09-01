@@ -113,16 +113,17 @@ func New(c *Config) (Logger, error) {
 		if cfg.Writer == logTypeFile && cfg.WriteConfig == nil {
 			return nil, errors.New("write config is nil")
 		}
-		if cfg.Writer == logTypeConsole {
+		switch cfg.Writer {
+		case logTypeConsole:
 			core := newConsoleCore(cfg)
 			cores = append(cores, core)
-		} else if cfg.Writer == logTypeFile {
+		case logTypeFile:
 			core, err := newFileCore(cfg)
 			if err != nil {
 				return nil, errors.New("new file core: " + err.Error())
 			}
 			cores = append(cores, core)
-		} else {
+		default:
 			return nil, fmt.Errorf("writer type[%s] not support", cfg.Writer)
 		}
 	}
