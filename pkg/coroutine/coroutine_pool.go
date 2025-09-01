@@ -23,7 +23,7 @@ type task struct {
 
 type Pool struct {
 	capacity uint64
-	length   atomic.Uint64
+	size     atomic.Uint64
 	taskChan chan *task
 	printf   func(formatter string, args ...any)
 	wg       sync.WaitGroup
@@ -48,11 +48,11 @@ func (pool *Pool) Go(fn func(...any), args ...any) {
 
 func (pool *Pool) spawnWorker() {
 	for {
-		length := pool.length.Load()
-		if length >= pool.capacity {
+		size := pool.size.Load()
+		if size >= pool.capacity {
 			break
 		}
-		if pool.length.CompareAndSwap(length, length+1) {
+		if pool.size.CompareAndSwap(size, size+1) {
 			go pool.worker()
 			break
 		}
@@ -60,7 +60,7 @@ func (pool *Pool) spawnWorker() {
 }
 
 func (pool *Pool) worker() {
-	defer pool.length.Add(^uint64(0))
+	defer pool.size.Add(^uint64(0))
 	for task := range pool.taskChan {
 		func() {
 			defer func() {
@@ -77,8 +77,8 @@ func (pool *Pool) worker() {
 	}
 }
 
-func (pool *Pool) Length() uint64 {
-	return pool.length.Load()
+func (pool *Pool) Size() uint64 {
+	return pool.size.Load()
 }
 
 func (pool *Pool) Capacity() uint64 {
