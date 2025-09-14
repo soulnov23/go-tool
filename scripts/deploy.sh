@@ -82,6 +82,29 @@ function nvm() {
     npm -v # Should print "10.9.2".
 }
 
+#./deploy.sh git v2.51.0
+function git() {
+    mkdir -p tmp
+    cd tmp
+    FILE=$1.tar.gz
+    wget https://github.com/git/git/archive/refs/tags/${FILE}
+    tar -zvxf ${FILE}
+    cd git-${1#v}
+    make -j32 prefix=/usr all
+    make -j32 prefix=/usr install
+    cd ../../
+    rm -rf tmp
+}
+
+#./deploy.sh chromium
+function chromium() {
+    wget https://download-chromium.appspot.com/dl/Linux_x64?type=snapshots -O chromium.zip
+    unzip chromium.zip
+    # chromedp.ExecPath("/usr/bin/chrome-linux/chrome")
+    mv -f chrome-linux /usr/bin/
+    # yum install -y alsa-lib atk at-spi2-atk mesa-libgbm
+}
+
 main() {
     case $1 in
     golang)
@@ -95,6 +118,12 @@ main() {
         ;;
     nvm)
         nvm $2
+        ;;
+    git)
+        git $2
+        ;;
+    chromium)
+        chromium
         ;;
     *)
         echo "error:argument is invalid"
