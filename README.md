@@ -74,6 +74,9 @@ go tool pprof -http 0.0.0.0:9999 'http://127.0.0.1:6060/debug/pprof/heap?seconds
 go tool pprof -http 0.0.0.0:9999 'http://127.0.0.1:6060/debug/pprof/goroutine?seconds=30'
 ```
 
+- debug=0 默认值，返回二进制的Protocol Buffers格式文件，这是go tool pprof工具期望的格式，适合用于后续的专业分析，但人类无法直接阅读
+- debug=1 纯文本格式，其中包含符号化的函数名、源文件路径和行号等信息，可以直接在浏览器中阅读，适合快速查看
+- debug=2 对于/debug/pprof/goroutine，此参数会以极高的可读性输出每个goroutine的完整状态和堆栈跟踪，格式类似于程序发生panic时的堆栈输出，非常适合深度调试goroutine泄漏或阻塞问题
 
 ## 💡 流程
 ## 🧰 安装
