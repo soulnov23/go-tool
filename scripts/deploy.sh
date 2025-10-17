@@ -105,6 +105,32 @@ function chromium() {
     # yum install -y alsa-lib atk at-spi2-atk mesa-libgbm
 }
 
+#./deploy.sh python
+function python() {
+    yum install -y python3.12 python3.12-pip
+    pip3.12 install --upgrade pip
+}
+
+#./deploy.sh venv /data/home/venv
+function venv() {
+    python3.12 -m venv $1
+    source $1/bin/activate
+    python3.12 install -r requirements.txt
+}
+
+#./deploy.sh markitdown v0.1.3
+function markitdown() {
+    mkdir -p tmp
+    cd tmp
+    FILE=$1.tar.gz
+    wget https://github.com/microsoft/markitdown/archive/refs/tags/${FILE}
+    tar -zvxf ${FILE}
+    cd markitdown-${1#v}
+    pip3.12 install -e 'packages/markitdown[docx,xls,xlsx,pptx,pdf]'
+    cd ../../
+    rm -rf tmp
+}
+
 main() {
     case $1 in
     golang)
@@ -124,6 +150,15 @@ main() {
         ;;
     chromium)
         chromium
+        ;;
+    python)
+        python
+        ;;
+    venv)
+        venv $2
+        ;;
+    markitdown)
+        markitdown $2
         ;;
     *)
         echo "error:argument is invalid"
