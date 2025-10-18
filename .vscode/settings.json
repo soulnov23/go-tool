@@ -236,9 +236,9 @@
     //隐藏GitHub Copilot
     "chat.commandCenter.enabled": false,
     //python选项
-    "python.terminal.activateEnvironment": true,
-    "python.venvPath": "/data/home/venv",
-    "python.defaultInterpreterPath": "/data/home/venv/bin/python",
+    //"python.terminal.activateEnvironment": true,
+    //"python.venvPath": "/data/home/venv",
+    //"python.defaultInterpreterPath": "/data/home/venv/bin/python"
     //database-client选项
     "database-client.autoSync": true,
     "database-client.showSecurity": false,
