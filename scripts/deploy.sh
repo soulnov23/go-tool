@@ -126,7 +126,7 @@ function markitdown() {
     wget https://github.com/microsoft/markitdown/archive/refs/tags/${FILE}
     tar -zvxf ${FILE}
     cd markitdown-${1#v}
-    pip3.12 install -e 'packages/markitdown[docx,xls,xlsx,pptx,pdf]'
+    pip3.12 install 'packages/markitdown[docx,xls,xlsx,pptx,pdf]'
     cd ../../
     rm -rf tmp
 }
