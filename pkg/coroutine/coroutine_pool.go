@@ -3,7 +3,6 @@ package coroutine
 import (
 	"runtime/debug"
 	"sync"
-	"sync/atomic"
 
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
@@ -22,23 +21,23 @@ type task struct {
 }
 
 type Pool struct {
-	capacity uint64
-	size     atomic.Uint64
 	taskChan chan *task
 	printf   func(formatter string, args ...any)
 	wg       sync.WaitGroup
 }
 
 func NewPool(poolCapacity int, printf func(formatter string, args ...any)) *Pool {
-	return &Pool{
-		capacity: uint64(poolCapacity),
+	pool := &Pool{
 		taskChan: make(chan *task),
 		printf:   printf,
 	}
+	for range poolCapacity {
+		go pool.worker()
+	}
+	return pool
 }
 
 func (pool *Pool) Go(fn func(...any), args ...any) {
-	pool.spawnWorker()
 	task := tasks.Get().(*task)
 	task.fn = fn
 	task.args = args
@@ -46,21 +45,7 @@ func (pool *Pool) Go(fn func(...any), args ...any) {
 	pool.taskChan <- task
 }
 
-func (pool *Pool) spawnWorker() {
-	for {
-		size := pool.size.Load()
-		if size >= pool.capacity {
-			break
-		}
-		if pool.size.CompareAndSwap(size, size+1) {
-			go pool.worker()
-			break
-		}
-	}
-}
-
 func (pool *Pool) worker() {
-	defer pool.size.Add(^uint64(0))
 	for task := range pool.taskChan {
 		func() {
 			defer func() {
@@ -75,14 +60,6 @@ func (pool *Pool) worker() {
 			task.fn(task.args...)
 		}()
 	}
-}
-
-func (pool *Pool) Size() uint64 {
-	return pool.size.Load()
-}
-
-func (pool *Pool) Capacity() uint64 {
-	return pool.capacity
 }
 
 func (pool *Pool) Wait() {
