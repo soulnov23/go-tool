@@ -12,13 +12,18 @@ import (
 
 // v${MAJOR}.${MINOR}.${PATCH}
 const (
-	tagPrefix      = "v"
-	initialVersion = "1.0.0"
+	tagPrefix           = "v"
+	initialVersion      = "1.1.0"
+	minorCarryThreshold = 99
+	patchCarryThreshold = 9
 )
 
 var workdir string
 
 func main() {
+	log.SetFlags(0)
+	log.SetPrefix("\033[1;32m[git-tag]\033[m ")
+
 	// 获取当前工作目录
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -56,7 +61,7 @@ func getCurrentVersion() string {
 
 	tag := strings.TrimSpace(stdout.String())
 	if !strings.HasPrefix(tag, tagPrefix) {
-		log.Fatalf("❌ 获取Git标签失败，无效的标签格式: %s", tag)
+		log.Fatalf("❌ 无效的标签格式: %s", tag)
 	}
 
 	// 去掉标签前缀 "v"
@@ -65,7 +70,7 @@ func getCurrentVersion() string {
 	return currentVersion
 }
 
-// 递增版本号（带进位逻辑）
+// 递增版本号
 func incrementVersion(version string) string {
 	parts := strings.Split(version, ".")
 	if len(parts) < 3 {
@@ -75,23 +80,23 @@ func incrementVersion(version string) string {
 	// 转换为整数
 	major, err := strconv.Atoi(parts[0])
 	if err != nil {
-		log.Fatalf("❌ 转换为整数失败: %s", version)
+		log.Fatalf("❌ 无效的版本格式: %s", version)
 	}
 	minor, err := strconv.Atoi(parts[1])
 	if err != nil {
-		log.Fatalf("❌ 转换为整数失败: %s", version)
+		log.Fatalf("❌ 无效的版本格式: %s", version)
 	}
 	patch, err := strconv.Atoi(parts[2])
 	if err != nil {
-		log.Fatalf("❌ 转换为整数失败: %s", version)
+		log.Fatalf("❌ 无效的版本格式: %s", version)
 	}
 
 	// 智能进位逻辑
 	patch++
-	if patch > 9 {
+	if patch > patchCarryThreshold {
 		patch = 0
 		minor++
-		if minor > 9 {
+		if minor > minorCarryThreshold {
 			minor = 0
 			major++
 		}
