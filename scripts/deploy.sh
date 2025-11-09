@@ -67,19 +67,21 @@ function kubectl() {
     rm -rf tmp
 }
 
-#./deploy.sh nvm v0.40.1
+#./deploy.sh nvm v0.40.3
 function nvm() {
     # Download and install nvm:
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$1/install.sh | bash
-    source ~/.bashrc
-    nvm --version
+    # in lieu of restarting the shell
+    \. "$HOME/.nvm/nvm.sh"
     # Download and install Node.js:
-    nvm install 23
+    nvm install 24
+    nvm use 24
     # Verify the Node.js version:
-    nvm current # Should print "v23.6.0".
-    node -v     # Should print "v23.6.0".
-    # Verify npm version:
-    npm -v # Should print "10.9.2".
+    node -v # Should print "v24.11.0".
+    # Download and install pnpm:
+    corepack enable pnpm
+    # Verify pnpm version:
+    pnpm -v
 }
 
 #./deploy.sh git v2.51.0
