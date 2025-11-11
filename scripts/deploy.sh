@@ -75,7 +75,7 @@ function nvm() {
     \. "$HOME/.nvm/nvm.sh"
     # Download and install Node.js:
     nvm install 24
-    nvm use 24
+    nvm alias default 24.11.0
     # Verify the Node.js version:
     node -v # Should print "v24.11.0".
     # Download and install pnpm:
