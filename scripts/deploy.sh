@@ -104,9 +104,9 @@ function chromium() {
     cd tmp
     wget https://download-chromium.appspot.com/dl/Linux_x64?type=snapshots -O chromium.zip
     unzip chromium.zip
-    # chromedp.ExecPath("/usr/bin/chrome-linux/chrome")
-    rm -rf /usr/bin/chrome-linux || true
-    mv -f chrome-linux /usr/bin/
+    # chromedp.ExecPath("/usr/local/bin/chrome-linux/chrome")
+    rm -rf /usr/local/bin/chrome-linux || true
+    mv -f chrome-linux /usr/local/bin/
     # yum install -y alsa-lib atk at-spi2-atk mesa-libgbm
     cd ..
     rm -rf tmp
