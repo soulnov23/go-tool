@@ -35,7 +35,7 @@ chmod:
     #(644)rw-r--r--
 	chmod -R 644 ./
     #(755)rwxr-xr-x
-	chmod -R +x ./build ./scripts
+	chmod +x ./build/bin/* ./scripts/*
 
 docker:
 	docker build -t go-tool:latest .

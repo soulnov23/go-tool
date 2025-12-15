@@ -138,6 +138,11 @@ function markitdown() {
     rm -rf tmp
 }
 
+#./deploy.sh vscode
+function vscode() {
+    ln -sf ${WORKSPACE}/go-tool/scripts/vscode.sh ${GOPATH}/bin/vscode
+}
+
 main() {
     case $1 in
     golang)
@@ -166,6 +171,9 @@ main() {
         ;;
     markitdown)
         markitdown $2
+        ;;
+    vscode)
+        vscode
         ;;
     *)
         echo "error:argument is invalid"
