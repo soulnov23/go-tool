@@ -143,6 +143,11 @@ function vscode() {
     ln -sf ${WORKSPACE}/go-tool/scripts/vscode.sh ${GOPATH}/bin/vscode
 }
 
+#./deploy.sh goinit
+function goinit() {
+    ln -sf ${WORKSPACE}/go-tool/scripts/goinit.sh ${GOPATH}/bin/goinit
+}
+
 main() {
     case $1 in
     golang)
@@ -174,6 +179,9 @@ main() {
         ;;
     vscode)
         vscode
+        ;;
+    goinit)
+        goinit
         ;;
     *)
         echo "error:argument is invalid"
