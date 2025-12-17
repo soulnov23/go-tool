@@ -117,14 +117,18 @@ func Stringify(value any) string {
 }
 
 func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
-	result := map[string]string{}
+	if data == "" {
+		return map[string]string{}
+	}
 	fieldSlice := strings.Split(data, fieldSep)
+	result := make(map[string]string, len(fieldSlice))
 	for _, kv := range fieldSlice {
-		valueSlice := strings.Split(kv, valueSep)
-		if len(valueSlice) == 2 {
-			result[valueSlice[0]] = valueSlice[1]
-		} else if len(valueSlice) == 1 && strings.Count(kv, valueSep) == 1 {
-			result[valueSlice[0]] = ""
+		if kv == "" {
+			continue
+		}
+		key, value, found := strings.Cut(kv, valueSep)
+		if found {
+			result[key] = value
 		}
 	}
 	return result
