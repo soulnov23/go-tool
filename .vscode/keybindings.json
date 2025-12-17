@@ -144,5 +144,22 @@
     {
         "key": "ctrl+shift+h",
         "command": "workbench.action.replaceInFiles"
+    },
+    {
+        "key": "ctrl+n",
+        "command": "workbench.action.files.newUntitledFile"
+    },
+    {
+        "key": "ctrl+j",
+        "command": "workbench.action.togglePanel",
+        "when": "!isAuxiliaryWindowFocusedContext"
+    },
+    {
+        "key": "ctrl+l",
+        "command": "aichat.newchataction"
+    },
+    {
+        "key": "ctrl+g",
+        "command": "workbench.action.gotoLine"
     }
 ]

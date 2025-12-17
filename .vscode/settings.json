@@ -57,6 +57,9 @@
     "[shellscript]": {
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
+    "[proto]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
     "[proto3]": {
         "editor.defaultFormatter": "xaver.clang-format"
     },
