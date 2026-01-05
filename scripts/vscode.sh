@@ -17,7 +17,10 @@ main() {
     cp -rf /data/home/project/go-tool/.vscode/settings.json ./.vscode
     chmod -R 644 ./
     find . -type d -name build | while read -r dir; do
-        chmod +x "${dir}/bin"/*
+        bin_dir="${dir}/bin"
+        if [ -d "$bin_dir" ]; then
+            find "$bin_dir" -maxdepth 1 -type f -exec chmod +x {} \;
+        fi
     done
     find . -type f -name "*.sh" | while read -r file; do
         chmod +x "${file}"
