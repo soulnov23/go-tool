@@ -81,7 +81,7 @@
     "C_Cpp.workspaceSymbols": "All",
     "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
     "C_Cpp.default.compilerPath": "/usr/bin/gcc",
-    "C_Cpp.intelliSenseEngine": "default",
+    //"C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseMemoryLimit": 10240,
     "C_Cpp.intelliSenseCachePath": "${workspaceFolder}/.vscode",
     "C_Cpp.intelliSenseCacheSize": 10240,
