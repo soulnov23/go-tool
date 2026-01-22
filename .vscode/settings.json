@@ -57,6 +57,9 @@
     "[shellscript]": {
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
+    "[sql]": {
+        "editor.defaultFormatter": "cweijan.vscode-database-client2"
+    },
     "[proto]": {
         "editor.defaultFormatter": "xaver.clang-format"
     },
