@@ -2,14 +2,14 @@ package utils
 
 func DeduplicateSlice[T comparable, Slice ~[]T](collection Slice) Slice {
 	result := make(Slice, 0, len(collection))
-	seen := make(map[T]struct{}, len(collection))
+	seen := make(map[T]bool, len(collection))
 
 	for i := range collection {
-		if _, ok := seen[collection[i]]; ok {
+		if seen[collection[i]] {
 			continue
 		}
 
-		seen[collection[i]] = struct{}{}
+		seen[collection[i]] = true
 		result = append(result, collection[i])
 	}
 
