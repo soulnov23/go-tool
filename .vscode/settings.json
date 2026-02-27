@@ -5,7 +5,7 @@
     //"http.proxyStrictSSL": false,
     //"http.proxySupport": "on",
     //editor选项
-    "editor.fontSize": 24,
+    "editor.fontSize": 20,
     "editor.wordWrap": "on",
     "editor.minimap.enabled": false,
     "editor.renderControlCharacters": true,
