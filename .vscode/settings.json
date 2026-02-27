@@ -5,7 +5,7 @@
     //"http.proxyStrictSSL": false,
     //"http.proxySupport": "on",
     //editor选项
-    "editor.fontSize": 18,
+    "editor.fontSize": 24,
     "editor.wordWrap": "on",
     "editor.minimap.enabled": false,
     "editor.renderControlCharacters": true,
@@ -131,7 +131,7 @@
     "explorer.confirmDragAndDrop": true,
     "explorer.compactFolders": false,
     //terminal选项
-    "terminal.integrated.fontSize": 22,
+    "terminal.integrated.fontSize": 24,
     "terminal.integrated.copyOnSelection": true,
     "terminal.integrated.enableMultiLinePasteWarning": "never",
     "terminal.integrated.cursorBlinking": true,
