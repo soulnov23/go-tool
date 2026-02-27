@@ -191,31 +191,6 @@
     //diffEditor
     "diffEditor.ignoreTrimWhitespace": false,
     "diffEditor.maxComputationTime": 0,
-    //gongfeng选项
-    "gongfeng.copilot.floatShortcut": false,
-    "gongfeng.copilot.enableAutoCompletions": true,
-    "gongfeng.copilot.enableCompletionLanguage": {
-        "scminput": true,
-        "markdown": true
-    },
-    "gongfeng.copilot.enableCodelensForFunctions": true,
-    "gongfeng.copilot.enableNextEditSuggestionsUI": true,
-    "gongfeng.copilot.featureConfig": {
-        "terminal": {
-            "autorun": true,
-            "whiteList": [],
-            "blackList": [
-                "rm"
-            ]
-        },
-        "chat": {
-            "autofix": true,
-            "autoweb": true
-        }
-    },
-    "gongfeng.copilot.mcpConfig": {
-        "autorun": true
-    },
     //remote选项
     "remote.SSH.remotePlatform": {
         "cloud": "linux",
