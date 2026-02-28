@@ -196,7 +196,7 @@
         "cloud": "linux",
         "anydev": "linux"
     },
-    "remote.autoForwardPorts": true,
+    "remote.autoForwardPorts": false,
     "remote.autoForwardPortsSource": "process",
     //gitlens选项
     "gitlens.advanced.fileHistoryShowAllBranches": true,
