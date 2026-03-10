@@ -58,6 +58,7 @@
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
     "[sql]": {
+        "editor.formatOnSave": false,
         "editor.defaultFormatter": "cweijan.vscode-database-client2"
     },
     "[proto]": {
