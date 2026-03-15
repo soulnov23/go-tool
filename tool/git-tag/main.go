@@ -47,27 +47,24 @@ func main() {
 // 获取当前版本
 func getCurrentVersion() string {
 	// 执行git命令获取最新标签
-	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
+	cmd := exec.Command("git", "tag", "--sort=-version:refname")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Dir = workdir
-	if err := cmd.Run(); err != nil {
-		// 没有标签时使用初始版本
-		log.Printf("⚠️ 获取Git标签失败: %s", stderr.String())
-		log.Printf("⚠️ 使用初始版本: %s", initialVersion)
-		return initialVersion
+	if err := cmd.Run(); err == nil {
+		for _, tag := range strings.Split(strings.TrimSpace(stdout.String()), "\n") {
+			tag = strings.TrimSpace(tag)
+			if strings.HasPrefix(tag, tagPrefix) {
+				currentVersion := strings.TrimPrefix(tag, tagPrefix)
+				log.Printf("✅ 从Git标签获取当前版本: %s", currentVersion)
+				return currentVersion
+			}
+		}
 	}
 
-	tag := strings.TrimSpace(stdout.String())
-	if !strings.HasPrefix(tag, tagPrefix) {
-		log.Fatalf("❌ 无效的标签格式: %s", tag)
-	}
-
-	// 去掉标签前缀 "v"
-	currentVersion := strings.TrimPrefix(tag, tagPrefix)
-	log.Printf("✅ 从Git标签获取当前版本: %s", currentVersion)
-	return currentVersion
+	log.Printf("⚠️ 未找到任何Git标签，使用初始版本: %s", initialVersion)
+	return initialVersion
 }
 
 // 递增版本号
