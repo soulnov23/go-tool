@@ -53,7 +53,7 @@ func main() {
 			return
 		}
 		for _, config := range tmp {
-			if config.Validate() != nil {
+			if err := config.Validate(); err != nil {
 				fmt.Printf("validate yaml file %s: %v", file, err)
 				return
 			}
