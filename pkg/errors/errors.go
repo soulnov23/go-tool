@@ -21,17 +21,13 @@ func (e *Error) Error() string {
 }
 
 func (e *Error) WithMessageValues(values any) *Error {
-	var (
-		tpl *template.Template
-		err error
-	)
 	value, ok := templateCache.Load(e.Message)
 	if !ok {
-		tpl, err = template.New(e.Name).Parse(e.Message)
+		tpl, err := template.New(e.Name).Parse(e.Message)
 		if err != nil {
 			return e
 		}
-		templateCache.Store(e.Message, tpl)
+		value, _ = templateCache.LoadOrStore(e.Message, tpl)
 	}
 	builder := &strings.Builder{}
 	if err := value.(*template.Template).Execute(builder, values); err != nil {
