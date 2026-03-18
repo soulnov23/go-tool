@@ -50,6 +50,7 @@ func (t *serverTransportTCP) ListenAndServe() error {
 		if err != nil {
 			return fmt.Errorf("netpoll.NewEpoll: %v", err)
 		}
+		t.epolls = append(t.epolls, epoll)
 
 		addr, err := netpoll.ResolveAddr(t.network, t.address)
 		if err != nil {
