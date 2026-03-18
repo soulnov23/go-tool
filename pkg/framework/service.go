@@ -47,5 +47,8 @@ func (s *service) serve() error {
 }
 
 func (s *service) close() {
+	if s.serverTransport == nil {
+		return
+	}
 	s.serverTransport.Close()
 }

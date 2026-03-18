@@ -39,7 +39,7 @@ func New(configPath string) *Server {
 	}
 
 	if config.Plugins == nil {
-		panic("server is empty")
+		panic("plugins is empty")
 	}
 	if err := config.Plugins.Setup(); err != nil {
 		panic(fmt.Sprintf("config.Plugins.Setup: %v", err))
@@ -105,9 +105,14 @@ func (s *Server) Serve() error {
 	for name, service := range s.services {
 		if err := service.serve(); err != nil {
 			log.DefaultLogger.FatalFields("service serve", zap.String("service_name", name), zap.Error(err))
+			return err
 		}
-		service.close()
 	}
+	defer func() {
+		for _, service := range s.services {
+			service.close()
+		}
+	}()
 
 	signalClose := make(chan os.Signal, 1)
 	signal.Notify(signalClose, DefaultServerCloseSIG...)
