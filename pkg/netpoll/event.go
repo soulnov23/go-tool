@@ -23,17 +23,23 @@ const (
 
 func EventString(event uint32) string {
 	var eventString string
-	switch {
-	case event&unix.EPOLLIN != 0:
+	if event&unix.EPOLLIN != 0 {
 		eventString += "|EPOLLIN"
-	case event&unix.EPOLLOUT != 0:
+	}
+	if event&unix.EPOLLOUT != 0 {
 		eventString += "|EPOLLOUT"
-	case event&unix.EPOLLHUP != 0:
+	}
+	if event&unix.EPOLLHUP != 0 {
 		eventString += "|EPOLLHUP"
-	case event&unix.EPOLLRDHUP != 0:
+	}
+	if event&unix.EPOLLRDHUP != 0 {
 		eventString += "|EPOLLRDHUP"
-	case event&unix.EPOLLERR != 0:
+	}
+	if event&unix.EPOLLERR != 0 {
 		eventString += "|EPOLLERR"
+	}
+	if eventString == "" {
+		return ""
 	}
 	return eventString[1:]
 }
