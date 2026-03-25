@@ -1,6 +1,6 @@
 module github.com/soulnov23/go-tool
 
-go 1.26.0
+go 1.26.1
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v1.3.3
