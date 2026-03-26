@@ -4,6 +4,7 @@ package ring
 
 import (
 	"errors"
+	"runtime"
 	"sync/atomic"
 	"unsafe"
 
@@ -138,7 +139,8 @@ func (queue *Queue) Enqueue(value any) error {
 				node.enSeq.Add(queue.capacity)
 				return nil
 			}
-			// 入列失败继续try
+			// 让出CPU时间片，避免忙等导致CPU空转
+			runtime.Gosched()
 		}
 	}
 }
@@ -175,7 +177,8 @@ func (queue *Queue) Dequeue() (any, error) {
 				node.deSeq.Add(queue.capacity)
 				return value, nil
 			}
-			// 出列失败继续try
+			// 让出CPU时间片，避免忙等导致CPU空转
+			runtime.Gosched()
 		}
 	}
 }
