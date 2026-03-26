@@ -44,11 +44,21 @@ func NewPool(poolCapacity int, printf func(formatter string, args ...any)) *Pool
 }
 
 func (pool *Pool) Go(fn func(...any), args ...any) {
+	if pool.closed.Load() {
+		panic("send task to closed pool")
+	}
 	task := tasks.Get().(*task)
 	task.fn = fn
 	task.args = args
 	pool.wg.Add(1)
 	for pool.queue.Enqueue(task) != nil {
+		if pool.closed.Load() {
+			pool.wg.Done()
+			task.fn = nil
+			task.args = nil
+			tasks.Put(task)
+			panic("send task to closed pool")
+		}
 		runtime.Gosched()
 	}
 }
@@ -57,8 +67,8 @@ func (pool *Pool) worker() {
 	for {
 		value, err := pool.queue.Dequeue()
 		if err != nil {
-			// 队列为空
-			if pool.closed.Load() {
+			// 队列为空，检查是否已关闭且所有任务已完成
+			if pool.closed.Load() && pool.queue.IsEmpty() {
 				return
 			}
 			runtime.Gosched()
