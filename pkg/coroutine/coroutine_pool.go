@@ -1,9 +1,12 @@
 package coroutine
 
 import (
+	"runtime"
 	"runtime/debug"
 	"sync"
+	"sync/atomic"
 
+	"github.com/soulnov23/go-tool/pkg/lockfree/ring"
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
@@ -21,15 +24,18 @@ type task struct {
 }
 
 type Pool struct {
-	taskChan chan *task
-	printf   func(formatter string, args ...any)
-	wg       sync.WaitGroup
+	queue  *ring.Queue
+	printf func(formatter string, args ...any)
+	wg     sync.WaitGroup
+	closed atomic.Bool
 }
 
 func NewPool(poolCapacity int, printf func(formatter string, args ...any)) *Pool {
+	// 队列容量设为 worker 数量的 4 倍，提供足够缓冲
+	queueCapacity := max(uint64(poolCapacity)*4, 64)
 	pool := &Pool{
-		taskChan: make(chan *task),
-		printf:   printf,
+		queue:  ring.New(queueCapacity),
+		printf: printf,
 	}
 	for range poolCapacity {
 		go pool.worker()
@@ -42,11 +48,23 @@ func (pool *Pool) Go(fn func(...any), args ...any) {
 	task.fn = fn
 	task.args = args
 	pool.wg.Add(1)
-	pool.taskChan <- task
+	for pool.queue.Enqueue(task) != nil {
+		runtime.Gosched()
+	}
 }
 
 func (pool *Pool) worker() {
-	for task := range pool.taskChan {
+	for {
+		value, err := pool.queue.Dequeue()
+		if err != nil {
+			// 队列为空
+			if pool.closed.Load() {
+				return
+			}
+			runtime.Gosched()
+			continue
+		}
+		task := value.(*task)
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
@@ -67,5 +85,5 @@ func (pool *Pool) Wait() {
 }
 
 func (pool *Pool) Close() {
-	close(pool.taskChan)
+	pool.closed.Store(true)
 }
