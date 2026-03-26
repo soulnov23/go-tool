@@ -46,9 +46,8 @@ type node struct {
 type Queue struct {
 	/*----------------CacheLine----------------*/
 	capacity uint64                      // 队列容量，必须是2的幂
-	size     *atomic.Uint64              // 队列当前大小
 	mask     uint64                      // 掩码，用于计算索引(等于capacity-1)
-	_        [cacheLinePadSize - 24]byte // 填充至缓存行大小
+	_        [cacheLinePadSize - 16]byte // 填充至缓存行大小
 	/*----------------CacheLine----------------*/
 	head *atomic.Uint64             // 队列头部索引
 	_    [cacheLinePadSize - 8]byte // 避免伪共享
@@ -71,7 +70,6 @@ func New(capacity uint64) *Queue {
 	capacity = roundUpToPower2(capacity)
 	queue := &Queue{
 		capacity: capacity,
-		size:     &atomic.Uint64{},
 		mask:     capacity - 1,
 		head:     &atomic.Uint64{},
 		tail:     &atomic.Uint64{},
@@ -114,24 +112,26 @@ func roundUpToPower2(v uint64) uint64 {
 // Enqueue 将元素添加到队列尾部
 func (queue *Queue) Enqueue(value any) error {
 	for {
-		if queue.IsFull() {
+		tail := queue.tail.Load()
+		head := queue.head.Load()
+		if tail-head >= queue.capacity {
 			return ErrQueueFull
 		}
 
 		// 抢占pos
-		tail := queue.tail.Load()
 		if !queue.tail.CompareAndSwap(tail, tail+1) {
 			continue
 		}
 
 		// 抢到位置后，就没有数据竞争了
-		queue.size.Add(1)
 		node := queue.nodes[tail&queue.mask]
 
 		for {
 			// 当Dequeue更新ring.head后，还没有更新node.deSeq，这里需要判断是否已经被读取，避免被覆盖
 			// 通过比较序列号确保节点状态一致性，防止ABA问题
 			if node.enSeq.Load() == node.deSeq.Load() {
+				// 先写数据，后原子更新序列号
+				// atomic更新enSeq提供release语义，保证value的写入对后续观察到enSeq变化的goroutine可见
 				node.value = value
 				// 增加一个完整的容量值而不是简单地+1
 				// 这确保即使节点被重用多次，序列号也会有显著差异，彻底解决ABA问题
@@ -146,18 +146,18 @@ func (queue *Queue) Enqueue(value any) error {
 // Dequeue 从队列头部取出元素
 func (queue *Queue) Dequeue() (any, error) {
 	for {
-		if queue.IsEmpty() {
+		head := queue.head.Load()
+		tail := queue.tail.Load()
+		if tail == head {
 			return nil, ErrQueueEmpty
 		}
 
 		// 抢占pos
-		head := queue.head.Load()
 		if !queue.head.CompareAndSwap(head, head+1) {
 			continue
 		}
 
 		// 抢到位置后，就没有数据竞争了
-		queue.size.Add(^uint64(0))
 		node := queue.nodes[head&queue.mask]
 
 		for {
@@ -165,12 +165,14 @@ func (queue *Queue) Dequeue() (any, error) {
 			// 通过序列号检查确保节点已被写入且未被读取
 			// enSeq比deSeq大一个容量值表示节点已写入但未读取
 			if node.enSeq.Load() == node.deSeq.Load()+queue.capacity {
+				// 先读数据并清零，后原子更新序列号
+				// atomic更新deSeq提供release语义，保证value的清零对后续观察到deSeq变化的goroutine可见
 				value := node.value
+				// 清除引用帮助GC
+				node.value = nil
 				// 增加一个完整的容量值标记节点已读取
 				// 这确保序列号保持较大差异，有效解决ABA问题
 				node.deSeq.Add(queue.capacity)
-				// 清除引用帮助GC
-				node.value = nil
 				return value, nil
 			}
 			// 出列失败继续try
@@ -178,9 +180,15 @@ func (queue *Queue) Dequeue() (any, error) {
 	}
 }
 
-// Size 返回队列当前大小
+// Size 返回队列当前大小（近似值）
+// 在并发环境下tail和head的读取不是原子的，结果可能不完全精确
 func (queue *Queue) Size() uint64 {
-	return queue.size.Load()
+	tail := queue.tail.Load()
+	head := queue.head.Load()
+	if tail >= head {
+		return tail - head
+	}
+	return 0
 }
 
 // Capacity 返回队列最大容量
@@ -190,10 +198,10 @@ func (queue *Queue) Capacity() uint64 {
 
 // IsEmpty 检查队列是否为空
 func (queue *Queue) IsEmpty() bool {
-	return queue.Size() == 0
+	return queue.tail.Load() == queue.head.Load()
 }
 
 // IsFull 检查队列是否已满
 func (queue *Queue) IsFull() bool {
-	return queue.Size() == queue.capacity
+	return queue.tail.Load()-queue.head.Load() >= queue.capacity
 }
