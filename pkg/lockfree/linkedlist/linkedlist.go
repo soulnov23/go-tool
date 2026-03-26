@@ -55,10 +55,6 @@ func (queue *Queue) Enqueue(value any) {
 	for {
 		// 执行cas前先把上一刻的tail和tail.next保存
 		tail = load(&queue.tail)
-		// 添加内存屏障确保load操作按顺序执行
-		// 确保之前的读操作（load(&queue.tail)）在之后的读操作（load(&tail.next)）之前完成
-		// 防止CPU或编译器的指令重排导致的不一致性
-		atomic.CompareAndSwapPointer(&tail.next, nil, nil) // 轻量级内存屏障
 		tailNext = load(&tail.next)
 
 		// 如果tail已经被其它线程移动了，重新开始
@@ -89,10 +85,6 @@ func (queue *Queue) Dequeue() any {
 	for {
 		// 执行cas前先把上一刻的head，tail和head.next保存
 		head = load(&queue.head)
-		// 添加内存屏障确保load操作按顺序执行
-		// 确保之前的读操作（load(&queue.head)）在之后的读操作（load(&queue.tail)和load(&head.next)）之前完成
-		// 防止CPU或编译器的指令重排导致的不一致性
-		atomic.CompareAndSwapPointer(&head.next, nil, nil) // 轻量级内存屏障
 		tail = load(&queue.tail)
 		headNext = load(&head.next)
 
@@ -122,7 +114,6 @@ func (queue *Queue) Dequeue() any {
 			queue.size.Add(^uint64(0)) // 相当于-1
 			// 释放旧head的引用，帮助GC回收
 			atomic.StorePointer(&head.next, nil)
-			head.value = nil
 			return value
 		}
 		// 出列失败继续try
@@ -132,11 +123,4 @@ func (queue *Queue) Dequeue() any {
 // Size 实际大小，链表没有容量限制，这里不需要Capacity方法
 func (queue *Queue) Size() uint64 {
 	return queue.size.Load()
-}
-
-// IsEmpty 检查队列是否为空
-func (queue *Queue) IsEmpty() bool {
-	head := load(&queue.head)
-	tail := load(&queue.tail)
-	return head == tail && load(&head.next) == nil
 }
