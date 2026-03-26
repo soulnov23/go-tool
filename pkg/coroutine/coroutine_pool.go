@@ -1,12 +1,9 @@
 package coroutine
 
 import (
-	"runtime"
 	"runtime/debug"
 	"sync"
-	"sync/atomic"
 
-	"github.com/soulnov23/go-tool/pkg/lockfree/ring"
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
@@ -24,18 +21,15 @@ type task struct {
 }
 
 type Pool struct {
-	queue  *ring.Queue
-	printf func(formatter string, args ...any)
-	wg     sync.WaitGroup
-	closed atomic.Bool
+	taskChan chan *task
+	printf   func(formatter string, args ...any)
+	wg       sync.WaitGroup
 }
 
 func NewPool(poolCapacity int, printf func(formatter string, args ...any)) *Pool {
-	// 队列容量设为 worker 数量的 4 倍，提供足够缓冲
-	queueCapacity := max(uint64(poolCapacity)*4, 64)
 	pool := &Pool{
-		queue:  ring.New(queueCapacity),
-		printf: printf,
+		taskChan: make(chan *task),
+		printf:   printf,
 	}
 	for range poolCapacity {
 		go pool.worker()
@@ -44,46 +38,24 @@ func NewPool(poolCapacity int, printf func(formatter string, args ...any)) *Pool
 }
 
 func (pool *Pool) Go(fn func(...any), args ...any) {
-	if pool.closed.Load() {
-		panic("send task to closed pool")
-	}
 	task := tasks.Get().(*task)
 	task.fn = fn
 	task.args = args
 	pool.wg.Add(1)
-	for pool.queue.Enqueue(task) != nil {
-		if pool.closed.Load() {
-			pool.wg.Done()
-			task.fn = nil
-			task.args = nil
-			tasks.Put(task)
-			panic("send task to closed pool")
-		}
-		runtime.Gosched()
-	}
+	pool.taskChan <- task
 }
 
 func (pool *Pool) worker() {
-	for {
-		value, err := pool.queue.Dequeue()
-		if err != nil {
-			// 队列为空，检查是否已关闭且所有任务已完成
-			if pool.closed.Load() && pool.queue.IsEmpty() {
-				return
-			}
-			runtime.Gosched()
-			continue
-		}
-		task := value.(*task)
+	for task := range pool.taskChan {
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
 					pool.printf("[PANIC] %v\n%s\n", err, utils.BytesToString(debug.Stack()))
 				}
-				pool.wg.Done()
 				task.fn = nil
 				task.args = nil
 				tasks.Put(task)
+				pool.wg.Done()
 			}()
 			task.fn(task.args...)
 		}()
@@ -95,5 +67,5 @@ func (pool *Pool) Wait() {
 }
 
 func (pool *Pool) Close() {
-	pool.closed.Store(true)
+	close(pool.taskChan)
 }
