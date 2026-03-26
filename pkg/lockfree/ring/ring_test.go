@@ -37,14 +37,15 @@ func TestRingBuffer(t *testing.T) {
 		return
 	}
 
-	queue := New(512)
+	queue := New(2) // 最小容量，提高并发碰撞概率
 
-	timeout := 10 * time.Second
+	timeout := 30 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var enWait sync.WaitGroup
-	var enCount atomic.Uint64
-	for i := 0; i < 8; i++ {
+	var enSuccess atomic.Uint64 // 入队成功次数
+	var enSeq atomic.Uint64     // 全局递增序列号，确保每个入队值唯一
+	for i := 0; i < 32; i++ {
 		enWait.Add(1)
 		go func(ctx context.Context, queue *Queue) {
 			defer enWait.Done()
@@ -54,19 +55,21 @@ func TestRingBuffer(t *testing.T) {
 					glog.DebugFields("ctx done")
 					return
 				default:
-					if queue.Enqueue("ringbuffer") == ErrQueueFull {
+					seq := enSeq.Add(1)
+					if queue.Enqueue(seq) == ErrQueueFull {
 						glog.DebugFields("full", zap.Uint64("size", queue.Size()))
+					} else {
+						enSuccess.Add(1)
 					}
-					glog.DebugFields("Enqueue", zap.Uint64("size", queue.Size()))
-					enCount.Add(1)
 				}
 			}
 		}(ctx, queue)
 	}
 
 	var deWait sync.WaitGroup
-	var deCount atomic.Uint64
-	for i := 0; i < 8; i++ {
+	var deSuccess atomic.Uint64 // 出队成功次数
+	var seen sync.Map           // 检测重复值
+	for i := 0; i < 32; i++ {
 		deWait.Add(1)
 		go func(ctx context.Context, queue *Queue) {
 			defer deWait.Done()
@@ -76,12 +79,15 @@ func TestRingBuffer(t *testing.T) {
 					glog.DebugFields("ctx done")
 					return
 				default:
-					_, err := queue.Dequeue()
+					value, err := queue.Dequeue()
 					if err == ErrQueueEmpty {
 						glog.DebugFields("empty", zap.Uint64("size", queue.Size()))
+					} else {
+						if _, loaded := seen.LoadOrStore(value, true); loaded {
+							t.Errorf("duplicate value: %v", value)
+						}
+						deSuccess.Add(1)
 					}
-					glog.DebugFields("Dequeue", zap.Uint64("size", queue.Size()))
-					deCount.Add(1)
 				}
 			}
 		}(ctx, queue)
@@ -93,5 +99,12 @@ func TestRingBuffer(t *testing.T) {
 	enWait.Wait()
 	deWait.Wait()
 
-	glog.DebugFields("", zap.Uint64("enCount", enCount.Load()), zap.Uint64("deCount", deCount.Load()))
+	// 正确性校验：入队成功数 == 出队成功数 + 队列剩余
+	en := enSuccess.Load()
+	de := deSuccess.Load()
+	remain := queue.Size()
+	glog.DebugFields("", zap.Uint64("enSuccess", en), zap.Uint64("deSuccess", de), zap.Uint64("remain", remain))
+	if en != de+remain {
+		t.Fatalf("data inconsistency: enSuccess(%d) != deSuccess(%d) + remain(%d)", en, de, remain)
+	}
 }

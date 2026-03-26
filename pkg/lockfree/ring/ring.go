@@ -4,7 +4,6 @@ package ring
 
 import (
 	"errors"
-	"runtime"
 	"sync/atomic"
 	"unsafe"
 
@@ -114,34 +113,30 @@ func roundUpToPower2(v uint64) uint64 {
 func (queue *Queue) Enqueue(value any) error {
 	for {
 		tail := queue.tail.Load()
-		head := queue.head.Load()
-		if tail-head >= queue.capacity {
+		node := queue.nodes[tail&queue.mask]
+		// 通过比较序列号判断节点是否空闲（已被消费可以写入）
+		// enSeq == deSeq 表示节点空闲，enSeq != deSeq 表示节点已写入尚未消费，队列满
+		enSeq := node.enSeq.Load()
+		deSeq := node.deSeq.Load()
+		if enSeq != deSeq {
+			// 节点尚未被消费，队列满
 			return ErrQueueFull
 		}
-
+		if enSeq != tail {
+			// 其他生产者已推进tail，重试
+			continue
+		}
 		// 抢占pos
 		if !queue.tail.CompareAndSwap(tail, tail+1) {
 			continue
 		}
-
-		// 抢到位置后，就没有数据竞争了
-		node := queue.nodes[tail&queue.mask]
-
-		for {
-			// 当Dequeue更新ring.head后，还没有更新node.deSeq，这里需要判断是否已经被读取，避免被覆盖
-			// 通过比较序列号确保节点状态一致性，防止ABA问题
-			if node.enSeq.Load() == node.deSeq.Load() {
-				// 先写数据，后原子更新序列号
-				// atomic更新enSeq提供release语义，保证value的写入对后续观察到enSeq变化的goroutine可见
-				node.value = value
-				// 增加一个完整的容量值而不是简单地+1
-				// 这确保即使节点被重用多次，序列号也会有显著差异，彻底解决ABA问题
-				node.enSeq.Add(queue.capacity)
-				return nil
-			}
-			// 让出CPU时间片，避免忙等导致CPU空转
-			runtime.Gosched()
-		}
+		// 先写数据，后原子更新序列号
+		// atomic更新enSeq提供release语义，保证value的写入对后续观察到enSeq变化的goroutine可见
+		node.value = value
+		// 设置序列号为tail+capacity标记节点已写入
+		// 这确保即使节点被重用多次，序列号也会有显著差异，彻底解决ABA问题
+		node.enSeq.Store(tail + queue.capacity)
+		return nil
 	}
 }
 
@@ -149,37 +144,32 @@ func (queue *Queue) Enqueue(value any) error {
 func (queue *Queue) Dequeue() (any, error) {
 	for {
 		head := queue.head.Load()
-		tail := queue.tail.Load()
-		if tail == head {
+		node := queue.nodes[head&queue.mask]
+		// 通过序列号判断节点是否已写入且尚未消费
+		// enSeq == deSeq+capacity 表示节点已写入可以读取，否则队列空
+		enSeq := node.enSeq.Load()
+		deSeq := node.deSeq.Load()
+		if enSeq != deSeq+queue.capacity {
+			// 节点尚未被写入，队列空
 			return nil, ErrQueueEmpty
 		}
-
+		if deSeq != head {
+			// 其他消费者已推进head，重试
+			continue
+		}
 		// 抢占pos
 		if !queue.head.CompareAndSwap(head, head+1) {
 			continue
 		}
-
-		// 抢到位置后，就没有数据竞争了
-		node := queue.nodes[head&queue.mask]
-
-		for {
-			// 当Enqueue更新ring.tail后，还没有更新node.enSeq，这里需要判断是否已经被写入，避免取旧值
-			// 通过序列号检查确保节点已被写入且未被读取
-			// enSeq比deSeq大一个容量值表示节点已写入但未读取
-			if node.enSeq.Load() == node.deSeq.Load()+queue.capacity {
-				// 先读数据并清零，后原子更新序列号
-				// atomic更新deSeq提供release语义，保证value的清零对后续观察到deSeq变化的goroutine可见
-				value := node.value
-				// 清除引用帮助GC
-				node.value = nil
-				// 增加一个完整的容量值标记节点已读取
-				// 这确保序列号保持较大差异，有效解决ABA问题
-				node.deSeq.Add(queue.capacity)
-				return value, nil
-			}
-			// 让出CPU时间片，避免忙等导致CPU空转
-			runtime.Gosched()
-		}
+		// 先读数据并清零，后原子更新序列号
+		// atomic更新deSeq提供release语义，保证value的清零对后续观察到deSeq变化的goroutine可见
+		value := node.value
+		// 清除引用帮助GC
+		node.value = nil
+		// 设置序列号为head+capacity标记节点已消费
+		// 这确保序列号保持较大差异，有效解决ABA问题
+		node.deSeq.Store(head + queue.capacity)
+		return value, nil
 	}
 }
 
