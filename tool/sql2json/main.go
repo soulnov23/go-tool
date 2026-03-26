@@ -63,8 +63,8 @@ func main() {
 		record := make(map[string]any, len(columns))
 		for i, column := range columns {
 			value := values[i]
-			if b, ok := value.([]byte); ok {
-				value = string(b)
+			if bytes, ok := value.([]byte); ok {
+				value = string(bytes)
 			}
 			record[column] = value
 		}
