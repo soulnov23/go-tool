@@ -156,7 +156,8 @@
     },
     {
         "key": "ctrl+l",
-        "command": "aichat.newchataction"
+        "command": "tencentcloud.codingcopilot.addToChat",
+        "when": "editorFocus && !editorReadonly"
     },
     {
         "key": "ctrl+g",
