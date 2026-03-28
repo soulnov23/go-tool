@@ -240,10 +240,10 @@
     "chat.disableAIFeatures": true,
     // codebuddy选项
     "codingcopilot.enableInlineChat": true,
-    "codingcopilot.enableInlineChatIDEShortcutsTip": true,
+    "codingcopilot.enableInlineChatIDEShortcutsTip": false,
     "codingcopilot.commitMessageStyle": "Auto",
     "codingcopilot.commitMessageLanguage": "zh_CN",
-    "codingcopilot.toolbarOnSelection": true,
+    "codingcopilot.toolbarOnSelection": false,
     "codingcopilot.enableAutoCompletions": true,
     "codingcopilot.enableNextEditSuggestions": true,
     "codingcopilot.generationPreference": "intelligentMode",
@@ -252,5 +252,10 @@
         "scmInput": false
     },
     "codingcopilot.enableFloatShortcut": true,
-    "codingcopilot.enableIDENotification": true
+    "codingcopilot.enableIDENotification": true,
+    "codingcopilot.taskList": true,
+    "codingcopilot.enabledWebSearch": true,
+    "codingcopilot.autoAcceptWebSearch": true,
+    "codingcopilot.standaloneTerminal": true,
+    "codingcopilot.enableImageGen": true
 }
