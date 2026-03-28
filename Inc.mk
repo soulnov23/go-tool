@@ -10,20 +10,26 @@ PRINT := -v -x
 #0:禁用检查
 #1:检查unsafe.Pointer转换
 #0:转换为unsafe.Pointer的对象分配到堆上
-DEBUG := -gcflags "all=-N -l -d=checkptr=1"
+DEBUG_GCFLAGS := all=-N -l -d=checkptr=1
 
 #使用go tool link查看-ldflags传递给链接器的参数
 #-w禁用DWARF生成
 #-s禁用符号表
-RELEASE := -ldflags "-w -s"
+RELEASE_LDFLAGS := -w -s
 
 #-m打印优化策略，编译器优化技术确定变量是否需要在堆上分配内存
 ESCAPE := -gcflags "-m"
 
-VERSION := -ldflags "-X 'main.goVersion=$(shell go version)' \
-					 -X 'main.gitBranch=$(shell git rev-parse --abbrev-ref HEAD)' \
-					 -X 'main.gitCommitID=$(shell git rev-parse HEAD)' \
-					 -X 'main.gitCommitTime=$(shell git log --pretty=format:"%ci" | head -1)' \
-					 -X 'main.gitCommitAuthor=$(shell git log --pretty=format:"%cn" | head -1)'"
+#版本信息通过-ldflags -X注入到main包变量中
+VERSION_LDFLAGS := -X 'main.goVersion=$(shell go version)' \
+				   -X 'main.gitBranch=$(shell git rev-parse --abbrev-ref HEAD)' \
+				   -X 'main.gitCommitID=$(shell git rev-parse HEAD)' \
+				   -X 'main.gitCommitTime=$(shell git log --pretty=format:"%ci" | head -1)' \
+				   -X 'main.gitCommitAuthor=$(shell git log --pretty=format:"%cn" | head -1)'
+
+#各构建目标的完整参数，确保-ldflags和-gcflags各只出现一次避免覆盖
+VERSION := -ldflags "$(VERSION_LDFLAGS)"
+DEBUG := -gcflags "$(DEBUG_GCFLAGS)" -ldflags "$(VERSION_LDFLAGS)"
+RELEASE := -ldflags "$(RELEASE_LDFLAGS) $(VERSION_LDFLAGS)"
 
 CGO := CGO_ENABLED=0
