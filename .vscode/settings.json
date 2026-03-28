@@ -228,5 +228,14 @@
     //database-client选项
     "database-client.autoSync": true,
     "database-client.showSecurity": false,
-    "database-client.terminalLocation": "Panel"
+    "database-client.terminalLocation": "Panel",
+    // gongfeng选项
+    "gongfeng.copilot.enableCompletionLanguage": {
+        "scminput": true,
+        "markdown": true
+    },
+    "gongfeng.copilot.enableCodelensForFunctions": true,
+    // chat选项
+    "chat.agent.enabled": false,
+    "chat.disableAIFeatures": true
 }
