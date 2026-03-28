@@ -15,6 +15,7 @@ main() {
         cp -rf /data/home/project/go-tool/.vscode/tasks.json ./.vscode
     fi
     cp -rf /data/home/project/go-tool/.vscode/settings.json ./.vscode
+    cp -rf /data/home/project/go-tool/.codebuddy ./
     if [ "$1" == "chmod" ]; then
         chmod -R 644 ./
         find . -type d -name build | while read -r dir; do
