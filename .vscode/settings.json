@@ -237,5 +237,20 @@
     "gongfeng.copilot.enableCodelensForFunctions": true,
     // chat选项
     "chat.agent.enabled": false,
-    "chat.disableAIFeatures": true
+    "chat.disableAIFeatures": true,
+    // codebuddy选项
+    "codingcopilot.enableInlineChat": true,
+    "codingcopilot.enableInlineChatIDEShortcutsTip": true,
+    "codingcopilot.commitMessageStyle": "Auto",
+    "codingcopilot.commitMessageLanguage": "zh_CN",
+    "codingcopilot.toolbarOnSelection": true,
+    "codingcopilot.enableAutoCompletions": true,
+    "codingcopilot.enableNextEditSuggestions": true,
+    "codingcopilot.generationPreference": "intelligentMode",
+    "codingcopilot.selectedCompletionModel": "",
+    "codingcopilot.enableCompletionLanguage": {
+        "scmInput": false
+    },
+    "codingcopilot.enableFloatShortcut": true,
+    "codingcopilot.enableIDENotification": true
 }
