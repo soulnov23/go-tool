@@ -30,11 +30,19 @@
 - 常量使用 MixedCaps（驼峰），不用 `ALL_CAPS` 或 `kConstName`
 - 测试函数遵循 `TestXxx`/`BenchmarkXxx`/`ExampleXxx` 命名
 
+**全项目命名统一**（详细正反示例见 `references/go-style-rules.md` 2.10 节）：
+- [严重] 同一概念在全项目中必须使用同一个名称（如 `userID` 不可在别处写成 `userId` / `uid`）
+- 约定俗成的变量名必须全项目统一（`ctx`/`err`/`req`/`resp`/`cfg`/`db`/`mu`/`logger` 等），选定一种后不混用
+- 变量声明风格统一：同一场景下不混用 `:=` 和 `var`
+- for range 中的循环变量命名统一（`i, v` / `k, v` / `idx, item`，选定一种后不混用）
+- channel 命名风格统一（如统一使用 `xxxCh` 后缀）
+
 ### 常见问题
 - 混用 `snake_case` 和 `camelCase`
 - 同一概念在不同包中名称不同
 - [严重] 包名与目录名不一致
 - 接收者名称在同类型不同方法间不一致
+- [严重] 同一概念在不同文件中使用不同变量名（如 `userID` vs `userId` vs `uid`）
 
 ---
 
@@ -92,10 +100,20 @@
 - Printf 风格函数名以 `f` 结尾（如 `Wrapf`）
 - 格式字符串声明为 `const` 以便 `go vet` 检查
 
+**函数调用写法全项目统一**（详细正反示例见 `references/go-style-rules.md` 4.5 节）：
+- 构造函数/初始化写法统一：统一使用函数式选项或配置结构体，不混用
+- HTTP 响应写法统一：`json.NewEncoder` 或 `json.Marshal + w.Write`，选定一种后不混用
+- 类型转换写法统一：整数转字符串统一使用 `strconv` 或 `fmt.Sprintf`，不混用
+- 超时设置方式统一：统一使用 `context.WithTimeout` 或其他方式
+- HTTP client 使用方式统一：全项目统一复用或统一创建策略
+- 同一种操作只允许一种写法，出现两种写法即为风格不一致
+
 ### 常见问题
 - `if ... { return } else { ... }` 应简化为 `if ... { return }` + 正常代码
 - 使用 `fmt.Errorf("Something bad.")` — 错误字符串不应首字母大写或以标点结尾
 - [严重] 导出函数缺少 godoc 注释
+- 同类函数调用写法不统一（如 HTTP 响应有的用 `json.NewEncoder` 有的用 `json.Marshal`）
+- 新代码引入了与项目既有风格不同的写法
 
 ---
 
@@ -130,10 +148,16 @@
 - 仅用于程序启动初始化或测试
 - 命名约定 `MustXxx`
 
+**错误写法全项目统一**（详细正反示例见 `references/go-style-rules.md` 4.5 节）：
+- [严重] 错误包装方式全项目统一：统一使用 `fmt.Errorf + %w` 或统一使用 `errors.Wrap`，不混用
+- [严重] 错误消息格式全项目统一：统一使用动词短语（`"query user: %w"`）或 `"failed to xxx"` 句式，不混用
+
 ### 常见问题
 - 错误包装用 `%v` 丢失错误链
 - 记录日志后又返回同一个错误
 - [严重] 用 `_` 忽略关键函数的错误返回值
+- [严重] 错误包装混用 `fmt.Errorf` 和 `errors.Wrap`
+- 错误消息格式混乱（`"failed to xxx"` / `"xxx failed"` / `"xxx error"` 混用）
 
 ---
 
@@ -574,6 +598,14 @@ func TestAdd(t *testing.T) {
 - 热路径/循环中避免无限制日志输出
 - panic 恢复：关键 goroutine 有 `recover()` 并记录堆栈
 
+**日志全项目一致性**（详细正反示例见 `references/go-style-rules.md` 9.5 节）：
+- [严重] 日志字段（Field）key 命名风格全项目统一（统一 `snake_case` 或 `camelCase`，不混用）
+- [严重] 同一语义的日志字段在全项目中使用同一个 key 名（如 `user_id` 不可在别处写成 `userId` / `uid`）
+- 日志消息风格统一：大小写、是否有标点、用词习惯全项目一致
+- 同类操作的日志必须携带相同的上下文字段（如所有 HTTP 请求日志统一包含 `request_id`、`method`、`path`、`status_code`、`latency`）
+- 所有错误日志统一包含基础上下文字段（`request_id`、关键业务 ID、`error`）
+- 数据库操作日志统一包含 `request_id`、`query`（操作名）、`latency`
+
 **API 设计**：
 - 函数参数 > 5 个考虑 Options 模式
 - 遵循 `(result, error)` 返回值惯例
@@ -584,3 +616,5 @@ func TestAdd(t *testing.T) {
 - [严重] 可变全局变量导致并发问题和测试不稳定
 - 循环依赖导致编译错误
 - 日志混用多个库，风格不统一
+- [严重] 日志字段 key 名不一致（如 `user_id` vs `userId` vs `UserID`）
+- 同类 HTTP handler 打印的日志字段不一致（有的有 `request_id` 有的没有）

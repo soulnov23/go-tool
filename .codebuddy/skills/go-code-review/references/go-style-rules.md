@@ -167,6 +167,48 @@ var (
 )
 ```
 
+### 2.10 全项目命名一致性
+
+> 同一项目中，同一概念必须使用同一个名称，不允许不同文件/包中对同一概念使用不同的命名。
+
+```go
+// ✅ 全项目统一使用同一命名
+userID   // 全项目统一，不要混用 userId / user_id / uid
+cfg      // 统一缩写，不要某处用 config 某处用 cfg 某处用 conf
+
+// ❌ 同一概念不同命名散落在各处
+// file_a.go: userID
+// file_b.go: userId
+// file_c.go: uid
+// file_d.go: user_id
+```
+
+**常见的必须统一的命名约定**：
+
+| 概念 | 选定一种后全项目统一 | 禁止混用 |
+|------|---------------------|---------|
+| 上下文 | `ctx` | `c` / `context` / `reqCtx` |
+| 错误 | `err` | `e` / `error` / `er` |
+| HTTP 请求 | `req` 或 `r` | 选一种后不混用 |
+| HTTP 响应 | `resp` 或 `w` | 选一种后不混用 |
+| 数据库连接 | `db` | `conn` / `database` / `dbc`（除非语义不同）|
+| 日志对象 | `logger` 或 `log` | 选一种后不混用 |
+| 配置对象 | `cfg` 或 `config` | 选一种后不混用 |
+| 互斥锁 | `mu` | `lock` / `mtx` / `mutex` |
+
+**变量声明风格统一**：
+
+```go
+// ✅ 选定一种声明风格后全项目统一
+// 风格 A：短变量声明
+client := &http.Client{Timeout: 10 * time.Second}
+
+// 风格 B：var 声明
+var client = &http.Client{Timeout: 10 * time.Second}
+
+// ❌ 同一场景下混用两种风格
+```
+
 ---
 
 ## 三、注释与文档
@@ -295,6 +337,90 @@ var cfg Config // 零值
 // ❌ 错误：不指定字段名
 svc := &Server{"localhost", 8080, 30 * time.Second}
 ```
+
+### 4.5 函数调用与操作写法全项目统一
+
+> 相同功能的函数调用在全项目中必须使用统一的写法和模式。
+> 一旦项目中确立了某种写法，全项目必须统一遵循，不允许多种写法并存。
+
+**错误创建与包装方式统一**：
+
+```go
+// ✅ 全项目统一使用一种错误创建方式
+// 方式 A：fmt.Errorf + %w
+return fmt.Errorf("query user: %w", err)
+
+// 方式 B：errors.Wrap（如使用 pkg/errors）
+return errors.Wrap(err, "query user")
+
+// ❌ 项目中混用多种错误包装
+// file_a.go: fmt.Errorf("failed: %w", err)
+// file_b.go: errors.Wrap(err, "failed")
+```
+
+**错误消息格式统一**：
+
+```go
+// ✅ 选定一种错误消息格式后全项目统一
+// 风格 A：动词短语（推荐）
+return fmt.Errorf("query user by id: %w", err)
+return fmt.Errorf("parse config file: %w", err)
+
+// 风格 B：failed to 句式
+return fmt.Errorf("failed to query user: %w", err)
+
+// ❌ 错误消息格式不统一
+// file_a.go: "query user failed: ..."     （后置 failed）
+// file_b.go: "failed to query user: ..."  （前置 failed to）
+// file_c.go: "query user: ..."            （无 failed）
+// file_d.go: "Query user error: ..."      （首字母大写 + error）
+```
+
+**构造函数与初始化写法统一**：
+
+```go
+// ✅ 全项目统一选择一种构造方式
+// 方式 A：函数式选项
+srv := NewServer(WithPort(8080), WithTimeout(30*time.Second))
+
+// 方式 B：配置结构体
+srv := NewServer(ServerConfig{Port: 8080, Timeout: 30*time.Second})
+
+// ❌ 同一项目中部分用选项模式，部分用配置结构体
+```
+
+**HTTP 响应写法统一**：
+
+```go
+// ✅ 全项目统一 HTTP 响应写法
+// 方式 A：
+w.Header().Set("Content-Type", "application/json")
+json.NewEncoder(w).Encode(resp)
+
+// 方式 B：
+data, _ := json.Marshal(resp)
+w.Write(data)
+
+// 选定一种后全项目统一，不要 A、B 混用
+```
+
+**类型转换写法统一**：
+
+```go
+// ✅ 全项目统一选择一种类型转换方式
+s := strconv.Itoa(n)
+
+// ❌ 混用 fmt.Sprintf 和 strconv
+// file_a.go: s := strconv.Itoa(n)
+// file_b.go: s := fmt.Sprintf("%d", n)
+```
+
+**通用一致性检查原则**：
+
+1. **同一种操作只允许一种写法**：一旦出现两种写法做同一件事，标记为风格不一致
+2. **先到先得**：以项目中最先/最多采用的写法为基准，偏离基准的应统一修正
+3. **新代码跟随已有风格**：新增代码必须遵循项目已确立的风格
+4. **重构时全量统一**：如需变更风格，必须全项目统一变更，不允许新旧风格并存
 
 ---
 
@@ -502,6 +628,128 @@ logger.Info(fmt.Sprintf("user %s login from %s", userID, clientIP))
 - 日志消息简短明确，风格全项目统一
 - 热路径/循环中避免无限制日志输出
 - [严重] 不在日志中打印敏感信息（密码、Token、PII）
+
+### 9.5 日志全项目一致性
+
+> 日志是全项目代码风格一致性最容易失控的领域。以下规则强制统一日志写法。
+
+**日志库与调用方式统一**：
+
+```go
+// ✅ 全项目统一使用同一种日志调用风格
+
+// 风格 A：zap 的强类型 Field
+logger.Info("user login",
+    zap.String("user_id", userID),
+    zap.String("ip", clientIP),
+    zap.Int("status", statusCode),
+)
+
+// 风格 B：slog 的键值对
+slog.Info("user login",
+    "user_id", userID,
+    "ip", clientIP,
+    "status", statusCode,
+)
+
+// 风格 C：logrus 的 WithFields
+log.WithFields(log.Fields{
+    "user_id": userID,
+    "ip":      clientIP,
+    "status":  statusCode,
+}).Info("user login")
+
+// ❌ 同一项目中混用多种日志库或调用风格
+```
+
+**日志消息风格统一**：
+
+```go
+// ✅ 选定一种日志消息风格后全项目统一
+// 风格 A：小写开头，无标点（推荐）
+logger.Info("user login success")
+logger.Error("query database failed")
+
+// 风格 B：大写开头，无标点
+logger.Info("User login success")
+
+// ❌ 消息风格不统一
+// logger.Info("User login success.")   // 有句号
+// logger.Info("user login success")    // 小写无句号
+// logger.Info("USER_LOGIN")            // 全大写下划线
+```
+
+**日志字段（Field）命名统一**：
+
+同一语义的日志字段在全项目中必须使用同一个 key 名。
+
+```go
+// ✅ 全项目统一字段命名（选定一套命名规则）
+// 规则：全部使用 snake_case
+zap.String("user_id", userID)
+zap.String("request_id", reqID)
+zap.String("trace_id", traceID)
+zap.Int("status_code", code)
+zap.String("method", method)
+zap.String("path", path)
+zap.Duration("latency", dur)
+zap.Error(err)  // error 字段统一用 zap.Error
+
+// ❌ 同一字段不同 key 名散落在各处
+// file_a.go: zap.String("userId", id)       // camelCase
+// file_b.go: zap.String("user_id", id)      // snake_case
+// file_c.go: zap.String("UserID", id)       // PascalCase
+// file_d.go: zap.String("user-id", id)      // kebab-case
+```
+
+**建议统一的常见日志字段名**：
+
+| 语义 | 推荐 key（snake_case） | 禁止混用 |
+|------|----------------------|---------|
+| 用户标识 | `user_id` | `userId` / `UserID` / `uid` |
+| 请求标识 | `request_id` | `requestId` / `reqId` / `req_id` |
+| 链路追踪 | `trace_id` | `traceId` / `TraceID` |
+| HTTP 方法 | `method` | `http_method` / `httpMethod` |
+| 请求路径 | `path` | `url` / `uri` / `endpoint`（除非语义不同）|
+| 状态码 | `status_code` | `statusCode` / `status` / `code` |
+| 耗时 | `latency` 或 `duration` | 选一种后不混用 |
+| 错误信息 | `error`（使用日志库内置 Error 方法）| `err` / `errmsg` / `error_msg` |
+| 调用方 | `caller` | `source` / `from`（除非语义不同）|
+| 模块/组件 | `component` | `module` / `service`（除非语义不同）|
+
+**同类操作日志必备字段统一**：
+
+对于同一类操作，日志中携带的上下文字段必须保持一致。
+
+```go
+// ✅ 全项目统一：所有 HTTP 请求日志必须包含以下字段
+logger.Info("request completed",
+    zap.String("request_id", reqID),
+    zap.String("method", r.Method),
+    zap.String("path", r.URL.Path),
+    zap.Int("status_code", statusCode),
+    zap.Duration("latency", duration),
+)
+
+// ✅ 全项目统一：所有数据库操作日志必须包含以下字段
+logger.Debug("db query",
+    zap.String("request_id", reqID),
+    zap.String("query", queryName),
+    zap.Duration("latency", duration),
+)
+
+// ✅ 全项目统一：所有错误日志必须包含以下字段
+logger.Error("query user failed",
+    zap.String("request_id", reqID),
+    zap.String("user_id", userID),
+    zap.Error(err),
+)
+
+// ❌ 同类操作日志字段不一致
+// handler_a.go: 打印了 request_id, method, path, latency
+// handler_b.go: 只打印了 path（缺少 request_id 和 latency）
+// handler_c.go: 打印了 request_id, url, time_cost（字段名不同）
+```
 
 ---
 
