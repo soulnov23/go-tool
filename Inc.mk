@@ -27,9 +27,4 @@ VERSION_LDFLAGS := -X 'main.goVersion=$(shell go version)' \
 				   -X 'main.gitCommitTime=$(shell git log --pretty=format:"%ci" | head -1)' \
 				   -X 'main.gitCommitAuthor=$(shell git log --pretty=format:"%cn" | head -1)'
 
-#各构建目标的完整参数，确保-ldflags和-gcflags各只出现一次避免覆盖
-VERSION := -ldflags "$(VERSION_LDFLAGS)"
-DEBUG := -gcflags "$(DEBUG_GCFLAGS)" -ldflags "$(VERSION_LDFLAGS)"
-RELEASE := -ldflags "$(RELEASE_LDFLAGS) $(VERSION_LDFLAGS)"
-
 CGO := CGO_ENABLED=0

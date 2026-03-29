@@ -4,13 +4,13 @@ SRC	:= ./
 BIN := ${GOPATH}/bin/git-tag
 
 all:
-	${CGO} go build ${PRINT} ${VERSION} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} -ldflags "$(VERSION_LDFLAGS)" -o ${BIN} ${SRC}
 
 debug:
-	${CGO} go build ${PRINT} ${VERSION} ${DEBUG} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} -ldflags "$(VERSION_LDFLAGS)" -ldflags "$(VERSION_LDFLAGS)" -gcflags "$(DEBUG_GCFLAGS)" -o ${BIN} ${SRC}
 
 release:
-	${CGO} go build ${PRINT} ${VERSION} ${RELEASE} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} -ldflags "$(VERSION_LDFLAGS)" -ldflags "$(VERSION_LDFLAGS) $(RELEASE_LDFLAGS)" -o ${BIN} ${SRC}
 
 .PHONY: all debug release
 

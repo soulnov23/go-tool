@@ -4,13 +4,13 @@ SRC := ./
 BIN := ./build/bin/go-tool
 
 all:
-	${CGO} go build ${PRINT} ${VERSION} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} -ldflags "$(VERSION_LDFLAGS)" -o ${BIN} ${SRC}
 
 debug:
-	${CGO} go build ${PRINT} ${DEBUG} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} -ldflags "$(VERSION_LDFLAGS)" -gcflags "$(DEBUG_GCFLAGS)" -o ${BIN} ${SRC}
 
 release:
-	${CGO} go build ${PRINT} ${RELEASE} -o ${BIN} ${SRC}
+	${CGO} go build ${PRINT} -ldflags "$(VERSION_LDFLAGS) $(RELEASE_LDFLAGS)" -o ${BIN} ${SRC}
 
 errors:
 	protoc --proto_path ./pkg/errors --go_out paths=source_relative:./pkg/errors --validate_out lang=go,paths=source_relative:./pkg/errors errors.proto
