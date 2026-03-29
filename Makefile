@@ -19,19 +19,19 @@ example:
 	go run ./pkg/errors/generator -source ./pkg/errors/example/common.yaml,./pkg/errors/example/errors.yaml -destination ./pkg/errors/example/errors.go -package errors
 
 escape:
-	go build ${ESCAPE} -o /dev/null ${SRC}
+	go build -gcflags "$(ESCAPE_GCFLAGS)" -o /dev/null ${SRC}
 
 test:
 	go test -v -count 1 -race -timeout 1s ./...
 
-#go env GOCACHE
-#go env GOMODCACHE
+# go env GOCACHE
+# go env GOMODCACHE
+# go clean ${PRINT} -i -cache -testcache -modcache -fuzzcache
 clean:
-	#go clean ${PRINT} -i -cache -testcache -modcache -fuzzcache
 	rm -rf ${BIN}
 
-#(644)rw-r--r--
-#(755)rwxr-xr-x
+# (644)rw-r--r--
+# (755)rwxr-xr-x
 chmod:
 	chmod -R 644 ./
 	chmod +x ./build/bin/* ./scripts/*
