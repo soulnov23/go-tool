@@ -1,3 +1,6 @@
+#禁用CGO，使用纯Go编译，不依赖C库
+CGO := CGO_ENABLED=0
+
 #-v编译包时打印包的名称
 #-x打印命令
 PRINT := -v -x
@@ -9,7 +12,7 @@ PRINT := -v -x
 #-d=checkptr检查unsafe.Pointer转换
 #0:禁用检查
 #1:检查unsafe.Pointer转换
-#0:转换为unsafe.Pointer的对象分配到堆上
+#2:转换为unsafe.Pointer的对象分配到堆上
 DEBUG_GCFLAGS := all=-N -l -d=checkptr=1
 
 #使用go tool link查看-ldflags传递给链接器的参数
@@ -26,5 +29,3 @@ VERSION_LDFLAGS := -X 'main.goVersion=$(shell go version)' \
 				   -X 'main.gitCommitID=$(shell git rev-parse HEAD)' \
 				   -X 'main.gitCommitTime=$(shell git log --pretty=format:"%ci" | head -1)' \
 				   -X 'main.gitCommitAuthor=$(shell git log --pretty=format:"%cn" | head -1)'
-
-CGO := CGO_ENABLED=0
