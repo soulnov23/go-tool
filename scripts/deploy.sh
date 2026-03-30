@@ -11,7 +11,7 @@ set -e
 
 WORKSPACE=$(pwd | awk -F'/go-tool' '{print $1}')
 
-#./deploy.sh golang 1.26.1
+# ./deploy.sh golang 1.26.1
 function golang() {
     mkdir -p tmp
     cd tmp
@@ -29,7 +29,7 @@ function golang() {
     rm -rf tmp
 }
 
-#./deploy.sh protoc v29.3
+# ./deploy.sh protoc v29.3
 function protoc() {
     mkdir -p tmp
     cd tmp
@@ -49,8 +49,8 @@ function protoc() {
     go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 }
 
-#./deploy.sh kubectl v1.18.4
-#kubectl版本和集群版本之间的差异必须在一个小版本号内。例如：v1.30版本的客户端能与v1.29、v1.30和v1.31版本的控制面通信。用最新兼容版的kubectl有助于避免不可预见的问题
+# ./deploy.sh kubectl v1.18.4
+# kubectl版本和集群版本之间的差异必须在一个小版本号内。例如：v1.30版本的客户端能与v1.29、v1.30和v1.31版本的控制面通信。用最新兼容版的kubectl有助于避免不可预见的问题
 function kubectl() {
     mkdir -p tmp
     cd tmp
@@ -67,7 +67,7 @@ function kubectl() {
     rm -rf tmp
 }
 
-#./deploy.sh nvm v0.40.3
+# ./deploy.sh nvm v0.40.3
 function nvm() {
     # Download and install nvm:
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$1/install.sh | bash
@@ -84,7 +84,7 @@ function nvm() {
     pnpm -v
 }
 
-#./deploy.sh git v2.51.0
+# ./deploy.sh git v2.51.0
 function git() {
     mkdir -p tmp
     cd tmp
@@ -98,7 +98,7 @@ function git() {
     rm -rf tmp
 }
 
-#./deploy.sh chromium
+# ./deploy.sh chromium
 function chromium() {
     mkdir -p tmp
     cd tmp
@@ -110,22 +110,25 @@ function chromium() {
     # yum install -y alsa-lib atk at-spi2-atk mesa-libgbm
     cd ..
     rm -rf tmp
+    # getent group chromium || groupadd -r chromium
+    # getent passwd chromium || useradd -r -g chromium -G audio,video -m -d /data/home/chromium chromium
+    # chown -R chromium:chromium ./build
 }
 
-#./deploy.sh python
+# ./deploy.sh python
 function python() {
     yum install -y python3.12 python3.12-pip
     pip3.12 install --upgrade pip
 }
 
-#./deploy.sh venv /data/home/venv
+# ./deploy.sh venv /data/home/venv
 function venv() {
     python3.12 -m venv $1
     source $1/bin/activate
     python3.12 install -r requirements.txt
 }
 
-#./deploy.sh markitdown v0.1.3
+# ./deploy.sh markitdown v0.1.5
 function markitdown() {
     mkdir -p tmp
     cd tmp
@@ -138,12 +141,12 @@ function markitdown() {
     rm -rf tmp
 }
 
-#./deploy.sh vscode
+# ./deploy.sh vscode
 function vscode() {
     ln -sf ${WORKSPACE}/go-tool/scripts/vscode.sh ${GOPATH}/bin/vscode
 }
 
-#./deploy.sh goinit
+# ./deploy.sh goinit
 function goinit() {
     ln -sf ${WORKSPACE}/go-tool/scripts/goinit.sh ${GOPATH}/bin/goinit
 }
