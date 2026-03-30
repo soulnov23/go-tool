@@ -221,6 +221,8 @@
     "cursor.cpp.disabledLanguages": [],
     //隐藏GitHub Copilot
     "chat.commandCenter.enabled": false,
+    "chat.agent.enabled": false,
+    "chat.disableAIFeatures": true,
     //python选项
     //"python.terminal.activateEnvironment": true,
     //"python.venvPath": "/data/home/venv",
@@ -235,9 +237,6 @@
         "markdown": true
     },
     "gongfeng.copilot.enableCodelensForFunctions": true,
-    // chat选项
-    "chat.agent.enabled": false,
-    "chat.disableAIFeatures": true,
     // codebuddy选项
     "codingcopilot.enableInlineChat": true,
     "codingcopilot.enableInlineChatIDEShortcutsTip": false,
