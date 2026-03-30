@@ -160,6 +160,11 @@
         "when": "editorFocus && !editorReadonly"
     },
     {
+        "key": "ctrl+alt+i",
+        "command": "-tencentcloud.codingcopilot.addToChat",
+        "when": "editorFocus && !editorReadonly"
+    },
+    {
         "key": "ctrl+g",
         "command": "workbench.action.gotoLine"
     }
