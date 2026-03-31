@@ -151,6 +151,16 @@ function goinit() {
     ln -sf ${WORKSPACE}/go-tool/scripts/goinit.sh ${GOPATH}/bin/goinit
 }
 
+# ./deploy.sh gotidy
+function gotidy() {
+    ln -sf ${WORKSPACE}/go-tool/scripts/gotidy.sh ${GOPATH}/bin/gotidy
+}
+
+# ./deploy.sh chmodinit
+function chmodinit() {
+    ln -sf ${WORKSPACE}/go-tool/scripts/chmodinit.sh ${GOPATH}/bin/chmodinit
+}
+
 main() {
     case $1 in
     golang)
@@ -185,6 +195,12 @@ main() {
         ;;
     goinit)
         goinit
+        ;;
+    gotidy)
+        gotidy
+        ;;
+    chmodinit)
+        chmodinit
         ;;
     *)
         echo "error:argument is invalid"
