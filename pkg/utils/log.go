@@ -11,12 +11,15 @@ import (
 )
 
 const (
+	ColorBlack  = "\033[1;30m"
 	ColorRed    = "\033[1;31m"
 	ColorGreen  = "\033[1;32m"
 	ColorYellow = "\033[1;33m"
+	ColorBlue   = "\033[1;34m"
 	ColorPurple = "\033[1;35m"
+	ColorCyan   = "\033[1;36m"
 	ColorWhite  = "\033[1;37m"
-	ColorReset  = "\033[m"
+	ColorReset  = "\033[0m"
 )
 
 var callers sync.Map
