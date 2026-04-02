@@ -16,18 +16,6 @@ main() {
     fi
     cp -rf /data/home/project/go-tool/.vscode/settings.json ./.vscode
     cp -rf /data/home/project/go-tool/.codebuddy ./
-    if [ "$1" == "chmod" ]; then
-        chmod -R 644 ./
-        find . -type d -name build | while read -r dir; do
-            bin_dir="${dir}/bin"
-            if [ -d "$bin_dir" ]; then
-                find "$bin_dir" -maxdepth 1 -type f -exec chmod +x {} \;
-            fi
-        done
-        find . -type f -name "*.sh" | while read -r file; do
-            chmod +x "${file}"
-        done
-    fi
 }
 
 main "$@"
