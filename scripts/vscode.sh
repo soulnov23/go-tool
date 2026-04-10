@@ -15,7 +15,7 @@ main() {
         cp -rf /data/home/project/go-tool/.vscode/tasks.json ./.vscode
     fi
     cp -rf /data/home/project/go-tool/.vscode/settings.json ./.vscode
-    cp -rf /data/home/project/go-tool/.codebuddy ./
+    cp -rf /data/home/project/go-tool/.claude ./
 }
 
 main "$@"
