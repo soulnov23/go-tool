@@ -1,0 +1,28 @@
+{
+    "permissions": {
+        "defaultMode": "acceptEdits",
+        "allow": [
+            "Bash(ls:*)",
+            "Bash(find:*)",
+            "Bash(wc:*)",
+            "Bash(pwd:*)",
+            "Bash(cat:*)",
+            "Bash(go build:*)",
+            "Bash(go test:*)",
+            "Bash(go vet:*)",
+            "Bash(go mod tidy:*)",
+            "Bash(go run:*)",
+            "Bash(go fmt:*)"
+        ],
+        "deny": [
+            "Bash(rm:*)",
+            "Bash(sudo:*)"
+        ]
+    },
+    "model": "opus[1m]",
+    "enabledPlugins": {
+        "claude-code-internal@claude-code-internal-plugins": true,
+        "gopls-lsp@claude-plugins-official": true
+    },
+    "language": "简体中文"
+}
