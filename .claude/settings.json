@@ -2,6 +2,8 @@
     "permissions": {
         "defaultMode": "acceptEdits",
         "allow": [
+            "WebFetch(domain:*)",
+            "WebSearch",
             "Bash(ls:*)",
             "Bash(find:*)",
             "Bash(wc:*)",
@@ -15,8 +17,30 @@
             "Bash(go fmt:*)"
         ],
         "deny": [
-            "Bash(rm:*)",
-            "Bash(sudo:*)"
+            "Bash(rm *)",
+            "Bash(rmdir *)"
+        ],
+        "ask": [
+            "Bash(shred *)",
+            "Bash(unlink *)",
+            "Bash(dd *)",
+            "Bash(mkfs *)",
+            "Bash(fdisk *)",
+            "Bash(chmod *)",
+            "Bash(chown *)",
+            "Bash(npm *)",
+            "Bash(pip *)",
+            "Bash(pip3 *)",
+            "Bash(yarn *)",
+            "Bash(pnpm *)",
+            "Bash(docker *)",
+            "Bash(kubectl *)",
+            "Bash(firebase *)",
+            "Bash(gcloud *)",
+            "Bash(wget *)",
+            "Bash(kill *)",
+            "Bash(killall *)",
+            "Bash(pkill *)"
         ]
     },
     "model": "opus[1m]",
