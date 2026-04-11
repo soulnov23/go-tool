@@ -44,6 +44,9 @@
         ]
     },
     "model": "opus[1m]",
+    "env": {
+        "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+    },
     "enabledPlugins": {
         "claude-code-internal@claude-code-internal-plugins": true,
         "gopls-lsp@claude-plugins-official": true
