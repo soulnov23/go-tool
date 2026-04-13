@@ -14,7 +14,8 @@
             "Bash(go vet:*)",
             "Bash(go mod tidy:*)",
             "Bash(go run:*)",
-            "Bash(go fmt:*)"
+            "Bash(go fmt:*)",
+            "Bash(GOMODCACHE:*)"
         ],
         "deny": [
             "Bash(rm *)",
