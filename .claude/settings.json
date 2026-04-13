@@ -15,6 +15,7 @@
             "Bash(go mod tidy:*)",
             "Bash(go run:*)",
             "Bash(go fmt:*)",
+            "Bash(go env:*)",
             "Bash(GOMODCACHE:*)"
         ],
         "deny": [
