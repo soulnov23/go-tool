@@ -4,7 +4,11 @@ set -x
 set -e
 
 main() {
-    shfmt -ln bash -i 4 -ci -kp -w $@
+    # --language-dialect
+    # --indent
+    # --case-indent switch cases will be indented
+    # --write write result to file instead of stdout
+    shfmt -ln bash -i 4 -ci -w $@
 }
 
 main "$@"

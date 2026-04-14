@@ -61,12 +61,12 @@ generate by http://patorjk.com/software/taag/#p=display&f=Doh&t=go-tool
 
 ```shell
 curl -v 'http://127.0.0.1:6060/debug/pprof/profile?seconds=30' > profile.tar.gz
-curl -v 'http://127.0.0.1:6060/debug/pprof/heap?seconds=30' > head.tar.gz
+curl -v 'http://127.0.0.1:6060/debug/pprof/heap?seconds=30' > heap.tar.gz
 curl -v 'http://127.0.0.1:6060/debug/pprof/goroutine?seconds=30' > goroutine.tar.gz
 
 yum install -y graph
 go tool pprof -http 0.0.0.0:9999 profile.tar.gz
-go tool pprof -http 0.0.0.0:9999 head.tar.gz
+go tool pprof -http 0.0.0.0:9999 heap.tar.gz
 go tool pprof -http 0.0.0.0:9999 goroutine.tar.gz
 
 go tool pprof -http 0.0.0.0:9999 'http://127.0.0.1:6060/debug/pprof/profile?seconds=30'
