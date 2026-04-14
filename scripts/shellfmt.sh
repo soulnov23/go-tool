@@ -4,7 +4,7 @@ set -x
 set -e
 
 main() {
-    go mod init $(basename $(pwd))
+    shfmt -ln bash -i 4 -ci -kp -w $@
 }
 
 main "$@"

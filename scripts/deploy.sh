@@ -141,6 +141,12 @@ function markitdown() {
     rm -rf tmp
 }
 
+# ./deploy.sh shellfmt
+function shellfmt() {
+    go install mvdan.cc/sh/v3/cmd/shfmt@latest
+    ln -sf ${WORKSPACE}/go-tool/scripts/shellfmt.sh ${GOPATH}/bin/shellfmt
+}
+
 # ./deploy.sh vscode
 function vscode() {
     ln -sf ${WORKSPACE}/go-tool/scripts/vscode.sh ${GOPATH}/bin/vscode
@@ -163,48 +169,51 @@ function chmodinit() {
 
 main() {
     case $1 in
-    golang)
-        golang $2
-        ;;
-    protoc)
-        protoc $2
-        ;;
-    kubectl)
-        kubectl $2
-        ;;
-    nvm)
-        nvm $2
-        ;;
-    git)
-        git $2
-        ;;
-    chromium)
-        chromium
-        ;;
-    python)
-        python
-        ;;
-    venv)
-        venv $2
-        ;;
-    markitdown)
-        markitdown $2
-        ;;
-    vscode)
-        vscode
-        ;;
-    goinit)
-        goinit
-        ;;
-    gotidy)
-        gotidy
-        ;;
-    chmodinit)
-        chmodinit
-        ;;
-    *)
-        echo "error:argument is invalid"
-        ;;
+        golang)
+            golang $2
+            ;;
+        protoc)
+            protoc $2
+            ;;
+        kubectl)
+            kubectl $2
+            ;;
+        nvm)
+            nvm $2
+            ;;
+        git)
+            git $2
+            ;;
+        chromium)
+            chromium
+            ;;
+        python)
+            python
+            ;;
+        venv)
+            venv $2
+            ;;
+        markitdown)
+            markitdown $2
+            ;;
+        shellfmt)
+            shellfmt
+            ;;
+        vscode)
+            vscode
+            ;;
+        goinit)
+            goinit
+            ;;
+        gotidy)
+            gotidy
+            ;;
+        chmodinit)
+            chmodinit
+            ;;
+        *)
+            echo "error:argument is invalid"
+            ;;
     esac
 }
 
