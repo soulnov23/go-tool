@@ -9,8 +9,6 @@ exec &>>${LOG_FILE}
 set -x
 set -e
 
-WORKSPACE=$(pwd | awk -F'/go-tool' '{print $1}')
-
 # ./deploy.sh golang 1.26.1
 function golang() {
     mkdir -p tmp
@@ -144,27 +142,27 @@ function markitdown() {
 # ./deploy.sh shellfmt
 function shellfmt() {
     go install mvdan.cc/sh/v3/cmd/shfmt@latest
-    ln -sf ${WORKSPACE}/go-tool/scripts/shellfmt.sh ${GOPATH}/bin/shellfmt
+    ln -sf $(pwd)/shellfmt.sh ${GOPATH}/bin/shellfmt
 }
 
 # ./deploy.sh vscode
 function vscode() {
-    ln -sf ${WORKSPACE}/go-tool/scripts/vscode.sh ${GOPATH}/bin/vscode
+    ln -sf $(pwd)/vscode.sh ${GOPATH}/bin/vscode
 }
 
 # ./deploy.sh goinit
 function goinit() {
-    ln -sf ${WORKSPACE}/go-tool/scripts/goinit.sh ${GOPATH}/bin/goinit
+    ln -sf $(pwd)/goinit.sh ${GOPATH}/bin/goinit
 }
 
 # ./deploy.sh gotidy
 function gotidy() {
-    ln -sf ${WORKSPACE}/go-tool/scripts/gotidy.sh ${GOPATH}/bin/gotidy
+    ln -sf $(pwd)/gotidy.sh ${GOPATH}/bin/gotidy
 }
 
 # ./deploy.sh chmodinit
 function chmodinit() {
-    ln -sf ${WORKSPACE}/go-tool/scripts/chmodinit.sh ${GOPATH}/bin/chmodinit
+    ln -sf $(pwd)/chmodinit.sh ${GOPATH}/bin/chmodinit
 }
 
 main() {
