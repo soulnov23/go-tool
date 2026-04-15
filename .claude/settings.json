@@ -53,5 +53,9 @@
         "claude-code-internal@claude-code-internal-plugins": true,
         "gopls-lsp@claude-plugins-official": true
     },
-    "language": "简体中文"
+    "language": "简体中文",
+    "statusLine": {
+        "type": "command",
+        "command": "~/.claude-internal/statusline.sh"
+    }
 }
