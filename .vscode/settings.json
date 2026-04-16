@@ -59,7 +59,7 @@
     },
     "[sql]": {
         "editor.formatOnSave": false,
-        "editor.defaultFormatter": "cweijan.vscode-database-client2"
+        "editor.defaultFormatter": "dbcode.dbcode"
     },
     "[proto]": {
         "editor.defaultFormatter": "xaver.clang-format"
@@ -172,6 +172,7 @@
     //显示子文件夹的git
     "git-graph.maxDepthOfRepoSearch": 3,
     "git-graph.date.format": "ISO Date & Time",
+    "git-graph.showStatusBarItem": true,
     //编辑器窗口
     "window.title": "${dirty}${separator}${rootName}",
     "window.titleBarStyle": "custom",
@@ -257,5 +258,18 @@
     "codingcopilot.enabledWebSearch": true,
     "codingcopilot.autoAcceptWebSearch": true,
     "codingcopilot.standaloneTerminal": true,
-    "codingcopilot.enableImageGen": true
+    "codingcopilot.enableImageGen": true,
+    // dbcode选项
+    "dbcode.formatting.keywordCase": "preserve",
+    "dbcode.formatting.dataTypeCase": "preserve",
+    "dbcode.formatting.functionCase": "preserve",
+    "dbcode.formatting.identifierCase": "preserve",
+    "dbcode.formatting.indentStyle": "standard",
+    "dbcode.formatting.logicalOperatorNewline": "before",
+    "dbcode.formatting.tabulateAlias": true,
+    "dbcode.formatting.expressionWidth": 50,
+    "dbcode.formatting.linesBetweenQueries": 1,
+    "dbcode.formatting.denseOperators": true,
+    "dbcode.formatting.newlineBeforeSemicolon": false,
+    "dbcode.formatting.preserveShortStatements": 0
 }
