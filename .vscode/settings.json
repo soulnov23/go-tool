@@ -318,5 +318,7 @@
                 "maxScanKeys": 50000
             }
         }
-    ]
+    ],
+    // yaml选项
+    "yaml.format.printWidth": 1e+36
 }
