@@ -271,5 +271,52 @@
     "dbcode.formatting.linesBetweenQueries": 1,
     "dbcode.formatting.denseOperators": true,
     "dbcode.formatting.newlineBeforeSemicolon": false,
-    "dbcode.formatting.preserveShortStatements": 0
+    "dbcode.formatting.preserveShortStatements": 0,
+    "dbcode.connections": [
+        {
+            "connectionId": "bb8Zp68Vs4Qf_IjeEXqqj",
+            "name": "开发tdsql",
+            "driver": "mysql",
+            "connectionType": "host",
+            "host": "21.6.145.72",
+            "port": 3306,
+            "ssl": false,
+            "authMethod": "password",
+            "username": "tdsql_admin",
+            "password": "",
+            "savePassword": "secretStorage",
+            "readOnly": false,
+            "postConnectionSqlType": "inline",
+            "connectionTimeout": 30,
+            "pinnedConnectionTimeout": "0",
+            "driverOptions": {
+                "retrievePublickey": false,
+                "disableMultiStatements": false,
+                "permitLocalInfile": true
+            },
+            "introspection": {
+                "progressive": false
+            },
+            "driverSettings": {
+                "charset": "utf8mb4",
+                "collation": "utf8mb4_bin"
+            }
+        },
+        {
+            "connectionId": "U-i-bkWKpj8evbPXmPTbi",
+            "name": "开发redis",
+            "driver": "redis",
+            "connectionType": "host",
+            "host": "9.135.127.16",
+            "port": 6380,
+            "ssl": false,
+            "password": "",
+            "savePassword": "secretStorage",
+            "readOnly": false,
+            "connectionTimeout": 30,
+            "driverOptions": {
+                "maxScanKeys": 50000
+            }
+        }
+    ]
 }
