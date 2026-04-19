@@ -58,7 +58,6 @@
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
     "[sql]": {
-        "editor.formatOnSave": false,
         "editor.defaultFormatter": "dbcode.dbcode"
     },
     "[proto]": {

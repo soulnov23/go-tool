@@ -4,7 +4,8 @@ pprof:
     write_timeout: 0
     idle_timeout: 0
 
-server: #服务端配置
+server:
+    #服务端配置
     update_gomaxprocs_interval: 3600000
     max_close_wait_time: 3000
     services:
@@ -19,7 +20,8 @@ server: #服务端配置
           protocol: http #应用层协议 rpc http
           timeout: 3000 #请求最长处理时间 单位 毫秒
 
-default_log: #默认日志配置
+default_log:
+    #默认日志配置
     caller_skip: &caller 1 #控制log函数嵌套深度
     core_config:
         - &console_console
@@ -64,7 +66,8 @@ default_log: #默认日志配置
               <<: *writer_config
 
 plugins:
-    frame_log: #框架日志配置
+    frame_log:
+        #框架日志配置
         caller_skip: *caller
         core_config:
             - <<: *console_json
