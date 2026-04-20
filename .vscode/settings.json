@@ -262,7 +262,7 @@
     "dbcode.formatting.keywordCase": "lower",
     "dbcode.formatting.dataTypeCase": "lower",
     "dbcode.formatting.functionCase": "lower",
-    "dbcode.formatting.identifierCase": "lower",
+    "dbcode.formatting.identifierCase": "preserve",
     "dbcode.formatting.indentStyle": "standard",
     "dbcode.formatting.logicalOperatorNewline": "after",
     "dbcode.formatting.tabulateAlias": true,
