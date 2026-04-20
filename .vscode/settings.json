@@ -266,7 +266,7 @@
     "dbcode.formatting.indentStyle": "standard",
     "dbcode.formatting.logicalOperatorNewline": "after",
     "dbcode.formatting.tabulateAlias": true,
-    "dbcode.formatting.expressionWidth": 50,
+    "dbcode.formatting.expressionWidth": 5,
     "dbcode.formatting.linesBetweenQueries": 1,
     "dbcode.formatting.denseOperators": true,
     "dbcode.formatting.newlineBeforeSemicolon": false,
