@@ -212,7 +212,7 @@ func AnyToString(value any) string {
 		}
 		return strconv.FormatUint(uint64(*v), 10)
 	case uint64:
-		return strconv.FormatUint(uint64(v), 10)
+		return strconv.FormatUint(v, 10)
 	case *uint64:
 		if v == nil {
 			return ""
@@ -247,7 +247,7 @@ func AnyToString(value any) string {
 		}
 		return strconv.FormatInt(int64(*v), 10)
 	case int64:
-		return strconv.FormatInt(int64(v), 10)
+		return strconv.FormatInt(v, 10)
 	case *int64:
 		if v == nil {
 			return ""
@@ -277,6 +277,22 @@ func AnyToString(value any) string {
 			return ""
 		}
 		return strconv.FormatInt(v.UnixMilli(), 10)
+	case json.RawMessage:
+		if len(v) == 0 {
+			return ""
+		}
+		if v[0] == '"' {
+			var s string
+			if err := json.Unmarshal(v, &s); err == nil {
+				return s
+			}
+		}
+		return BytesToString(v)
+	case *json.RawMessage:
+		if v == nil || len(*v) == 0 {
+			return ""
+		}
+		return AnyToString(*v)
 	case json.Number:
 		return v.String()
 	case *json.Number:
