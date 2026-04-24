@@ -165,74 +165,129 @@ func AnyToString(value any) string {
 	case []byte:
 		return BytesToString(v)
 	case *[]byte:
+		if v == nil {
+			return ""
+		}
 		return BytesToString(*v)
 	case string:
 		return v
 	case *string:
+		if v == nil {
+			return ""
+		}
 		return *v
 	case bool:
 		return strconv.FormatBool(v)
 	case *bool:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatBool(*v)
 	case uint:
 		return strconv.FormatUint(uint64(v), 10)
 	case *uint:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatUint(uint64(*v), 10)
 	case uint8:
 		return strconv.FormatUint(uint64(v), 10)
 	case *uint8:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatUint(uint64(*v), 10)
 	case uint16:
 		return strconv.FormatUint(uint64(v), 10)
 	case *uint16:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatUint(uint64(*v), 10)
 	case uint32:
 		return strconv.FormatUint(uint64(v), 10)
 	case *uint32:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatUint(uint64(*v), 10)
 	case uint64:
 		return strconv.FormatUint(uint64(v), 10)
 	case *uint64:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatUint(uint64(*v), 10)
 	case int:
 		return strconv.FormatInt(int64(v), 10)
 	case *int:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatInt(int64(*v), 10)
 	case int8:
 		return strconv.FormatInt(int64(v), 10)
 	case *int8:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatInt(int64(*v), 10)
 	case int16:
 		return strconv.FormatInt(int64(v), 10)
 	case *int16:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatInt(int64(*v), 10)
 	case int32:
 		return strconv.FormatInt(int64(v), 10)
 	case *int32:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatInt(int64(*v), 10)
 	case int64:
 		return strconv.FormatInt(int64(v), 10)
 	case *int64:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatInt(int64(*v), 10)
 	case float32:
 		return strconv.FormatFloat(float64(v), 'f', -1, 32)
 	case *float32:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatFloat(float64(*v), 'f', -1, 32)
 	case float64:
 		return strconv.FormatFloat(float64(v), 'f', -1, 64)
 	case *float64:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatFloat(float64(*v), 'f', -1, 64)
 	case time.Time:
+		if v.IsZero() {
+			return ""
+		}
 		return strconv.FormatInt(v.UnixMilli(), 10)
 	case *time.Time:
+		if v == nil || v.IsZero() {
+			return ""
+		}
 		return strconv.FormatInt(v.UnixMilli(), 10)
-	case struct{}, *struct{}:
-		return Stringify(v)
 	case json.Number:
 		return v.String()
 	case *json.Number:
+		if v == nil {
+			return ""
+		}
 		return v.String()
 	case *any:
+		if v == nil {
+			return ""
+		}
 		return AnyToString(*v)
 	default:
 		return fmt.Sprintf("%v", v)
