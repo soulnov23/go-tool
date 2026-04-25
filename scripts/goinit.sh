@@ -4,7 +4,7 @@ set -x
 set -e
 
 main() {
-    go mod init $(basename $(pwd))
+    go mod init $(basename $(pwd)) || true
 }
 
 main "$@"
