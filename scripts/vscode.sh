@@ -16,6 +16,9 @@ main() {
     fi
     cp -rf /data/home/project/go-tool/.vscode/settings.json ./.vscode
     cp -rf /data/home/project/go-tool/.claude ./
+    goinit ./
+    shellfmt ./
+    chmodinit ./
 }
 
 main "$@"
