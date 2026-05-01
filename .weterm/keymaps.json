@@ -1,0 +1,6 @@
+[
+    {
+        "command": "weterm:folkActiveSession",
+        "keybinding": "alt+T"
+    }
+]

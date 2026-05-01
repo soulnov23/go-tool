@@ -1,0 +1,75 @@
+{
+    "version": "3.0",
+    "teamList": [
+        {
+            "id": "0",
+            "pos": 0,
+            "name": "mappingKey",
+            "child": [
+                {
+                    "id": "0",
+                    "title": "export PS1",
+                    "value": "export PS1='\\\\[\\\\e[1;32m\\\\]\\\\$\\\\[\\\\e[0m\\\\] '\n",
+                    "pos": 0,
+                    "keybinding": "F1",
+                    "keybinding_win": "",
+                    "keybinding_mac": ""
+                },
+                {
+                    "id": "1",
+                    "title": "kubectl logs",
+                    "value": "kubectl logs -f `kubectl get pods | grep eventhub | grep Running | awk '{print $1}'`",
+                    "pos": 1,
+                    "keybinding": "F2",
+                    "keybinding_win": "",
+                    "keybinding_mac": ""
+                },
+                {
+                    "id": "2",
+                    "title": "tcpdump",
+                    "value": "tcpdump -i any -s 0 -A -vvv \"(tcp) and (dst port 8080) and (dst host 10.24.1.201)\"",
+                    "pos": 2,
+                    "keybinding": "F3",
+                    "keybinding_win": "",
+                    "keybinding_mac": ""
+                },
+                {
+                    "id": "3",
+                    "title": "du -ah",
+                    "value": "du -ah --max-depth=1 ./ | sort -rh",
+                    "pos": 3,
+                    "keybinding": "F4",
+                    "keybinding_win": "",
+                    "keybinding_mac": ""
+                },
+                {
+                    "id": "4",
+                    "title": "docker rmi",
+                    "value": "docker rmi $(docker images -q -f reference=\"*/msrd-ci/*\")",
+                    "pos": 4,
+                    "keybinding": "F5",
+                    "keybinding_win": "",
+                    "keybinding_mac": ""
+                },
+                {
+                    "id": "5",
+                    "title": "ps -efww",
+                    "value": "ps -efww | awk 'NR==1 || ($3!=0 && $3!=1 && $3!=2)'",
+                    "pos": 5,
+                    "keybinding": "F6",
+                    "keybinding_win": "",
+                    "keybinding_mac": ""
+                },
+                {
+                    "id": "6",
+                    "title": "pip",
+                    "value": "TMPDIR=/data2/home/chengpzhang/pip-tmp PIP_CACHE_DIR=/data2/home/chengpzhang/pip-cache pip",
+                    "pos": 6,
+                    "keybinding": "F7",
+                    "keybinding_win": "",
+                    "keybinding_mac": ""
+                }
+            ]
+        }
+    ]
+}
