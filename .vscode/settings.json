@@ -215,6 +215,7 @@
     "gitlens.defaultDateFormat": "YYYY-MM-DD HH:mm:ss",
     //cursor选项
     "workbench.activityBar.orientation": "vertical",
+    "workbench.agentsWindowButton.enabled": false,
     "cursor.cpp.enablePartialAccepts": true,
     "cursor.composer.collapsePaneInputBoxPills": true,
     "cursor.diffs.useCharacterLevelDiffs": true,
