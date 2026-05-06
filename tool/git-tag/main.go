@@ -33,8 +33,7 @@ func main() {
 
 	// 1. 检查当前HEAD是否已经打过tag，如果是则跳过
 	if tags := getHeadTags(); len(tags) > 0 {
-		log.Printf("📢 当前最新提交已有标签%v，跳过打标签", tags)
-		return
+		log.Fatalf("📢 当前最新提交已有标签%v，跳过打标签", tags)
 	}
 
 	// 2. 获取当前版本
