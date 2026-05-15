@@ -1,4 +1,7 @@
 {
+    "env": {
+        "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+    },
     "permissions": {
         "defaultMode": "acceptEdits",
         "allow": [
@@ -49,16 +52,16 @@
         ]
     },
     "model": "opus[1m]",
-    "env": {
-        "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+    "statusLine": {
+        "type": "command",
+        "command": "~/.claude-internal/statusline.sh"
     },
     "enabledPlugins": {
         "claude-code-internal@claude-code-internal-plugins": true,
         "gopls-lsp@claude-plugins-official": true
     },
     "language": "简体中文",
-    "statusLine": {
-        "type": "command",
-        "command": "~/.claude-internal/statusline.sh"
-    }
+    "editorMode": "normal",
+    "verbose": true,
+    "preferredNotifChannel": "auto"
 }
