@@ -204,7 +204,7 @@
     "gitlens.advanced.fileHistoryShowAllBranches": true,
     "gitlens.views.scm.grouped.views": {
         "fileHistory": false,
-        "searchAndCompare": false,
+        "searchAndCompare": false
     },
     "gitlens.currentLine.dateFormat": "YYYY-MM-DD HH:mm:ss",
     "gitlens.codeLens.dateFormat": "YYYY-MM-DD HH:mm:ss",

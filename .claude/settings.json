@@ -22,7 +22,7 @@
             "Bash(go run:*)",
             "Bash(go fmt:*)",
             "Bash(go env:*)",
-            "Bash(GOMODCACHE:*)"
+            "Bash(GOMODCACHE=*)"
         ],
         "deny": [
             "Bash(rm *)",
@@ -52,6 +52,8 @@
         ]
     },
     "model": "opus[1m]",
+    "alwaysThinkingEnabled": true,
+    "effortLevel": "high",
     "statusLine": {
         "type": "command",
         "command": "~/.claude-internal/statusline.sh"
