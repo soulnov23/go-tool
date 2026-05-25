@@ -320,5 +320,7 @@
         }
     ],
     // yaml选项
-    "yaml.format.printWidth": 1e+36
+    "yaml.format.printWidth": 1e+36,
+    // extensions选项
+    "extensions.ignoreRecommendations": true
 }
