@@ -274,7 +274,7 @@
     "dbcode.formatting.preserveShortStatements": 0,
     "dbcode.connections": [
         {
-            "connectionId": "bb8Zp68Vs4Qf_IjeEXqqj",
+            "connectionId": "0",
             "name": "开发tdsql",
             "driver": "mysql",
             "connectionType": "host",
@@ -303,7 +303,7 @@
             }
         },
         {
-            "connectionId": "U-i-bkWKpj8evbPXmPTbi",
+            "connectionId": "1",
             "name": "开发redis",
             "driver": "redis",
             "connectionType": "host",
