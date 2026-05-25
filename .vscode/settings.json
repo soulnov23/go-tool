@@ -173,7 +173,7 @@
     "git-graph.date.format": "ISO Date & Time",
     "git-graph.showStatusBarItem": true,
     //编辑器窗口
-    "window.title": "${dirty}${separator}${rootName}",
+    "window.title": "${dirty}${separator}${folderName}",
     "window.titleBarStyle": "custom",
     "window.commandCenter": false,
     //plantuml渲染服务器
