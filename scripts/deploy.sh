@@ -150,9 +150,9 @@ function vscode() {
     ln -sf $(pwd)/vscode.sh ${GOPATH}/bin/vscode
 }
 
-# ./deploy.sh goinit
-function goinit() {
-    ln -sf $(pwd)/goinit.sh ${GOPATH}/bin/goinit
+# ./deploy.sh gowork
+function gowork() {
+    ln -sf $(pwd)/gowork.sh ${GOPATH}/bin/gowork
 }
 
 # ./deploy.sh gotidy
@@ -200,8 +200,8 @@ main() {
         vscode)
             vscode
             ;;
-        goinit)
-            goinit
+        gowork)
+            gowork
             ;;
         gotidy)
             gotidy
