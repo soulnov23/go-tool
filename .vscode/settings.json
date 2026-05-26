@@ -58,7 +58,8 @@
         "editor.defaultFormatter": "foxundermoon.shell-format"
     },
     "[sql]": {
-        "editor.defaultFormatter": "dbcode.dbcode"
+        "editor.defaultFormatter": "dbcode.dbcode",
+        "editor.formatOnSave": false
     },
     "[proto]": {
         "editor.defaultFormatter": "xaver.clang-format"
