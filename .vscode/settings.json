@@ -273,6 +273,7 @@
     "dbcode.formatting.denseOperators": true,
     "dbcode.formatting.newlineBeforeSemicolon": false,
     "dbcode.formatting.preserveShortStatements": 0,
+    "dbcode.ai.inlineCompletion": false,
     "dbcode.connections": [
         {
             "connectionId": "开发tdsql",
