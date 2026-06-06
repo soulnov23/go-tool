@@ -8,11 +8,14 @@
             "WebFetch(domain:*)",
             "WebSearch",
             "Read",
-            "Bash"
+            "Bash",
+            "Task",
+            "Agent"
         ],
         "deny": [
             "Bash(rm:*)",
-            "Bash(rmdir:*)"
+            "Bash(rmdir:*)",
+            "Bash(sudo:*)"
         ],
         "ask": [
             "Bash(shred:*)",
@@ -22,11 +25,35 @@
             "Bash(fdisk:*)",
             "Bash(chmod:*)",
             "Bash(chown:*)",
+            "Bash(chgrp:*)",
+            "Bash(ln:*)",
             "Bash(docker:*)",
             "Bash(kubectl:*)",
             "Bash(firebase:*)",
             "Bash(gcloud:*)",
+            "Bash(aws:*)",
+            "Bash(az:*)",
+            "Bash(terraform:*)",
             "Bash(wget:*)",
+            "Bash(curl:*)",
+            "Bash(eval:*)",
+            "Bash(ssh:*)",
+            "Bash(scp:*)",
+            "Bash(rsync:*)",
+            "Bash(git push:*)",
+            "Bash(git reset:*)",
+            "Bash(git clean:*)",
+            "Bash(npm publish:*)",
+            "Bash(pip install:*)",
+            "Bash(apt:*)",
+            "Bash(apt-get:*)",
+            "Bash(brew:*)",
+            "Bash(yum:*)",
+            "Bash(dnf:*)",
+            "Bash(systemctl:*)",
+            "Bash(service:*)",
+            "Bash(mount:*)",
+            "Bash(crontab:*)",
             "Bash(kill:*)",
             "Bash(killall:*)",
             "Bash(pkill:*)"
@@ -34,7 +61,7 @@
     },
     "model": "opus[1m]",
     "alwaysThinkingEnabled": true,
-    "effortLevel": "max",
+    "effortLevel": "xhigh",
     "statusLine": {
         "type": "command",
         "command": "~/.claude-internal/statusline.sh"
