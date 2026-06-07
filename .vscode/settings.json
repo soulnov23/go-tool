@@ -73,8 +73,9 @@
     "workbench.editor.enablePreview": false,
     "workbench.tree.renderIndentGuides": "always",
     "workbench.view.alwaysShowHeaderActions": true,
-    "workbench.startupEditor": "welcomePageInEmptyWorkbench",
+    "workbench.startupEditor": "none",
     "workbench.layoutControl.enabled": false,
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
     "workbench.editorLargeFileConfirmation": 1024,
     //C_Cpp选项
     //"C_Cpp.default.cppStandard": "c++20",
@@ -177,6 +178,7 @@
     "window.title": "${dirty}${separator}${folderName}",
     "window.titleBarStyle": "custom",
     "window.commandCenter": false,
+    "window.restoreWindows": "none",
     //plantuml渲染服务器
     "plantuml.server": "http://9.134.3.96:38080",
     "plantuml.render": "PlantUMLServer",
