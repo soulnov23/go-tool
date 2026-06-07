@@ -197,6 +197,9 @@
     "diffEditor.ignoreTrimWhitespace": false,
     "diffEditor.maxComputationTime": 0,
     //remote选项
+    "remote.explorerType": [
+        "ssh-remote"
+    ],
     "remote.SSH.remotePlatform": {
         "cloud": "linux",
         "anydev": "linux"

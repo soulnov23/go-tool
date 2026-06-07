@@ -34,8 +34,6 @@
             "Bash(aws:*)",
             "Bash(az:*)",
             "Bash(terraform:*)",
-            "Bash(wget:*)",
-            "Bash(curl:*)",
             "Bash(eval:*)",
             "Bash(ssh:*)",
             "Bash(scp:*)",
