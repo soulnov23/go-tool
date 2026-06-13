@@ -73,7 +73,7 @@
     "workbench.editor.enablePreview": false,
     "workbench.tree.renderIndentGuides": "always",
     "workbench.view.alwaysShowHeaderActions": true,
-    "workbench.startupEditor": "none",
+    "workbench.startupEditor": "welcomePageInEmptyWorkbench",
     "workbench.layoutControl.enabled": false,
     "workbench.secondarySideBar.defaultVisibility": "hidden",
     "workbench.editorLargeFileConfirmation": 1024,
