@@ -1,11 +1,8 @@
 {
-    "env": {
-        "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
-    },
     "permissions": {
         "defaultMode": "acceptEdits",
         "allow": [
-            "WebFetch(domain:*)",
+            "WebFetch",
             "WebSearch",
             "Read",
             "Bash",
@@ -59,7 +56,7 @@
     },
     "model": "opus[1m]",
     "alwaysThinkingEnabled": true,
-    "effortLevel": "xhigh",
+    "effortLevel": "high",
     "statusLine": {
         "type": "command",
         "command": "~/.claude-internal/statusline.sh"
