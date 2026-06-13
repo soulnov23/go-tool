@@ -2,8 +2,7 @@
     "recommendations": [
         "adamhartford.vscode-base64",
         "andyyaldoo.vscode-json",
-        "anthropic.claude-code",
-        "anysphere.cpptools",
+        "ms-vscode.cpptools",
         "bierner.markdown-mermaid",
         "bmewburn.vscode-intelephense-client",
         "dbcode.dbcode",
