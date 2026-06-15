@@ -140,6 +140,7 @@
     "terminal.integrated.cursorStyle": "line",
     "terminal.integrated.scrollback": 5000,
     "terminal.integrated.wordSeparators": " `~!@#$%^&*()-=+[{]}\\\\|;:'\\\",.<>/?",
+    "terminal.integrated.initialHint": false,
     //go选项
     "go.diagnostic.vulncheck": "Imports",
     "go.toolsManagement.autoUpdate": true,
