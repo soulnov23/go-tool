@@ -178,9 +178,6 @@
     "window.titleBarStyle": "custom",
     "window.commandCenter": false,
     "window.restoreWindows": "none",
-    //plantuml渲染服务器
-    "plantuml.server": "http://9.134.3.96:38080",
-    "plantuml.render": "PlantUMLServer",
     //yaml工具
     "yaml-plus-json": {
         "convertOnRename": true,
