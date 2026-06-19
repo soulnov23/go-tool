@@ -155,6 +155,11 @@ function gowork() {
     ln -sf $(pwd)/gowork.sh ${GOPATH}/bin/gowork
 }
 
+# ./deploy.sh golist
+function golist() {
+    ln -sf $(pwd)/golist.sh ${GOPATH}/bin/golist
+}
+
 # ./deploy.sh gotidy
 function gotidy() {
     ln -sf $(pwd)/gotidy.sh ${GOPATH}/bin/gotidy
@@ -202,6 +207,9 @@ main() {
             ;;
         gowork)
             gowork
+            ;;
+        golist)
+            golist
             ;;
         gotidy)
             gotidy
