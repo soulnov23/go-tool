@@ -25,7 +25,7 @@ ESCAPE_GCFLAGS := -m
 
 # 版本信息通过-ldflags -X注入到main包变量中
 VERSION_LDFLAGS := -X 'main.goVersion=$(shell go version)' \
-                   -X 'main.gitBranch=$(shell git rev-parse --abbrev-ref HEAD)' \
+                   -X 'main.gitBranch=$(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match 2>/dev/null || echo detached)' \
                    -X 'main.gitCommitID=$(shell git rev-parse HEAD)' \
-                   -X 'main.gitCommitTime=$(shell git log --pretty=format:"%ci" | head -1)' \
-                   -X 'main.gitCommitAuthor=$(shell git log --pretty=format:"%cn" | head -1)'
+                   -X 'main.gitCommitTime=$(shell git log -1 --pretty=format:"%ci")' \
+                   -X 'main.gitCommitAuthor=$(shell git log -1 --pretty=format:"%cn")'
