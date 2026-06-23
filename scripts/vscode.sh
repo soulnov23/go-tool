@@ -17,3 +17,4 @@ cp -rf /data/home/project/go-tool/.vscode/settings.json ./.vscode
 cp -rf /data/home/project/go-tool/.claude ./
 rm -rf ./.codebuddy
 #cp -rf /data/home/project/go-tool/.codebuddy ./
+rm -rf ./.cursor
