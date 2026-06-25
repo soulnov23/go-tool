@@ -56,7 +56,7 @@
     },
     "model": "opus[1m]",
     "alwaysThinkingEnabled": true,
-    "effortLevel": "xhigh",
+    "effortLevel": "high",
     "statusLine": {
         "type": "command",
         "command": ".claude/statusline.sh"
