@@ -59,7 +59,7 @@
     "effortLevel": "high",
     "statusLine": {
         "type": "command",
-        "command": "~/.claude-internal/statusline.sh"
+        "command": ".claude/statusline.sh"
     },
     "enabledPlugins": {
         "claude-code-internal@claude-code-internal-plugins": true,
