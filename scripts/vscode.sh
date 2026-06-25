@@ -15,8 +15,7 @@ if [ ! -f "./.vscode/tasks.json" ]; then
 fi
 cp -rf /data/home/project/go-tool/.vscode/settings.json ./.vscode
 
-mkdir -p ./.claude
-cp -rf /data/home/project/go-tool/.claude/settings.json ./.claude
+cp -rf /data/home/project/go-tool/.claude ./
 
 rm -rf ./.codebuddy
 rm -rf ./.cursor
