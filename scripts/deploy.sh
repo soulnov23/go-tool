@@ -27,7 +27,7 @@ function golang() {
     rm -rf tmp
 }
 
-# ./deploy.sh protoc v29.3
+# ./deploy.sh protoc v35.1
 function protoc() {
     mkdir -p tmp
     cd tmp
@@ -82,7 +82,7 @@ function nvm() {
     pnpm -v
 }
 
-# ./deploy.sh git v2.51.0
+# ./deploy.sh git v2.55.0
 function git() {
     mkdir -p tmp
     cd tmp
@@ -90,6 +90,7 @@ function git() {
     wget https://github.com/git/git/archive/refs/tags/${FILE}
     tar -zvxf ${FILE}
     cd git-${1#v}
+    # yum install -y rust cargo
     make -j32 prefix=/usr all
     make -j32 prefix=/usr install
     cd ../../
