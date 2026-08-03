@@ -69,7 +69,7 @@
     },
     "clang-format.language.proto.style": "{BasedOnStyle: Google,IncludeBlocks: Regroup,TabWidth: 4,IndentWidth: 4,ColumnLimit: 0}",
     //workbench选项
-    "workbench.colorTheme": "Dark+",
+    "workbench.colorTheme": "Default Dark+",
     "workbench.editor.enablePreview": false,
     "workbench.tree.renderIndentGuides": "always",
     "workbench.view.alwaysShowHeaderActions": true,
