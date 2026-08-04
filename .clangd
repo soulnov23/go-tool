@@ -1,0 +1,59 @@
+CompileFlags:
+    Add:
+        - -Wno-reserved-user-defined-literal
+        - -Isrc/base
+        - -Isrc/module
+        - -Isrc/tools
+        - -Idep/include
+        - -Idep/tlib/include
+        - -Idep/rapidjson
+        - -Idep/cajun
+        - -Idep/sig_checkv3/inc
+        - -Idep/portal_api/include
+        - -Idep/drm_api/include
+        - -Idep/qr_code/include
+        - -Idep/billno_api/include
+        - -Idep/RegisterAPI/include
+        - -Idep/sm/include
+        - -Idep/ea_thirdparty_login_api/include
+        - -I/data/home/project/unipay-incl
+        - -I/data/home/jenkins/lib/oauth/0.9.4/include
+        - -I/data/home/jenkins/lib/wbl_oss/0.7.0/include
+        - -I/data/home/jenkins/lib/TDF/R269/include/app
+        - -I/data/home/jenkins/lib/TDF/R269/include/protocol
+        - -I/data/home/jenkins/lib/TDF/R269/include/protocol/boss_c4b
+        - -I/data/home/jenkins/lib/TDF/R269/include/tdf_based_ex/acct_comm_pack
+        - -I/data/home/jenkins/lib/TDF/R269/include/tdf_based_ex/c4qab_comm_info
+        - -I/data/home/jenkins/lib/msgpack/0.5.7/include
+        - -I/data/home/jenkins/lib/mysql/10.0.8/include
+        - -I/data/home/jenkins/lib/openssl/1.0.2a/include
+        - -I/data/home/jenkins/lib/secapi/0.0.1/include
+        - -I/data/home/jenkins/lib/risk_control/1.3.0/include
+        - -I/data/home/jenkins/lib/pcer_lib/0.0.0/include
+        - -I/data/home/jenkins/lib/gtest/1.7.0/include
+---
+If:
+    PathMatch: [.*\.c]
+CompileFlags:
+    Add:
+        - -xc
+        - -std=gnu11
+---
+If:
+    PathExclude: [.*\.c]
+CompileFlags:
+    Add:
+        - -xc++
+        - -std=gnu++14
+---
+Diagnostics:
+    UnusedIncludes: None
+    MissingIncludes: None
+    ClangTidy:
+        Remove: ["*"]
+
+InlayHints:
+    Enabled: No
+
+Completion:
+    HeaderInsertion: Never
