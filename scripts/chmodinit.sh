@@ -9,3 +9,4 @@ find . -type f -exec chmod 644 {} +
 find . -type d -exec chmod 755 {} +
 find . -type f -path "*/build/bin/*" ! -path "*/build/bin/*/*" -print -exec chmod +x {} +
 find . -type f -name "*.sh" -print -exec chmod +x {} +
+find . -type f -name "*.py" -print -exec chmod +x {} +
