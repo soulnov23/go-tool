@@ -169,6 +169,7 @@
     "protobuf.includes": [
         "/data/home/project/trpc-protocol/trpc"
     ],
+    "protobuf.protoc.path": "/usr/local/bin/protoc",
     //显示子文件夹的git
     "git-graph.maxDepthOfRepoSearch": 3,
     "git-graph.date.format": "ISO Date & Time",
