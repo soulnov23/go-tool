@@ -77,21 +77,14 @@
     "workbench.layoutControl.enabled": false,
     "workbench.secondarySideBar.defaultVisibility": "hidden",
     "workbench.editorLargeFileConfirmation": 1024,
-    //C_Cpp选项
-    //"C_Cpp.default.cppStandard": "c++20",
-    //"C_Cpp.default.cStandard": "c18",
-    "C_Cpp.errorSquiggles": "enabled",
-    "C_Cpp.exclusionPolicy": "checkFilesAndFolders",
-    "C_Cpp.autoAddFileAssociations": false,
-    "C_Cpp.workspaceSymbols": "All",
-    "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
-    //"C_Cpp.intelliSenseEngine": "default",
-    "C_Cpp.intelliSenseMemoryLimit": 10240,
-    "C_Cpp.intelliSenseCachePath": "${workspaceFolder}/.vscode",
-    "C_Cpp.intelliSenseCacheSize": 10240,
-    "C_Cpp.clang_format_fallbackStyle": "none",
-    "C_Cpp.clang_format_style": "file",
+    //clangd选项
+    "clangd.path": "clangd-launch",
+    "clangd.arguments": [
+        "--background-index-priority=normal",
+        "--limit-references=0",
+        "-j=16",
+        "--pch-storage=memory"
+    ],
     //files选项
     "files.autoGuessEncoding": true,
     "files.autoSave": "onFocusChange",

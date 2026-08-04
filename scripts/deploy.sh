@@ -171,6 +171,11 @@ function chmodinit() {
     ln -sf $(pwd)/chmodinit.sh ${GOPATH}/bin/chmodinit
 }
 
+# ./deploy.sh clangd-launch
+function clangd-launch() {
+    ln -sf $(pwd)/clangd-launch.py ${GOPATH}/bin/clangd-launch
+}
+
 main() {
     case $1 in
         golang)
@@ -217,6 +222,9 @@ main() {
             ;;
         chmodinit)
             chmodinit
+            ;;
+        clangd-launch)
+            clangd-launch
             ;;
         *)
             echo "error:argument is invalid"
