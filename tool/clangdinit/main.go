@@ -50,10 +50,7 @@ func refreshCompileCommands(root string) error {
 	var sources []string
 	if err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
-			if path == root {
-				return err
-			}
-			return nil
+			return err
 		}
 		if d.IsDir() {
 			return nil
