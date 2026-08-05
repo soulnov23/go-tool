@@ -2,7 +2,7 @@
     "recommendations": [
         "adamhartford.vscode-base64",
         "andyyaldoo.vscode-json",
-        "ms-vscode.cpptools",
+        "anysphere.cursorpyright",
         "bierner.markdown-mermaid",
         "bmewburn.vscode-intelephense-client",
         "dbcode.dbcode",
@@ -12,6 +12,7 @@
         "foxundermoon.shell-format",
         "golang.go",
         "hilleer.yaml-plus-json",
+        "llvm-vs-code-extensions.vscode-clangd",
         "mechatroner.rainbow-csv",
         "mhutchie.git-graph",
         "ms-ceintl.vscode-language-pack-zh-hans",
