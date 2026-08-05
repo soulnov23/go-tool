@@ -86,7 +86,7 @@
     "workbench.secondarySideBar.defaultVisibility": "hidden",
     "workbench.editorLargeFileConfirmation": 1024,
     //clangd选项
-    "clangd.path": "clangd-launch",
+    "clangd.path": "/usr/bin/clangd",
     "clangd.arguments": [
         "--background-index-priority=normal",
         "--limit-references=0",
