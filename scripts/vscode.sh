@@ -4,9 +4,6 @@ set -x
 set -e
 
 mkdir -p ./.vscode
-if [ ! -f "./.vscode/c_cpp_properties.json" ]; then
-    cp -rf /data/home/project/go-tool/.vscode/c_cpp_properties.json ./.vscode
-fi
 if [ ! -f "./.vscode/launch.json" ]; then
     cp -rf /data/home/project/go-tool/.vscode/launch.json ./.vscode
 fi
