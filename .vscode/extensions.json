@@ -2,7 +2,6 @@
     "recommendations": [
         "adamhartford.vscode-base64",
         "andyyaldoo.vscode-json",
-        "anysphere.cursorpyright",
         "bierner.markdown-mermaid",
         "bmewburn.vscode-intelephense-client",
         "dbcode.dbcode",
@@ -17,6 +16,8 @@
         "mhutchie.git-graph",
         "ms-ceintl.vscode-language-pack-zh-hans",
         "ms-python.python",
+        "anysphere.cursorpyright",
+        "charliermarsh.ruff",
         "redhat.vscode-yaml",
         "usernamehw.errorlens",
         "xaver.clang-format",

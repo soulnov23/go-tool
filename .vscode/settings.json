@@ -45,6 +45,13 @@
         "editor.defaultFormatter": "xaver.clang-format",
         "editor.formatOnSave": false
     },
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "always",
+            "source.organizeImports": "always"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
