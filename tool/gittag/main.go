@@ -22,7 +22,7 @@ var workdir string
 
 func main() {
 	log.SetFlags(0)
-	log.SetPrefix("\033[1;32m[git-tag]\033[m ")
+	log.SetPrefix("\033[1;32m[gittag]\033[m ")
 
 	// 获取当前工作目录
 	cwd, err := os.Getwd()

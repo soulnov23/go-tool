@@ -1,7 +1,7 @@
 include ../../Inc.mk
 
 SRC := ./
-BIN := ${GOPATH}/bin/clangd-launch
+BIN := ${GOPATH}/bin/clangdinit
 
 all:
 	${CGO} go build ${PRINT} -o ${BIN} ${SRC}

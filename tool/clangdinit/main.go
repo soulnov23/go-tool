@@ -1,12 +1,15 @@
 package main
 
 import (
-	"bytes"
+	_ "embed"
 	"encoding/json"
 	"log"
 	"os"
 	"path/filepath"
 )
+
+//go:embed .clangd
+var clangdConfig []byte
 
 var drivers = map[string]string{
 	".c":   "clang",
@@ -23,7 +26,7 @@ type compileCommand struct {
 
 func main() {
 	log.SetFlags(0)
-	log.SetPrefix("\033[1;32m[clangd-launch]\033[m ")
+	log.SetPrefix("\033[1;32m[clangdinit]\033[m ")
 
 	// 获取当前工作目录
 	cwd, err := os.Getwd()
@@ -35,9 +38,14 @@ func main() {
 	if err := refreshCompileCommands(cwd); err != nil {
 		log.Fatalf("❌ 刷新compile_commands.json失败: %v", err)
 	}
+
+	// 刷新.clangd
+	if err := refreshClangdConfig(cwd); err != nil {
+		log.Fatalf("❌ 刷新.clangd失败: %v", err)
+	}
 }
 
-// 扫描源文件并按需刷新compile_commands.json
+// 扫描源文件并刷新compile_commands.json
 func refreshCompileCommands(root string) error {
 	var sources []string
 	if err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
@@ -84,13 +92,19 @@ func refreshCompileCommands(root string) error {
 	}
 
 	output := filepath.Join(root, "compile_commands.json")
-	if existing, err := os.ReadFile(output); err == nil && bytes.Equal(existing, payload) {
-		log.Printf("📢 compile_commands.json已是最新[%d个源文件]", len(sources))
-		return nil
-	}
 	if err := os.WriteFile(output, payload, 0o644); err != nil {
 		return err
 	}
 	log.Printf("✅ 已刷新compile_commands.json[%d个源文件]", len(sources))
+	return nil
+}
+
+// 刷新.clangd
+func refreshClangdConfig(root string) error {
+	output := filepath.Join(root, ".clangd")
+	if err := os.WriteFile(output, clangdConfig, 0o644); err != nil {
+		return err
+	}
+	log.Print("✅ 已刷新.clangd")
 	return nil
 }

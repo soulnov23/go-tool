@@ -1,7 +1,7 @@
 include ../../Inc.mk
 
 SRC := ./
-BIN := ${GOPATH}/bin/git-tag
+BIN := ${GOPATH}/bin/gittag
 
 all:
 	${CGO} go build ${PRINT} -o ${BIN} ${SRC}
