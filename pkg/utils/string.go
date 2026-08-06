@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand/v2"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -114,48 +113,6 @@ func Bytesify(value any) []byte {
 func Stringify(value any) string {
 	result, _ := pbjson.Marshal(value)
 	return BytesToString(result)
-}
-
-func StringToMap(data string, fieldSep string, valueSep string) map[string]string {
-	if data == "" {
-		return map[string]string{}
-	}
-	fieldSlice := strings.Split(data, fieldSep)
-	result := make(map[string]string, len(fieldSlice))
-	for _, kv := range fieldSlice {
-		if kv == "" {
-			continue
-		}
-		key, value, found := strings.Cut(kv, valueSep)
-		if found {
-			result[key] = value
-		}
-	}
-	return result
-}
-
-func MapToString(record map[string]string, sorted bool) string {
-	size := len(record)
-	if size == 0 {
-		return ""
-	}
-
-	var builder strings.Builder
-	if sorted {
-		keys := make([]string, 0, size)
-		for key := range record {
-			keys = append(keys, key)
-		}
-		sort.Strings(keys)
-		for _, key := range keys {
-			builder.WriteString(key + "=" + record[key] + "&")
-		}
-	} else {
-		for key, value := range record {
-			builder.WriteString(key + "=" + value + "&")
-		}
-	}
-	return builder.String()[0 : builder.Len()-1]
 }
 
 func AnyToString(value any) string {
