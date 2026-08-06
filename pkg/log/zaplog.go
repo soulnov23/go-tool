@@ -12,6 +12,52 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+var DefaultLogger Logger
+
+func init() {
+	var err error
+	DefaultLogger, err = New(&Config{
+		CallerSkip: 1,
+		CoreConfig: []*CoreConfig{
+			{
+				Level:     "debug",
+				Formatter: "json",
+				FormatConfig: &FormatConfig{
+					TimeKey:       "time",
+					LevelKey:      "level",
+					NameKey:       "name",
+					CallerKey:     "caller",
+					FunctionKey:   "",
+					MessageKey:    "msg",
+					StacktraceKey: "stack",
+				},
+				Writer: logTypeConsole,
+			},
+			{
+				Level:     "debug",
+				Formatter: "json",
+				FormatConfig: &FormatConfig{
+					TimeKey:       "time",
+					LevelKey:      "level",
+					NameKey:       "name",
+					CallerKey:     "caller",
+					FunctionKey:   "",
+					MessageKey:    "msg",
+					StacktraceKey: "stack",
+				},
+				Writer: logTypeFile,
+				WriteConfig: &WriteConfig{
+					FileName:   "run.log",
+					TimeFormat: ".%Y-%m-%d",
+				},
+			},
+		},
+	})
+	if err != nil {
+		panic(fmt.Errorf("init default logger: %v", err))
+	}
+}
+
 const (
 	logTypeConsole = "console"
 	logTypeFile    = "file"
