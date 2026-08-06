@@ -31,12 +31,6 @@ func TestRoundUpToPower2(t *testing.T) {
 }
 
 func TestRingBuffer(t *testing.T) {
-	glog, err := log.GetDefaultLogger()
-	if err != nil {
-		t.Logf("log.GetDefaultLogger: %v", err)
-		return
-	}
-
 	queue := New(2) // 最小容量，提高并发碰撞概率
 
 	timeout := 30 * time.Second
@@ -52,12 +46,12 @@ func TestRingBuffer(t *testing.T) {
 			for {
 				select {
 				case <-ctx.Done():
-					glog.DebugFields("ctx done")
+					log.DefaultLogger.DebugFields("ctx done")
 					return
 				default:
 					seq := enSeq.Add(1)
 					if queue.Enqueue(seq) == ErrQueueFull {
-						glog.DebugFields("full", zap.Uint64("size", queue.Size()))
+						log.DefaultLogger.DebugFields("full", zap.Uint64("size", queue.Size()))
 					} else {
 						enSuccess.Add(1)
 					}
@@ -76,12 +70,12 @@ func TestRingBuffer(t *testing.T) {
 			for {
 				select {
 				case <-ctx.Done():
-					glog.DebugFields("ctx done")
+					log.DefaultLogger.DebugFields("ctx done")
 					return
 				default:
 					value, err := queue.Dequeue()
 					if err == ErrQueueEmpty {
-						glog.DebugFields("empty", zap.Uint64("size", queue.Size()))
+						log.DefaultLogger.DebugFields("empty", zap.Uint64("size", queue.Size()))
 					} else {
 						if _, loaded := seen.LoadOrStore(value, true); loaded {
 							t.Errorf("duplicate value: %v", value)
@@ -103,7 +97,7 @@ func TestRingBuffer(t *testing.T) {
 	en := enSuccess.Load()
 	de := deSuccess.Load()
 	remain := queue.Size()
-	glog.DebugFields("", zap.Uint64("enSuccess", en), zap.Uint64("deSuccess", de), zap.Uint64("remain", remain))
+	log.DefaultLogger.DebugFields("", zap.Uint64("enSuccess", en), zap.Uint64("deSuccess", de), zap.Uint64("remain", remain))
 	if en != de+remain {
 		t.Fatalf("data inconsistency: enSuccess(%d) != deSuccess(%d) + remain(%d)", en, de, remain)
 	}
