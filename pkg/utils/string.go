@@ -266,3 +266,28 @@ func AnyToString(value any) string {
 		return fmt.Sprintf("%v", v)
 	}
 }
+
+func MySQLRealEscapeString(value string) string {
+	bytes := make([]byte, 0, 2*len(value))
+	for i := 0; i < len(value); i++ {
+		switch char := value[i]; char {
+		case 0:
+			bytes = append(bytes, '\\', '0')
+		case '\'', '"', '\\':
+			bytes = append(bytes, '\\', char)
+		case '\b':
+			bytes = append(bytes, '\\', 'b')
+		case '\n':
+			bytes = append(bytes, '\\', 'n')
+		case '\r':
+			bytes = append(bytes, '\\', 'r')
+		case '\t':
+			bytes = append(bytes, '\\', 't')
+		case 26:
+			bytes = append(bytes, '\\', 'Z')
+		default:
+			bytes = append(bytes, char)
+		}
+	}
+	return string(bytes)
+}
