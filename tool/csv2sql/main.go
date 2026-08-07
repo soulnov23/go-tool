@@ -11,6 +11,7 @@ import (
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
+// csv2sql -csv tmp.csv -sql tmp.sql -table database.table
 func main() {
 	// 定义需要解析的命令行参数
 	var csvPath string
@@ -32,15 +33,15 @@ func main() {
 
 	csvFile, err := os.Open(csvPath)
 	if err != nil {
-		log.Fatalf("❌ [%s]打开CSV文件失败: %s", csvPath, err.Error())
+		log.Fatalf("❌ 打开CSV文件失败: %s", err.Error())
 	}
 	defer csvFile.Close()
 	records, err := csv.NewReader(csvFile).ReadAll()
 	if err != nil {
-		log.Fatalf("❌ [%s]读取CSV文件失败: %s", csvPath, err.Error())
+		log.Fatalf("❌ 读取CSV文件失败: %s", err.Error())
 	}
 	if len(records) == 0 {
-		log.Fatalf("❌ [%s]CSV文件为空", csvPath)
+		log.Fatalf("❌ CSV文件为空: %s", csvPath)
 	}
 	size := len(records[0])
 	var indexs []int
@@ -59,7 +60,7 @@ func main() {
 	var sqls []string
 	for line, record := range records[1:] {
 		if len(record) != size {
-			log.Fatalf("❌ [%s]第%d行列数不匹配", csvPath, line+2)
+			log.Fatalf("❌ 第%d行列数不匹配: %s", line+2, csvPath)
 		}
 		var values []string
 		for _, index := range indexs {
@@ -69,7 +70,7 @@ func main() {
 	}
 	sql := strings.Join(sqls, "\n")
 	if err := os.WriteFile(sqlPath, utils.StringToBytes(sql), 0o644); err != nil {
-		log.Fatalf("❌ [%s]写入SQL文件失败: %s", sqlPath, err.Error())
+		log.Fatalf("❌ 写入SQL文件失败: %s", err.Error())
 	}
 	log.Printf("✅ 结果已保存到: %s", sqlPath)
 }
