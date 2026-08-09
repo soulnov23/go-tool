@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand/v2"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -120,12 +122,12 @@ func AnyToString(value any) string {
 	case nil:
 		return ""
 	case []byte:
-		return BytesToString(v)
+		return string(v)
 	case *[]byte:
 		if v == nil {
 			return ""
 		}
-		return BytesToString(*v)
+		return string(*v)
 	case string:
 		return v
 	case *string:
@@ -174,6 +176,13 @@ func AnyToString(value any) string {
 		if v == nil {
 			return ""
 		}
+		return strconv.FormatUint(*v, 10)
+	case uintptr:
+		return strconv.FormatUint(uint64(v), 10)
+	case *uintptr:
+		if v == nil {
+			return ""
+		}
 		return strconv.FormatUint(uint64(*v), 10)
 	case int:
 		return strconv.FormatInt(int64(v), 10)
@@ -209,7 +218,7 @@ func AnyToString(value any) string {
 		if v == nil {
 			return ""
 		}
-		return strconv.FormatInt(int64(*v), 10)
+		return strconv.FormatInt(*v, 10)
 	case float32:
 		return strconv.FormatFloat(float64(v), 'f', -1, 32)
 	case *float32:
@@ -218,12 +227,26 @@ func AnyToString(value any) string {
 		}
 		return strconv.FormatFloat(float64(*v), 'f', -1, 32)
 	case float64:
-		return strconv.FormatFloat(float64(v), 'f', -1, 64)
+		return strconv.FormatFloat(v, 'f', -1, 64)
 	case *float64:
 		if v == nil {
 			return ""
 		}
-		return strconv.FormatFloat(float64(*v), 'f', -1, 64)
+		return strconv.FormatFloat(*v, 'f', -1, 64)
+	case complex64:
+		return strconv.FormatComplex(complex128(v), 'f', -1, 64)
+	case *complex64:
+		if v == nil {
+			return ""
+		}
+		return strconv.FormatComplex(complex128(*v), 'f', -1, 64)
+	case complex128:
+		return strconv.FormatComplex(v, 'f', -1, 128)
+	case *complex128:
+		if v == nil {
+			return ""
+		}
+		return strconv.FormatComplex(*v, 'f', -1, 128)
 	case time.Time:
 		if v.IsZero() {
 			return ""
@@ -235,21 +258,12 @@ func AnyToString(value any) string {
 		}
 		return strconv.FormatInt(v.UnixMilli(), 10)
 	case json.RawMessage:
-		if len(v) == 0 {
-			return ""
-		}
-		if v[0] == '"' {
-			var s string
-			if err := json.Unmarshal(v, &s); err == nil {
-				return s
-			}
-		}
-		return BytesToString(v)
+		return rawMessageToString(v)
 	case *json.RawMessage:
-		if v == nil || len(*v) == 0 {
+		if v == nil {
 			return ""
 		}
-		return AnyToString(*v)
+		return rawMessageToString(*v)
 	case json.Number:
 		return v.String()
 	case *json.Number:
@@ -263,7 +277,47 @@ func AnyToString(value any) string {
 		}
 		return AnyToString(*v)
 	default:
-		return fmt.Sprintf("%v", v)
+		return reflectToString(value)
+	}
+}
+
+func rawMessageToString(raw json.RawMessage) string {
+	trimmed := bytes.TrimSpace(raw)
+	if len(trimmed) == 0 {
+		return ""
+	}
+	if trimmed[0] == '"' {
+		var str string
+		if err := json.Unmarshal(trimmed, &str); err == nil {
+			return str
+		}
+	}
+	return string(trimmed)
+}
+
+func reflectToString(value any) string {
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Invalid:
+		return ""
+	case reflect.String:
+		return rv.String()
+	case reflect.Bool:
+		return strconv.FormatBool(rv.Bool())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(rv.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return strconv.FormatUint(rv.Uint(), 10)
+	case reflect.Float32:
+		return strconv.FormatFloat(rv.Float(), 'f', -1, 32)
+	case reflect.Float64:
+		return strconv.FormatFloat(rv.Float(), 'f', -1, 64)
+	case reflect.Complex64:
+		return strconv.FormatComplex(rv.Complex(), 'f', -1, 64)
+	case reflect.Complex128:
+		return strconv.FormatComplex(rv.Complex(), 'f', -1, 128)
+	default:
+		return fmt.Sprintf("%v", value)
 	}
 }
 
