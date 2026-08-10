@@ -13,7 +13,7 @@ import (
 // v${MAJOR}.${MINOR}.${PATCH}
 const (
 	tagPrefix           = "v"
-	initialVersion      = "1.1.0"
+	initialVersion      = "1.0.0"
 	minorCarryThreshold = 99
 	patchCarryThreshold = 9
 )
@@ -77,36 +77,54 @@ func getCurrentVersion() string {
 	if err := cmd.Run(); err == nil {
 		for tag := range strings.SplitSeq(strings.TrimSpace(stdout.String()), "\n") {
 			tag = strings.TrimSpace(tag)
-			if currentVersion, ok := strings.CutPrefix(tag, tagPrefix); ok {
-				log.Printf("✅ 从Git标签获取当前版本[%s]", currentVersion)
-				return currentVersion
+			currentVersion, ok := strings.CutPrefix(tag, tagPrefix)
+			if !ok {
+				log.Printf("📢 跳过无效标签[%s]: %v", tag, err)
+				continue
 			}
+			if _, _, _, err := parseVersion(currentVersion); err != nil {
+				log.Printf("📢 跳过无效标签[%s]: %v", tag, err)
+				continue
+			}
+			log.Printf("✅ 从Git标签获取当前版本[%s]", currentVersion)
+			return currentVersion
 		}
 	}
 
-	log.Printf("📢 未找到任何Git标签，使用初始版本[%s]", initialVersion)
+	log.Printf("📢 未找到任何有效Git标签，使用初始版本[%s]", initialVersion)
 	return initialVersion
+}
+
+// parseVersion解析MAJOR.MINOR.PATCH，忽略-及之后的后缀（如 1.2.3-rc1）
+func parseVersion(version string) (major, minor, patch int, err error) {
+	numbers, _, _ := strings.Cut(version, "-")
+	majStr, rest, ok := strings.Cut(numbers, ".")
+	if !ok || majStr == "" || rest == "" {
+		return 0, 0, 0, fmt.Errorf("无效的版本格式[%s]", version)
+	}
+	minStr, patchStr, ok := strings.Cut(rest, ".")
+	if !ok || minStr == "" || patchStr == "" {
+		return 0, 0, 0, fmt.Errorf("无效的版本格式[%s]", version)
+	}
+	patchStr, _, _ = strings.Cut(patchStr, ".")
+
+	if major, err = strconv.Atoi(majStr); err != nil {
+		return 0, 0, 0, fmt.Errorf("无法解析major[%s]: %s", majStr, version)
+	}
+	if minor, err = strconv.Atoi(minStr); err != nil {
+		return 0, 0, 0, fmt.Errorf("无法解析minor[%s]: %s", minStr, version)
+	}
+	if patch, err = strconv.Atoi(patchStr); err != nil {
+		return 0, 0, 0, fmt.Errorf("无法解析patch[%s]: %s", patchStr, version)
+	}
+	return major, minor, patch, nil
 }
 
 // 递增版本号
 func incrementVersion(version string) string {
-	parts := strings.Split(version, ".")
-	if len(parts) < 3 {
-		log.Fatalf("❌ 无效的版本格式[%s]", version)
-	}
-
-	// 转换为整数
-	major, err := strconv.Atoi(parts[0])
+	major, minor, patch, err := parseVersion(version)
 	if err != nil {
-		log.Fatalf("❌ 无效的版本格式[%s]", version)
-	}
-	minor, err := strconv.Atoi(parts[1])
-	if err != nil {
-		log.Fatalf("❌ 无效的版本格式[%s]", version)
-	}
-	patch, err := strconv.Atoi(parts[2])
-	if err != nil {
-		log.Fatalf("❌ 无效的版本格式[%s]", version)
+		log.Fatalf("❌ %v", err)
 	}
 
 	// 智能进位逻辑
@@ -120,7 +138,7 @@ func incrementVersion(version string) string {
 		}
 	}
 	newVersion := fmt.Sprintf("%d.%d.%d", major, minor, patch)
-	log.Printf("✅ 版本递增成功[%s]", newVersion)
+	log.Printf("✅ 版本递增成功[%s->%s]", version, newVersion)
 	return newVersion
 }
 
