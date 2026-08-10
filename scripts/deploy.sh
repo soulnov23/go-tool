@@ -171,6 +171,33 @@ function chmodinit() {
     ln -sf $(pwd)/chmodinit.sh ${GOPATH}/bin/chmodinit
 }
 
+# ./deploy.sh backuproot [verbose]
+function backuproot() {
+    mkdir -p /data/home/backup/root
+    local verbose=(--info=progress2)
+    if [ -n "$1" ]; then
+        verbose=(-v --progress)
+    fi
+    rsync -aHAX --numeric-ids --delete --delete-excluded "${verbose[@]}" \
+        --exclude="/.cache" \
+        --exclude="/.npm" \
+        --exclude="/.nvm" \
+        --exclude="/.local" \
+        --exclude="/.gongfeng-copilot" \
+        --exclude="/.vscode-server" \
+        --exclude="/.codebuddy-server-cn" \
+        /root/ /data/home/backup/root/
+}
+
+# ./deploy.sh restoreroot [verbose]
+function restoreroot() {
+    local verbose=(--info=progress2)
+    if [ -n "$1" ]; then
+        verbose=(-v --progress)
+    fi
+    rsync -aHAX --numeric-ids "${verbose[@]}" /data/home/backup/root/ /root/
+}
+
 main() {
     case $1 in
         golang)
@@ -217,6 +244,12 @@ main() {
             ;;
         chmodinit)
             chmodinit
+            ;;
+        backuproot)
+            backuproot $2
+            ;;
+        restoreroot)
+            restoreroot $2
             ;;
         *)
             echo "error:argument is invalid"
