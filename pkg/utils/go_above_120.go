@@ -17,3 +17,11 @@ func BytesToString(b []byte) string {
 func StringToBytes(s string) []byte {
 	return unsafe.Slice(unsafe.StringData(s), len(s))
 }
+
+func RunesToString(r []rune) string {
+	return string(r)
+}
+
+func StringToRunes(s string) []rune {
+	return []rune(s)
+}

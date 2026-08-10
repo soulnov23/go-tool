@@ -128,6 +128,13 @@ func AnyToString(value any) string {
 			return ""
 		}
 		return string(*v)
+	case []rune:
+		return string(v)
+	case *[]rune:
+		if v == nil {
+			return ""
+		}
+		return string(*v)
 	case string:
 		return v
 	case *string:

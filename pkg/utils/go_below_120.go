@@ -22,3 +22,11 @@ func StringToBytes(s string) (b []byte) {
 	bh.Len = sh.Len
 	return b
 }
+
+func RunesToString(r []rune) string {
+	return string(r)
+}
+
+func StringToRunes(s string) []rune {
+	return []rune(s)
+}
