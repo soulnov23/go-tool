@@ -183,9 +183,15 @@ function backuproot() {
         --exclude="/.npm" \
         --exclude="/.nvm" \
         --exclude="/.local" \
+        --exclude="/polaris" \
+        --exclude="/background_agent_cli" \
+        --exclude="/.bg-agent" \
         --exclude="/.gongfeng-copilot" \
         --exclude="/.vscode-server" \
         --exclude="/.codebuddy-server-cn" \
+        --exclude="/.workbuddy" \
+        --exclude="/.codebuddy" \
+        --exclude="/.codenexus" \
         /root/ /data/home/backup/root/
 }
 
