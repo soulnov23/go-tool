@@ -159,6 +159,9 @@
     "xmlTools.enableXmlTreeViewCursorSync": true,
     "xmlTools.enforcePrettySelfClosingTagOnFormat": true,
     "xmlTools.splitXmlnsOnFormat": false,
+    //shellfmt选项
+    "shellformat.path": "/data/home/project/gopath/bin/shfmt",
+    "shellformat.flag": "-ln bash -i 4 -ci",
     //工作区信任选项
     "security.workspace.trust.banner": "never",
     "security.workspace.trust.enabled": false,
