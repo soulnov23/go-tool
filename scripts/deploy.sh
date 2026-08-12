@@ -73,9 +73,10 @@ function nvm() {
     \. "$HOME/.nvm/nvm.sh"
     # Download and install Node.js:
     nvm install 24
-    nvm alias default 24.11.0
+    nvm alias default 24
     # Verify the Node.js version:
-    node -v # Should print "v24.11.0".
+    node -v
+    npm -v
     # Download and install pnpm:
     corepack enable pnpm
     # Verify pnpm version:
