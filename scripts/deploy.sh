@@ -76,10 +76,12 @@ function nvm() {
     nvm alias default 24
     # Verify the Node.js version:
     node -v
+    # Verify npm version:
+    npm install -g npm@latest
     npm -v
-    # Download and install pnpm:
-    corepack enable pnpm
     # Verify pnpm version:
+    corepack enable pnpm
+    corepack prepare pnpm@latest --activate
     pnpm -v
 }
 
