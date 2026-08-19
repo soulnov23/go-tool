@@ -7,10 +7,11 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/soulnov23/go-tool/pkg/json/jsoniter"
 	"github.com/soulnov23/go-tool/pkg/utils"
 )
 
-// sql2json -dsn user:password@tcp(ip:port)/?charset=utf8mb4 -sql "select * from database.table" -output tmp.json
+// sql2json -dsn 'tdsql_admin:fNsBM*2467gjMA@tcp(21.6.145.72:3306)/?charset=utf8mb4&loc=Local' -sql 'select * from tax_conf.address_rule_v1' -output 'tmp.json'
 func main() {
 	// 定义需要解析的命令行参数
 	var dsn string
@@ -66,6 +67,13 @@ func main() {
 			value := values[i]
 			if bytes, ok := value.([]byte); ok {
 				value = string(bytes)
+				var jsonValue any
+				if jsoniter.Unmarshal(bytes, &jsonValue) == nil {
+					switch jsonValue.(type) {
+					case map[string]any, []any:
+						value = jsonValue
+					}
+				}
 			}
 			record[column] = value
 		}
