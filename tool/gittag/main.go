@@ -13,9 +13,9 @@ import (
 // v${MAJOR}.${MINOR}.${PATCH}
 const (
 	tagPrefix           = "v"
-	initialVersion      = "1.0.0"
+	initialVersion      = "1.1.1"
 	minorCarryThreshold = 99
-	patchCarryThreshold = 9
+	patchCarryThreshold = 99
 )
 
 var workdir string
