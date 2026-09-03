@@ -10,7 +10,8 @@
             "Read",
             "Bash",
             "Task",
-            "Agent"
+            "Agent",
+            "Skill"
         ],
         "deny": [
             "Bash(rm:*)",
