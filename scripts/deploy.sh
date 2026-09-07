@@ -149,14 +149,17 @@ function shellfmt() {
     ln -sf $(pwd)/shellfmt.sh ${GOPATH}/bin/shellfmt
 }
 
-# ./deploy.sh clangd 23.1.0
-function clangd() {
+# ./deploy.sh clang 23.1.0
+function clang() {
     mkdir -p tmp
     cd tmp
     wget https://github.com/clangd/clangd/releases/download/$1/clangd-linux-$1.zip -O clangd.zip
     unzip clangd.zip
-    rm -rf /usr/bin/clangd || true
     mv -f clangd_$1/bin/clangd /usr/bin/
+    wget https://github.com/microsoft/vscode-cpptools/releases/download/v1.34.3/cpptools-linux-x64.vsix -O cpptools.vsix
+    unzip cpptools.vsix
+    mv -f extension/LLVM/bin/clang-format extension/LLVM/bin/clang-tidy /usr/bin/
+    chmod +x /usr/bin/clang-format /usr/bin/clang-tidy
     cd ..
     rm -rf tmp
 }
@@ -256,8 +259,8 @@ main() {
         shellfmt)
             shellfmt
             ;;
-        clangd)
-            clangd $2
+        clang)
+            clang $2
             ;;
         vscode)
             vscode
