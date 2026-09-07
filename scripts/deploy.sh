@@ -149,6 +149,18 @@ function shellfmt() {
     ln -sf $(pwd)/shellfmt.sh ${GOPATH}/bin/shellfmt
 }
 
+# ./deploy.sh clangd 23.1.0
+function clangd() {
+    mkdir -p tmp
+    cd tmp
+    wget https://github.com/clangd/clangd/releases/download/$1/clangd-linux-$1.zip -O clangd.zip
+    unzip clangd.zip
+    rm -rf /usr/bin/clangd || true
+    mv -f clangd_$1/bin/clangd /usr/bin/
+    cd ..
+    rm -rf tmp
+}
+
 # ./deploy.sh vscode
 function vscode() {
     ln -sf $(pwd)/vscode.sh ${GOPATH}/bin/vscode
@@ -243,6 +255,9 @@ main() {
             ;;
         shellfmt)
             shellfmt
+            ;;
+        clangd)
+            clangd $2
             ;;
         vscode)
             vscode
