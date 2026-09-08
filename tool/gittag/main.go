@@ -37,10 +37,13 @@ func main() {
 	}
 
 	// 2. 获取当前版本
-	currentVersion := getCurrentVersion()
+	currentVersion, isInitial := getCurrentVersion()
 
-	// 3. 递增版本号
-	newVersion := incrementVersion(currentVersion)
+	// 3. 递增版本号（初始版本不递增）
+	newVersion := currentVersion
+	if !isInitial {
+		newVersion = incrementVersion(currentVersion)
+	}
 
 	// 4. 创建并推送Git标签
 	createAndPushGitTag(newVersion)
@@ -66,8 +69,8 @@ func getHeadTags() []string {
 	return tags
 }
 
-// 获取当前版本
-func getCurrentVersion() string {
+// 获取当前版本（无有效标签时isInitial为true）
+func getCurrentVersion() (version string, isInitial bool) {
 	// 执行git命令获取最新标签
 	cmd := exec.Command("git", "tag", "--sort=-version:refname")
 	var stdout, stderr bytes.Buffer
@@ -87,12 +90,12 @@ func getCurrentVersion() string {
 				continue
 			}
 			log.Printf("✅ 从Git标签获取当前版本[%s]", currentVersion)
-			return currentVersion
+			return currentVersion, false
 		}
 	}
 
 	log.Printf("📢 未找到任何有效Git标签，使用初始版本[%s]", initialVersion)
-	return initialVersion
+	return initialVersion, true
 }
 
 // parseVersion解析MAJOR.MINOR.PATCH，忽略-及之后的后缀（如 1.2.3-rc1）
