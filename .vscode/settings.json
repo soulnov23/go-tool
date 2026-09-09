@@ -228,6 +228,7 @@
     "cursor.diffs.useCharacterLevelDiffs": true,
     "cursor.terminal.usePreviewBox": true,
     "cursor.cpp.disabledLanguages": [],
+    "cursor.composer.usageSummaryDisplay": "always",
     //隐藏GitHub Copilot
     "chat.commandCenter.enabled": false,
     "chat.agent.enabled": false,
