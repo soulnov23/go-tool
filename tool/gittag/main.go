@@ -80,9 +80,12 @@ func getCurrentVersion() (version string, isInitial bool) {
 	if err := cmd.Run(); err == nil {
 		for tag := range strings.SplitSeq(strings.TrimSpace(stdout.String()), "\n") {
 			tag = strings.TrimSpace(tag)
+			if tag == "" {
+				continue
+			}
 			currentVersion, ok := strings.CutPrefix(tag, tagPrefix)
 			if !ok {
-				log.Printf("📢 跳过无效标签[%s]: %v", tag, err)
+				log.Printf("📢 跳过无效标签[%s]: 缺少前缀[%s]", tag, tagPrefix)
 				continue
 			}
 			if _, _, _, err := parseVersion(currentVersion); err != nil {
@@ -150,27 +153,29 @@ func createAndPushGitTag(version string) {
 	tag := tagPrefix + version
 
 	createCmd := exec.Command("git", "tag", tag)
-	var stdout, stderr bytes.Buffer
-	createCmd.Stdout = &stdout
-	createCmd.Stderr = &stderr
+	var createStdout, createStderr bytes.Buffer
+	createCmd.Stdout = &createStdout
+	createCmd.Stderr = &createStderr
 	createCmd.Dir = workdir
 	if err := createCmd.Run(); err != nil {
-		log.Fatalf("❌ 创建Git标签[%s]失败: %s", tag, stderr.String())
+		log.Fatalf("❌ 创建Git标签[%s]失败: %s", tag, createStderr.String())
 	}
 	log.Printf("✅ 已创建Git标签[%s]", tag)
 
 	pushCmd := exec.Command("git", "push", "origin", tag)
-	pushCmd.Stdout = &stdout
-	pushCmd.Stderr = &stderr
+	var pushStdout, pushStderr bytes.Buffer
+	pushCmd.Stdout = &pushStdout
+	pushCmd.Stderr = &pushStderr
 	pushCmd.Dir = workdir
 	if err := pushCmd.Run(); err != nil {
-		log.Printf("❌ 推送Git标签[%s]失败: %s", tag, stderr.String())
+		log.Printf("❌ 推送Git标签[%s]失败: %s", tag, pushStderr.String())
 		rollbackCmd := exec.Command("git", "tag", "-d", tag)
-		rollbackCmd.Stdout = &stdout
-		rollbackCmd.Stderr = &stderr
+		var rollbackStdout, rollbackStderr bytes.Buffer
+		rollbackCmd.Stdout = &rollbackStdout
+		rollbackCmd.Stderr = &rollbackStderr
 		rollbackCmd.Dir = workdir
 		if err := rollbackCmd.Run(); err != nil {
-			log.Printf("📢 回滚本地标签[%s]失败: %v", tag, err)
+			log.Printf("📢 回滚本地标签[%s]失败: %s", tag, rollbackStderr.String())
 			log.Fatalf("📢 请手动执行[git tag -d %s]", tag)
 		} else {
 			log.Fatalf("📢 已回滚本地标签[%s]", tag)
