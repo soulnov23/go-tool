@@ -194,6 +194,11 @@ function chmodinit() {
     ln -sf $(pwd)/chmodinit.sh ${GOPATH}/bin/chmodinit
 }
 
+# ./deploy.sh gittag
+function gittag() {
+    ln -sf $(pwd)/gittag.sh ${GOPATH}/bin/gittag
+}
+
 # ./deploy.sh backuproot [verbose]
 function backuproot() {
     mkdir -p /data/home/backup/root
@@ -279,6 +284,9 @@ main() {
             ;;
         chmodinit)
             chmodinit
+            ;;
+        gittag)
+            gittag
             ;;
         backuproot)
             backuproot $2
