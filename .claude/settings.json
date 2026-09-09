@@ -1,7 +1,5 @@
 {
-    "env": {
-        "CLAUDE_CODE_SUBAGENT_MODEL": "opus[1m]"
-    },
+    "env": {},
     "permissions": {
         "defaultMode": "acceptEdits",
         "allow": [
@@ -66,7 +64,6 @@
         "command": ".claude/statusline.sh"
     },
     "enabledPlugins": {
-        "claude-code-internal@claude-code-internal-plugins": true,
         "gopls-lsp@claude-plugins-official": true
     },
     "language": "简体中文",
