@@ -56,7 +56,7 @@
             "Bash(pkill:*)"
         ]
     },
-    "model": "claude-glm-5.3[1m]",
+    "model": "claude-sonnet-5[1m]",
     "alwaysThinkingEnabled": true,
     "effortLevel": "xhigh",
     "statusLine": {
