@@ -58,7 +58,7 @@
     },
     "model": "claude-sonnet-5[1m]",
     "alwaysThinkingEnabled": true,
-    "effortLevel": "high",
+    "effortLevel": "xhigh",
     "statusLine": {
         "type": "command",
         "command": ".claude/statusline.sh"
