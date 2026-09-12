@@ -56,7 +56,7 @@
             "Bash(pkill:*)"
         ]
     },
-    "model": "opus[1m]",
+    "model": "claude-glm-5.3[1m]",
     "alwaysThinkingEnabled": true,
     "effortLevel": "xhigh",
     "statusLine": {
