@@ -62,8 +62,8 @@
                 },
                 {
                     "id": "6",
-                    "title": "pip",
-                    "value": "TMPDIR=/data2/home/chengpzhang/pip-tmp PIP_CACHE_DIR=/data2/home/chengpzhang/pip-cache pip",
+                    "title": "lsof",
+                    "value": "sudo kill $(sudo lsof -t -i:8888)",
                     "pos": 6,
                     "keybinding": "F7",
                     "keybinding_win": "",
