@@ -1,4 +1,4 @@
-// Package linkedlist 使用链表实现
+// Package linkedlist 使用链表实现Michael-Scott无锁队列
 package linkedlist
 
 import (
