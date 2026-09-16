@@ -4,6 +4,15 @@ package linkedlist
 import (
 	"sync/atomic"
 	"unsafe"
+
+	"golang.org/x/sys/cpu"
+)
+
+const (
+	// 缓存行大小
+	cacheLinePadSize = unsafe.Sizeof(cpu.CacheLinePad{})
+	// 指针大小，32位平台为4字节，64位平台为8字节，不能写死8否则32位平台上head和tail会挤在同一缓存行
+	pointerSize = unsafe.Sizeof(atomic.Pointer[node]{})
 )
 
 // 解决ABA问题有两个思路：
@@ -13,63 +22,57 @@ import (
 
 type node struct {
 	value any
-	next  unsafe.Pointer
+	next  atomic.Pointer[node]
 }
 
-func load(addr *unsafe.Pointer) *node {
-	return (*node)(atomic.LoadPointer(addr))
-}
-
-func cas(addr *unsafe.Pointer, old, new *node) bool {
-	return atomic.CompareAndSwapPointer(addr, unsafe.Pointer(old), unsafe.Pointer(new))
-}
-
-// Queue
+// Queue 为了获得高性能，使用缓存行填充在多线程环境下避免伪共享
+// 伪共享(False Sharing)指多个CPU核心访问不同变量，但这些变量在同一缓存行，导致缓存失效
+// 生产者只cas队尾tail，消费者只cas队头head，两者相邻时每次写都会让对方核心的缓存行失效，
+// 把它们隔到不同缓存行可以避免这部分缓存一致性流量
 type Queue struct {
-	head unsafe.Pointer
-	tail unsafe.Pointer
+	/*----------------CacheLine----------------*/
+	head atomic.Pointer[node]                 // 队列头，指向dummy节点
+	_    [cacheLinePadSize - pointerSize]byte // 避免伪共享
+	/*----------------CacheLine----------------*/
+	tail atomic.Pointer[node]                 // 队列尾
+	_    [cacheLinePadSize - pointerSize]byte // 避免伪共享
+	/*----------------CacheLine----------------*/
 }
 
 // New 创建无锁队列
 func New() *Queue {
 	// 分配一个空节点dummy头指针head来解决队列中如果只有一个元素，head和tail都指向同一个节点的问题
-	p := &node{
-		value: nil,
-		next:  nil,
-	}
-	return &Queue{
-		head: unsafe.Pointer(p),
-		tail: unsafe.Pointer(p),
-	}
+	p := &node{}
+	queue := &Queue{}
+	queue.head.Store(p)
+	queue.tail.Store(p)
+	return queue
 }
 
 // Enqueue 入队列尾
 func (queue *Queue) Enqueue(value any) {
-	p := &node{
-		value: value,
-		next:  nil,
-	}
+	p := &node{value: value}
 	var tail, tailNext *node
 	for {
 		// 执行cas前先把上一刻的tail和tail.next保存
-		tail = load(&queue.tail)
-		tailNext = load(&tail.next)
+		tail = queue.tail.Load()
+		tailNext = tail.next.Load()
 
 		// 如果tail已经被其它线程移动了，重新开始
-		if tail != load(&queue.tail) {
+		if tail != queue.tail.Load() {
 			continue
 		}
 
 		// 如果tail.next不为nil，往下遍历到尾位置
 		if tailNext != nil {
-			cas(&queue.tail, tail, tailNext)
+			queue.tail.CompareAndSwap(tail, tailNext)
 			continue
 		}
 
 		// 尝试把p连接到tail.next
-		if cas(&tail.next, tailNext, p) {
+		if tail.next.CompareAndSwap(tailNext, p) {
 			// 入列成功，尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
-			cas(&queue.tail, tail, p)
+			queue.tail.CompareAndSwap(tail, p)
 			return
 		}
 		// 入列失败继续try
@@ -81,12 +84,12 @@ func (queue *Queue) Dequeue() any {
 	var head, tail, headNext *node
 	for {
 		// 执行cas前先把上一刻的head，tail和head.next保存
-		head = load(&queue.head)
-		tail = load(&queue.tail)
-		headNext = load(&head.next)
+		head = queue.head.Load()
+		tail = queue.tail.Load()
+		headNext = head.next.Load()
 
 		// 如果head已经被其它线程移动了，重新开始
-		if head != load(&queue.head) {
+		if head != queue.head.Load() {
 			continue
 		}
 
@@ -99,12 +102,12 @@ func (queue *Queue) Dequeue() any {
 		// 2. 如果其它线程EnQueue做了一半导致head.next!=nil，但是tail还没有移到新位置
 		if head == tail && headNext != nil {
 			// 尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
-			cas(&queue.tail, tail, headNext)
+			queue.tail.CompareAndSwap(tail, headNext)
 			continue
 		}
 
 		// 因为引入了dummy节点，所以每次操作的都是head.next的值
-		if cas(&queue.head, head, headNext) {
+		if queue.head.CompareAndSwap(head, headNext) {
 			// 取值和清空都放在cas成功之后：head从head移到headNext这次cas全局只会成功一次，
 			// 清空headNext.value的只可能是这次cas的赢家，所以赢家同时也是它唯一的读者，
 			// 竞争失败者压根不会碰这个字段，value用普通字段读写不存在data race。
@@ -113,11 +116,11 @@ func (queue *Queue) Dequeue() any {
 			value := headNext.value
 			// headNext变成新的dummy头会一直留在队列里，不清空的话最后一个出队的元素会被它一直强引用无法GC
 			headNext.value = nil
-			// 注意：这里不能清空head.next。Enqueue的cas(&tail.next, nil, p)依赖
+			// 注意：这里不能清空head.next。Enqueue的tail.next.CompareAndSwap(nil, p)依赖
 			// "next一旦非nil就不再变回nil"这个单调性来确认tail快照仍是真队尾，
 			// 一旦把已摘下节点的next改回nil，持有过期tail快照的Enqueue会cas成功，
 			// 把节点挂到已脱链的节点上导致元素丢失。旧head自身已不可达，会被GC整体回收
-			// atomic.StorePointer(&head.next, nil)
+			// head.next.Store(nil)
 			return value
 		}
 		// 出列失败继续try
