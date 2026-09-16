@@ -28,7 +28,6 @@ func cas(addr *unsafe.Pointer, old, new *node) bool {
 type Queue struct {
 	head unsafe.Pointer
 	tail unsafe.Pointer
-	size *atomic.Uint64
 }
 
 // New 创建无锁队列
@@ -41,7 +40,6 @@ func New() *Queue {
 	return &Queue{
 		head: unsafe.Pointer(p),
 		tail: unsafe.Pointer(p),
-		size: &atomic.Uint64{},
 	}
 }
 
@@ -72,7 +70,6 @@ func (queue *Queue) Enqueue(value any) {
 		if cas(&tail.next, tailNext, p) {
 			// 入列成功，尝试把tail移到next新位置，失败了没关系不需要判断返回值，下次EnQueue/DeQueue时会遍历
 			cas(&queue.tail, tail, p)
-			queue.size.Add(1)
 			return
 		}
 		// 入列失败继续try
@@ -107,20 +104,22 @@ func (queue *Queue) Dequeue() any {
 		}
 
 		// 因为引入了dummy节点，所以每次操作的都是head.next的值
-		// 执行cas前先把head.next的值保存下来，避免cas刚执行完那一刻，其它线程也同时DeQueue把head移动了，那么cas后再取值可能就是head.next.next的值
-		value := headNext.value
 		if cas(&queue.head, head, headNext) {
-			// 使用-1代替^uint64(0)提高可读性
-			queue.size.Add(^uint64(0)) // 相当于-1
-			// 释放旧head的引用，帮助GC回收
-			atomic.StorePointer(&head.next, nil)
+			// 取值和清空都放在cas成功之后：head从head移到headNext这次cas全局只会成功一次，
+			// 清空headNext.value的只可能是这次cas的赢家，所以赢家同时也是它唯一的读者，
+			// 竞争失败者压根不会碰这个字段，value用普通字段读写不存在data race。
+			// 此刻其它线程继续DeQueue把queue.head推到更后面也没关系，headNext是栈上的局部指针，
+			// 指向的始终是本次摘下的那个节点，只有cas之后重新从queue.head出发取值才会读到后面节点的值
+			value := headNext.value
+			// headNext变成新的dummy头会一直留在队列里，不清空的话最后一个出队的元素会被它一直强引用无法GC
+			headNext.value = nil
+			// 注意：这里不能清空head.next。Enqueue的cas(&tail.next, nil, p)依赖
+			// "next一旦非nil就不再变回nil"这个单调性来确认tail快照仍是真队尾，
+			// 一旦把已摘下节点的next改回nil，持有过期tail快照的Enqueue会cas成功，
+			// 把节点挂到已脱链的节点上导致元素丢失。旧head自身已不可达，会被GC整体回收
+			// atomic.StorePointer(&head.next, nil)
 			return value
 		}
 		// 出列失败继续try
 	}
-}
-
-// Size 实际大小，链表没有容量限制，这里不需要Capacity方法
-func (queue *Queue) Size() uint64 {
-	return queue.size.Load()
 }
