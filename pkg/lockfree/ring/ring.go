@@ -1,10 +1,12 @@
-// Package ring 实现了基于环形缓冲区的无锁队列
-// 该实现通过维护序列号计数器解决ABA问题，提供高性能的并发消息传递机制
+// Package ring 实现了基于环形缓冲区的有界无锁(lock-free)多生产者多消费者队列
+// 采用Vyukov的MPMC bounded queue方案：每个节点带一个序列号，操作时先校验序列号确认
+// "是否轮到本票号"以及节点的空/满状态，确认通过后再CAS抢占全局票号。
+// 因为校验在抢票之前完成，CAS成功的那一刻节点必定归本次操作独占，
+// 所以整个流程不存在任何等待循环：任一goroutine被抢占都不会阻塞其他goroutine，满足lock-free的进展保证
 package ring
 
 import (
 	"errors"
-	"runtime"
 	"sync/atomic"
 	"unsafe"
 
@@ -27,18 +29,20 @@ const (
 )
 
 // node 表示队列中的节点
-// 环形队列通过维护入队(enSeq)和出队(deSeq)序列号解决ABA问题
-// 当一个节点被入队和出队多次时，序列号会保持递增，确保操作安全
-// 每个序列号操作增加容量大小的值而不是简单地增加1，可以确保序列号不会在短时间内重复
+// seq同时编码了"轮次"和"空满"两件事，取值只有两种：
+//
+//	seq == pos           节点为空，正轮到入队票号pos写入
+//	seq == pos+1         节点已写入，正轮到出队票号pos取走
+//
+// 入队完成后seq推进到pos+1，出队完成后seq推进到pos+capacity，
+// 即下一个会落到本节点上的入队票号。节点每capacity个票号复用一次，
+// seq始终等于"下一个有权操作本节点的票号"，据此可以区分轮次，
+// 保证复用同一节点的不同票号之间严格串行
 type node struct {
 	/*----------------CacheLine----------------*/
-	enSeq *atomic.Uint64             // 入队序列号，每次入队操作+capacity
-	_     [cacheLinePadSize - 8]byte // 避免伪共享
-	/*----------------CacheLine----------------*/
-	deSeq *atomic.Uint64             // 出队序列号，每次出队操作+capacity
-	_     [cacheLinePadSize - 8]byte // 避免伪共享
-	/*----------------CacheLine----------------*/
-	value any // 节点存储的值
+	seq   atomic.Uint64               // 序列号，标识当前轮到哪个票号操作本节点
+	value any                         // 节点存储的值
+	_     [cacheLinePadSize - 24]byte // 填充至整缓存行，避免相邻节点伪共享
 }
 
 // Queue 为了获得高性能，使用缓存行填充在多线程环境下避免伪共享
@@ -50,13 +54,13 @@ type Queue struct {
 	mask     uint64                      // 掩码，用于计算索引(等于capacity-1)
 	_        [cacheLinePadSize - 16]byte // 填充至缓存行大小
 	/*----------------CacheLine----------------*/
-	head *atomic.Uint64             // 队列头部索引
+	head atomic.Uint64              // 出队票号发号器
 	_    [cacheLinePadSize - 8]byte // 避免伪共享
 	/*----------------CacheLine----------------*/
-	tail *atomic.Uint64             // 队列尾部索引
+	tail atomic.Uint64              // 入队票号发号器
 	_    [cacheLinePadSize - 8]byte // 避免伪共享
 	/*----------------CacheLine----------------*/
-	nodes []*node // 节点数组
+	nodes []node // 节点数组
 }
 
 // New 创建指定容量的环形队列
@@ -72,20 +76,11 @@ func New(capacity uint64) *Queue {
 	queue := &Queue{
 		capacity: capacity,
 		mask:     capacity - 1,
-		head:     &atomic.Uint64{},
-		tail:     &atomic.Uint64{},
-		nodes:    make([]*node, capacity),
+		nodes:    make([]node, capacity),
 	}
 	for index := range queue.nodes {
-		node := &node{
-			enSeq: &atomic.Uint64{},
-			deSeq: &atomic.Uint64{},
-		}
-		// 初始化时序列号设置为索引位置
-		// 这确保了序列号的唯一性并与索引位置对应
-		node.enSeq.Store(uint64(index))
-		node.deSeq.Store(uint64(index))
-		queue.nodes[index] = node
+		// 初始化时序列号设置为索引位置，索引位置就是第一个落到该节点上的入队票号
+		queue.nodes[index].seq.Store(uint64(index))
 	}
 	return queue
 }
@@ -111,75 +106,61 @@ func roundUpToPower2(v uint64) uint64 {
 }
 
 // Enqueue 将元素添加到队列尾部
+// 队列满时返回ErrQueueFull。该判断是保守的：当已发出的入队票号填满一整圈但数据还没写完时，
+// 同样按已满处理，不会退化成等待
 func (queue *Queue) Enqueue(value any) error {
+	// tail是本次尝试使用的入队票号
+	tail := queue.tail.Load()
 	for {
-		tail := queue.tail.Load()
-		head := queue.head.Load()
-		if tail-head >= queue.capacity {
+		node := &queue.nodes[tail&queue.mask]
+		// 转成有符号数比较，利用二进制补码天然处理uint64回绕
+		diff := int64(node.seq.Load() - tail)
+		if diff < 0 {
+			// 节点还压着上一轮(票号tail-capacity)的值没被取走，队列已满
 			return ErrQueueFull
 		}
-
-		// 抢占pos
-		if !queue.tail.CompareAndSwap(tail, tail+1) {
-			continue
+		// 节点为空且正轮到本票号，此时才去抢票
+		// CAS成功说明票号tail只属于本次调用，而序列号推进到tail+1只可能由票号tail的持有者完成，
+		// 因此这一刻节点已被独占，可以直接写入，无需任何等待
+		if diff == 0 && queue.tail.CompareAndSwap(tail, tail+1) {
+			node.value = value
+			// 先写数据，后原子更新序列号
+			// atomic更新seq提供release语义，保证value的写入对后续观察到seq变化的goroutine可见
+			node.seq.Store(tail + 1)
+			return nil
 		}
-
-		// 抢到位置后，就没有数据竞争了
-		node := queue.nodes[tail&queue.mask]
-
-		for {
-			// 当Dequeue更新ring.head后，还没有更新node.deSeq，这里需要判断是否已经被读取，避免被覆盖
-			// 通过比较序列号确保节点状态一致性，防止ABA问题
-			if node.enSeq.Load() == node.deSeq.Load() {
-				// 先写数据，后原子更新序列号
-				// atomic更新enSeq提供release语义，保证value的写入对后续观察到enSeq变化的goroutine可见
-				node.value = value
-				// 增加一个完整的容量值而不是简单地+1
-				// 这确保即使节点被重用多次，序列号也会有显著差异，彻底解决ABA问题
-				node.enSeq.Add(queue.capacity)
-				return nil
-			}
-			// 让出CPU时间片，避免忙等导致CPU空转
-			runtime.Gosched()
-		}
+		// diff>0说明其他生产者已经推进了tail，CAS失败说明票号被抢走，两种情况都要重新取号
+		tail = queue.tail.Load()
 	}
 }
 
 // Dequeue 从队列头部取出元素
+// 队列空时返回ErrQueueEmpty。该判断是保守的：当入队票号已发出但数据还没写完时，
+// 该元素尚不可见，同样按空处理，不会退化成等待
 func (queue *Queue) Dequeue() (any, error) {
+	// head是本次尝试使用的出队票号
+	head := queue.head.Load()
 	for {
-		head := queue.head.Load()
-		tail := queue.tail.Load()
-		if tail == head {
+		node := &queue.nodes[head&queue.mask]
+		// 节点已写入的标志是seq推进到了head+1
+		diff := int64(node.seq.Load() - (head + 1))
+		if diff < 0 {
+			// 票号head对应的入队还没写完(seq仍为head)，队列为空
 			return nil, ErrQueueEmpty
 		}
-
-		// 抢占pos
-		if !queue.head.CompareAndSwap(head, head+1) {
-			continue
+		// 节点已写入且正轮到本票号，此时才去抢票，同理CAS成功即独占该节点
+		if diff == 0 && queue.head.CompareAndSwap(head, head+1) {
+			value := node.value
+			// 清除引用帮助GC
+			node.value = nil
+			// 先读数据并清零，后原子更新序列号
+			// 序列号推进到head+capacity，即下一个落到本节点上的入队票号，
+			// atomic更新seq提供release语义，保证value的清零对后续观察到seq变化的goroutine可见
+			node.seq.Store(head + queue.capacity)
+			return value, nil
 		}
-
-		// 抢到位置后，就没有数据竞争了
-		node := queue.nodes[head&queue.mask]
-
-		for {
-			// 当Enqueue更新ring.tail后，还没有更新node.enSeq，这里需要判断是否已经被写入，避免取旧值
-			// 通过序列号检查确保节点已被写入且未被读取
-			// enSeq比deSeq大一个容量值表示节点已写入但未读取
-			if node.enSeq.Load() == node.deSeq.Load()+queue.capacity {
-				// 先读数据并清零，后原子更新序列号
-				// atomic更新deSeq提供release语义，保证value的清零对后续观察到deSeq变化的goroutine可见
-				value := node.value
-				// 清除引用帮助GC
-				node.value = nil
-				// 增加一个完整的容量值标记节点已读取
-				// 这确保序列号保持较大差异，有效解决ABA问题
-				node.deSeq.Add(queue.capacity)
-				return value, nil
-			}
-			// 让出CPU时间片，避免忙等导致CPU空转
-			runtime.Gosched()
-		}
+		// diff>0说明其他消费者已经推进了head，CAS失败说明票号被抢走，两种情况都要重新取号
+		head = queue.head.Load()
 	}
 }
 
@@ -199,12 +180,12 @@ func (queue *Queue) Capacity() uint64 {
 	return queue.capacity
 }
 
-// IsEmpty 检查队列是否为空
+// IsEmpty 检查队列是否为空（近似值）
 func (queue *Queue) IsEmpty() bool {
 	return queue.tail.Load() == queue.head.Load()
 }
 
-// IsFull 检查队列是否已满
+// IsFull 检查队列是否已满（近似值）
 func (queue *Queue) IsFull() bool {
 	return queue.tail.Load()-queue.head.Load() >= queue.capacity
 }
