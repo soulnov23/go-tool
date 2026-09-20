@@ -79,7 +79,7 @@ func refreshCompileCommands(root string) error {
 		commands = append(commands, compileCommand{
 			Directory: root,
 			Arguments: []string{drivers[ext], "-c", src},
-			File:      src,
+			File:      filepath.Join(root, src),
 		})
 	}
 
