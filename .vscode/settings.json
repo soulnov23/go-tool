@@ -88,6 +88,7 @@
     //clangd选项
     "clangd.path": "/usr/bin/clangd",
     "clangd.arguments": [
+        "--resource-dir=/usr/lib/clang/17",
         "--background-index-priority=normal",
         "--limit-references=0",
         "-j=16",
