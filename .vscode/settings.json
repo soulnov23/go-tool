@@ -97,21 +97,6 @@
     //files选项
     "files.autoGuessEncoding": true,
     "files.autoSave": "onFocusChange",
-    "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/CVS": true,
-        "**/.DS_Store": true,
-        "**/.vscode/ipch": true,
-        "**/*.o": true,
-        "**/*.lo": true,
-        "**/*.so": true,
-        "**/*.so.*": true,
-        "**/*.a": true,
-        "**/*.la": true,
-        "**/.obj": true
-    },
     "files.defaultLanguage": "jsonc",
     "files.associations": {
         "*.json*": "jsonc",
