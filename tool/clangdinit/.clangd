@@ -53,7 +53,7 @@ Diagnostics:
         Remove: ["*"]
 
 InlayHints:
-    Enabled: No
+    Enabled: false
 
 Completion:
     HeaderInsertion: Never
