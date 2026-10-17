@@ -1,10 +1,10 @@
 #!/bin/bash
 
-: <<!
+: <<'EOF'
 LOG_FILE="deploy.log"
 >"${LOG_FILE}"
 exec &>>${LOG_FILE}
-!
+EOF
 
 set -x
 set -e
