@@ -194,6 +194,11 @@ function chmodinit() {
     ln -sf $(pwd)/chmodinit.sh ${GOPATH}/bin/chmodinit
 }
 
+# ./deploy.sh githubinit
+function githubinit() {
+    ln -sf $(pwd)/githubinit.sh ${GOPATH}/bin/githubinit
+}
+
 # ./deploy.sh gittag
 function gittag() {
     ln -sf $(pwd)/gittag.sh ${GOPATH}/bin/gittag
@@ -284,6 +289,9 @@ main() {
             ;;
         chmodinit)
             chmodinit
+            ;;
+        githubinit)
+            githubinit
             ;;
         gittag)
             gittag
