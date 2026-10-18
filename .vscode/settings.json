@@ -97,6 +97,10 @@
     //files选项
     "files.autoGuessEncoding": true,
     "files.autoSave": "onFocusChange",
+    "files.exclude": {
+        "**/*.d": true,
+        "**/*.o": true
+    },
     "files.defaultLanguage": "jsonc",
     "files.associations": {
         "*.json*": "jsonc",
