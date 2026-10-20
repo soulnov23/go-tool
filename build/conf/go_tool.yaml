@@ -10,12 +10,12 @@ server:
     max_close_wait_time: 3000
     services:
         - name: rpc_service
-          address: 0.0.0.0:6666 #服务监听地址ipv4/ipv6
+          address: 0.0.0.0:6666 #服务监听地址ipv4
           network: tcp #网络监听类型 tcp udp
           protocol: rpc #应用层协议 rpc http
           timeout: 3000 #请求最长处理时间 单位 毫秒
         - name: http_service
-          address: 0.0.0.0:8888 #服务监听地址ipv4/ipv6
+          address: 0.0.0.0:8888 #服务监听地址ipv4
           network: tcp #网络监听类型 tcp udp
           protocol: http #应用层协议 rpc http
           timeout: 3000 #请求最长处理时间 单位 毫秒

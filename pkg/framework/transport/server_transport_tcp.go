@@ -16,7 +16,6 @@ import (
 func init() {
 	RegisterServerTransportFunc("tcp", newServerTransportTCP)
 	RegisterServerTransportFunc("tcp4", newServerTransportTCP)
-	RegisterServerTransportFunc("tcp6", newServerTransportTCP)
 }
 
 type serverTransportTCP struct {
@@ -72,7 +71,7 @@ func (t *serverTransportTCP) ListenAndServe() error {
 	}
 	if err := unix.Bind(listenFD, t.localSockAddr); err != nil {
 		unix.Close(listenFD)
-		return fmt.Errorf("unix.Bind[%d] address[%s] network[%s]: %v", listenFD, t.network, t.address, err)
+		return fmt.Errorf("unix.Bind[%d] network[%s] address[%s]: %v", listenFD, t.network, t.address, err)
 	}
 	backlog := netpoll.MaxListenerBacklog()
 	if err := unix.Listen(listenFD, backlog); err != nil {

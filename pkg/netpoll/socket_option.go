@@ -25,8 +25,8 @@ func SetSocketTCPNodelay(fd int) error {
 }
 
 // cnt保活探测次数
-// intvl保活探测间隔时间
-// idle连接空闲时间阈值
+// intvl保活探测间隔时间，单位秒
+// idle连接空闲时间阈值，单位秒
 func SetSocketKeepAlive(fd int, cnt int, intvl int, idle int) error {
 	if err := unix.SetsockoptInt(fd, unix.SOL_SOCKET, unix.SO_KEEPALIVE, 1); err != nil {
 		return err
