@@ -19,14 +19,13 @@ func init() {
 }
 
 type serverTransportTCP struct {
-	address       string
-	network       string
-	protocol      string
-	epoll         *netpoll.Epoll
-	listenFD      int
-	localAddr     net.Addr
-	localSockAddr unix.Sockaddr
-	opts          *ServerTransportOptions
+	address   string
+	network   string
+	protocol  string
+	epoll     *netpoll.Epoll
+	listenFD  int
+	localAddr net.Addr
+	opts      *ServerTransportOptions
 }
 
 func newServerTransportTCP(address, network, protocol string, opts ...ServerTransportOption) ServerTransport {
@@ -45,18 +44,10 @@ func newServerTransportTCP(address, network, protocol string, opts ...ServerTran
 }
 
 func (t *serverTransportTCP) ListenAndServe() error {
-	addr, err := netpoll.ResolveAddr(t.network, t.address)
-	if err != nil {
-		return fmt.Errorf("netpoll.ResolveAddr: %v", err)
-	}
-	t.localAddr = addr
-
 	sockaddr, err := netpoll.ResolveSockaddr(t.network, t.address)
 	if err != nil {
 		return fmt.Errorf("netpoll.ResolveSockaddr: %v", err)
 	}
-	t.localSockAddr = sockaddr
-
 	listenFD, err := netpoll.Socket(t.network)
 	if err != nil {
 		return fmt.Errorf("netpoll.Socket[%s]: %v", t.network, err)
@@ -69,7 +60,7 @@ func (t *serverTransportTCP) ListenAndServe() error {
 		unix.Close(listenFD)
 		return fmt.Errorf("netpoll.SetSocketReUsePort[%d]: %v", listenFD, err)
 	}
-	if err := unix.Bind(listenFD, t.localSockAddr); err != nil {
+	if err := unix.Bind(listenFD, sockaddr); err != nil {
 		unix.Close(listenFD)
 		return fmt.Errorf("unix.Bind[%d] network[%s] address[%s]: %v", listenFD, t.network, t.address, err)
 	}
@@ -78,6 +69,18 @@ func (t *serverTransportTCP) ListenAndServe() error {
 		unix.Close(listenFD)
 		return fmt.Errorf("unix.Listen[%d] backlog[%d]: %v", listenFD, backlog, err)
 	}
+	// 端口填0时由内核分配，从listen fd取实际绑定的地址
+	localSockAddr, err := unix.Getsockname(listenFD)
+	if err != nil {
+		unix.Close(listenFD)
+		return fmt.Errorf("unix.Getsockname[%d]: %v", listenFD, err)
+	}
+	localAddr, err := netpoll.SockaddrToAddr(t.network, localSockAddr)
+	if err != nil {
+		unix.Close(listenFD)
+		return fmt.Errorf("netpoll.SockaddrToAddr: %v", err)
+	}
+	t.localAddr = localAddr
 
 	// listen fd建好之后再创建epoll，前面失败时不会留下没有启动Wait的epoll
 	epoll, err := netpoll.NewEpoll(log.DefaultLogger.InfoFields)
@@ -87,7 +90,7 @@ func (t *serverTransportTCP) ListenAndServe() error {
 	}
 	t.epoll = epoll
 	t.listenFD = listenFD
-	log.DefaultLogger.InfoFields("listen success", zap.Int("epoll_fd", epoll.FD()), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address))
+	log.DefaultLogger.InfoFields("listen success", zap.Int("epoll_fd", epoll.FD()), zap.Int("listen_fd", listenFD), zap.String("network", t.network), zap.String("address", t.address), zap.String("local_address", t.localAddr.String()))
 
 	operator := epoll.Alloc()
 	operator.FD = listenFD
