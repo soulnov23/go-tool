@@ -1,6 +1,7 @@
 package netpoll
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"runtime"
@@ -125,38 +126,47 @@ func (epoll *Epoll) handle(eventSize int) bool {
 	for i := 0; i < eventSize; i++ {
 		event := epoll.events[i]
 		operator := *(**FDOperator)(unsafe.Pointer(&event.Data))
+		if operator == nil {
+			continue
+		}
 		epoll.info("wake epoll", zap.Int("epoll_fd", epoll.fd), zap.Int("client_fd", operator.FD), zap.String("event", EventString(event.Events)))
 
 		// 通过write event fd主动触发循环优雅退出
-		if operator.FD == epoll.wakeOperator.FD {
-			_, _ = unix.Read(epoll.wakeOperator.FD, epoll.triggerBuf)
-			if epoll.triggerBuf[0] > 0 {
+		if operator == epoll.wakeOperator {
+			// eventfd必须一次读满8字节才能清零计数器
+			if _, err := unix.Read(epoll.wakeOperator.FD, epoll.triggerBuf); err != nil {
+				if err != unix.EAGAIN {
+					epoll.info("read event_fd failed", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD), zap.Error(err))
+				}
+				continue
+			}
+			if binary.NativeEndian.Uint64(epoll.triggerBuf) > 0 {
 				exit = true
 			}
 			continue
 		}
 
 		if event.Events&(unix.EPOLLRDHUP|unix.EPOLLHUP|unix.EPOLLERR) != 0 {
-			if operator != nil && operator.OnHup != nil {
+			if operator.OnHup != nil {
 				hups = append(hups, operator)
 			}
 		}
 
 		if event.Events&(unix.EPOLLIN) != 0 {
-			if operator != nil && operator.OnRead != nil {
+			if operator.OnRead != nil {
 				operator.OnRead(epoll, operator)
 			}
 		}
 
 		if event.Events&unix.EPOLLOUT != 0 {
-			if operator != nil && operator.OnWrite != nil {
+			if operator.OnWrite != nil {
 				operator.OnWrite(epoll, operator)
 			}
 		}
 	}
 	for _, operator := range hups {
 		if err := epoll.Control(operator, Detach); err != nil {
-			epoll.info("epoll.Control event_fd failed", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD), zap.Error(err))
+			epoll.info("epoll.Control client_fd failed", zap.Int("epoll_fd", epoll.fd), zap.Int("client_fd", operator.FD), zap.Error(err))
 		}
 		operator.OnHup(epoll, operator)
 		epoll.Free(operator)
@@ -171,7 +181,7 @@ func (epoll *Epoll) Close() error {
 	if epoll.trigger.Add(1) > 1 {
 		return nil
 	}
-	if _, err := unix.Write(epoll.wakeOperator.FD, []byte{1, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+	if _, err := unix.Write(epoll.wakeOperator.FD, binary.NativeEndian.AppendUint64(nil, 1)); err != nil {
 		return fmt.Errorf("epoll_fd[%d] write event_fd[%d]: %v", epoll.fd, epoll.wakeOperator.FD, err)
 	}
 	<-epoll.close
