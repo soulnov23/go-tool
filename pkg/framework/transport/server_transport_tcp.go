@@ -52,13 +52,13 @@ func (t *serverTransportTCP) ListenAndServe() error {
 	if err != nil {
 		return fmt.Errorf("netpoll.Socket[%s]: %v", t.network, err)
 	}
-	if err := netpoll.SetSocketReuseaddr(listenFD); err != nil {
+	if err := netpoll.SetSocketReuseAddr(listenFD); err != nil {
 		unix.Close(listenFD)
-		return fmt.Errorf("netpoll.SetSocketReuseaddr[%d]: %v", listenFD, err)
+		return fmt.Errorf("netpoll.SetSocketReuseAddr[%d]: %v", listenFD, err)
 	}
-	if err := netpoll.SetSocketReUsePort(listenFD); err != nil {
+	if err := netpoll.SetSocketReusePort(listenFD); err != nil {
 		unix.Close(listenFD)
-		return fmt.Errorf("netpoll.SetSocketReUsePort[%d]: %v", listenFD, err)
+		return fmt.Errorf("netpoll.SetSocketReusePort[%d]: %v", listenFD, err)
 	}
 	if err := unix.Bind(listenFD, sockaddr); err != nil {
 		unix.Close(listenFD)
@@ -133,6 +133,19 @@ func (t *serverTransportTCP) accept(epoll *netpoll.Epoll, operator *netpoll.FDOp
 			log.DefaultLogger.ErrorFields("netpoll.SockaddrToAddr", zap.Error(err), zap.Reflect("sockaddr", addr))
 			continue
 		}
+		// 监听0.0.0.0时每个连接实际的本地地址各不相同，从client fd取
+		localSockAddr, err := unix.Getsockname(clientFD)
+		if err != nil {
+			unix.Close(clientFD)
+			log.DefaultLogger.ErrorFields("unix.Getsockname", zap.Error(err), zap.Int("client_fd", clientFD))
+			continue
+		}
+		localAddr, err := netpoll.SockaddrToAddr(t.network, localSockAddr)
+		if err != nil {
+			unix.Close(clientFD)
+			log.DefaultLogger.ErrorFields("netpoll.SockaddrToAddr", zap.Error(err), zap.Reflect("sockaddr", localSockAddr))
+			continue
+		}
 		clientOperator := epoll.Alloc()
 		clientOperator.FD = clientFD
 		clientOperator.Epoll = epoll
@@ -141,7 +154,7 @@ func (t *serverTransportTCP) accept(epoll *netpoll.Epoll, operator *netpoll.FDOp
 		clientOperator.OnHup = t.hup
 		clientOperator.Data = &tcpConnection{
 			fd:          clientFD,
-			localAddr:   t.localAddr,
+			localAddr:   localAddr,
 			remoteAddr:  remoteAddr,
 			readBuffer:  buffer.New(),
 			writeBuffer: buffer.New(),
@@ -152,7 +165,7 @@ func (t *serverTransportTCP) accept(epoll *netpoll.Epoll, operator *netpoll.FDOp
 			log.DefaultLogger.ErrorFields("epoll.Control", zap.Error(err), zap.Int("epoll_fd", epoll.FD()), zap.Int("client_fd", clientFD), zap.String("epoll_event", netpoll.EventString(netpoll.Readable)))
 			continue
 		}
-		log.DefaultLogger.InfoFields("accept success", zap.Int("epoll_fd", epoll.FD()), zap.Int("listen_fd", operator.FD), zap.Int("client_fd", clientOperator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", t.localAddr.String()))
+		log.DefaultLogger.InfoFields("accept success", zap.Int("epoll_fd", epoll.FD()), zap.Int("listen_fd", operator.FD), zap.Int("client_fd", clientOperator.FD), zap.String("remote_address", remoteAddr.String()), zap.String("local_address", localAddr.String()))
 	}
 }
 

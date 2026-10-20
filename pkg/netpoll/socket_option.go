@@ -12,15 +12,15 @@ func SetSocketNonBlock(fd int) error {
 	return unix.SetNonblock(fd, true)
 }
 
-func SetSocketReuseaddr(fd int) error {
+func SetSocketReuseAddr(fd int) error {
 	return unix.SetsockoptInt(fd, unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
 }
 
-func SetSocketReUsePort(fd int) error {
+func SetSocketReusePort(fd int) error {
 	return unix.SetsockoptInt(fd, unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 }
 
-func SetSocketTCPNodelay(fd int) error {
+func SetSocketTCPNoDelay(fd int) error {
 	return unix.SetsockoptInt(fd, unix.IPPROTO_TCP, unix.TCP_NODELAY, 1)
 }
 
