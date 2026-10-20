@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"runtime"
 	"sync/atomic"
-	"unsafe"
 
 	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
@@ -33,7 +32,7 @@ func NewEpoll(info func(msg string, fields ...zap.Field)) (*Epoll, error) {
 		events:        make([]EpollEvent, 128), // https://github.com/golang/go/blob/master/src/runtime/netpoll_epoll.go#L114
 		operatorCache: newOperatorCache(),
 		triggerBuf:    make([]byte, 8),
-		close:         make(chan struct{}, 1),
+		close:         make(chan struct{}),
 		info:          info,
 	}
 	eventFD, err := unix.Eventfd(0, unix.EFD_NONBLOCK|unix.EFD_CLOEXEC)
@@ -62,8 +61,10 @@ func (epoll *Epoll) Control(operator *FDOperator, event int) error {
 	if operator == nil {
 		return errors.New("operator is nil")
 	}
+	// Data在amd64上不是8字节对齐的，直接存指针-race下会触发checkptr，
+	// 这里存operator在operatorCache里的index，所以operator必须由同一个epoll的Alloc分配
 	epollEvent := &EpollEvent{}
-	*(**FDOperator)(unsafe.Pointer(&epollEvent.Data)) = operator
+	binary.NativeEndian.PutUint32(epollEvent.Data[:], uint32(operator.index))
 	switch event {
 	case Readable:
 		epollEvent.Events = ReadFlags
@@ -112,8 +113,8 @@ func (epoll *Epoll) Wait() error {
 			}
 			unix.Close(epoll.wakeOperator.FD)
 			unix.Close(epoll.fd)
-			epoll.close <- struct{}{}
-			epoll.trigger.Store(0)
+			// trigger不清零，fd已经关闭可能被复用，后续Close不能再写event fd
+			close(epoll.close)
 			epoll.info("exit gracefully", zap.Int("epoll_fd", epoll.fd), zap.Int("event_fd", epoll.wakeOperator.FD))
 			return nil
 		}
@@ -125,7 +126,7 @@ func (epoll *Epoll) handle(eventSize int) bool {
 	var hups []*FDOperator
 	for i := 0; i < eventSize; i++ {
 		event := epoll.events[i]
-		operator := *(**FDOperator)(unsafe.Pointer(&event.Data))
+		operator := epoll.operatorCache.cache[binary.NativeEndian.Uint32(event.Data[:])]
 		if operator == nil {
 			continue
 		}
@@ -177,8 +178,9 @@ func (epoll *Epoll) handle(eventSize int) bool {
 }
 
 func (epoll *Epoll) Close() error {
-	// 防止重复主动触发
+	// 防止重复主动触发，重复调用也等Wait退出再返回
 	if epoll.trigger.Add(1) > 1 {
+		<-epoll.close
 		return nil
 	}
 	if _, err := unix.Write(epoll.wakeOperator.FD, binary.NativeEndian.AppendUint64(nil, 1)); err != nil {
