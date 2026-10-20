@@ -107,7 +107,7 @@ func (t *serverTransportTCP) ListenAndServe() error {
 
 func (t *serverTransportTCP) accept(epoll *netpoll.Epoll, operator *netpoll.FDOperator) {
 	for {
-		clientFD, addr, err := unix.Accept4(operator.FD, unix.SOCK_CLOEXEC)
+		clientFD, addr, err := unix.Accept4(operator.FD, unix.SOCK_CLOEXEC|unix.SOCK_NONBLOCK|unix.SOCK_CLOEXEC)
 		if err != nil {
 			if err == unix.EAGAIN {
 				break
@@ -117,17 +117,6 @@ func (t *serverTransportTCP) accept(epoll *netpoll.Epoll, operator *netpoll.FDOp
 				log.DefaultLogger.ErrorFields("accept client", zap.Error(err), zap.Int("listen_fd", operator.FD))
 				continue
 			}
-		}
-		if err := netpoll.SetSocketNonBlock(clientFD); err != nil {
-			unix.Close(clientFD)
-			log.DefaultLogger.ErrorFields("netpoll.SetSocketNonBlock", zap.Error(err), zap.Int("client_fd", clientFD))
-			continue
-		}
-		netpoll.SetSocketCloseExec(clientFD)
-		if err := netpoll.SetSocketTCPNodelay(clientFD); err != nil {
-			unix.Close(clientFD)
-			log.DefaultLogger.ErrorFields("netpoll.SetSocketTCPNodelay", zap.Error(err), zap.Int("client_fd", clientFD))
-			continue
 		}
 		remoteAddr, err := netpoll.SockaddrToAddr(t.network, addr)
 		if err != nil {
