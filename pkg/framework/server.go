@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGTERM, syscall.SIGSEGV}
+	DefaultServerCloseSIG = []os.Signal{syscall.SIGINT, syscall.SIGTERM}
 	DefaultHotRestartSIG  = []os.Signal{syscall.SIGUSR1}
 	DefaultTriggerSIG     = []os.Signal{syscall.SIGUSR2}
 )
