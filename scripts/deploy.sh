@@ -9,7 +9,7 @@ EOF
 set -x
 set -e
 
-# ./deploy.sh golang 1.26.1
+# ./deploy.sh golang 1.27.3
 function golang() {
     mkdir -p tmp
     cd tmp
