@@ -7,6 +7,7 @@ import (
 const (
 	defaultConfigPath               = "../conf/go_tool.yaml"
 	defaultUpdateGOMAXPROCSInterval = 60000
+	defaultMaxCloseWaitTime         = 3000
 )
 
 type Config struct {

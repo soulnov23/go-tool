@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -102,17 +103,13 @@ func (s *Server) Serve() error {
 		}()
 	}
 
+	defer s.close()
 	for name, service := range s.services {
 		if err := service.serve(); err != nil {
 			log.DefaultLogger.FatalFields("service serve", zap.String("service_name", name), zap.Error(err))
 			return err
 		}
 	}
-	defer func() {
-		for _, service := range s.services {
-			service.close()
-		}
-	}()
 
 	signalClose := make(chan os.Signal, 1)
 	signal.Notify(signalClose, DefaultServerCloseSIG...)
@@ -129,4 +126,21 @@ func (s *Server) Serve() error {
 		log.DefaultLogger.InfoFields("signal trigger", zap.String("sig", sig.String()))
 	}
 	return nil
+}
+
+func (s *Server) close() {
+	done := make(chan struct{})
+	go func() {
+		var wg sync.WaitGroup
+		for _, service := range s.services {
+			wg.Go(service.close)
+		}
+		wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(s.maxCloseWaitTime):
+		log.DefaultLogger.ErrorFields("close services timeout", zap.Duration("max_close_wait_time", s.maxCloseWaitTime))
+	}
 }
