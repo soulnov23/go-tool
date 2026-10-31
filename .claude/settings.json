@@ -5,6 +5,9 @@
     },
     "permissions": {
         "defaultMode": "acceptEdits",
+        "additionalDirectories": [
+            "/tmp"
+        ],
         "allow": [
             "WebFetch",
             "WebSearch",
